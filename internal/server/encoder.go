@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-kratos/kratos/v2/errors"
+	adminsystemv1 "github.com/npanel-dev/NPanel-backend/api/admin/system/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -116,7 +117,7 @@ var requiredFields = map[string]bool{
 func CustomResponseEncoder(w http.ResponseWriter, r *http.Request, v interface{}) error {
 	marshal, err := protojson.MarshalOptions{
 		UseProtoNames:   true,
-		EmitUnpopulated: shouldEmitUnpopulatedFields(r),
+		EmitUnpopulated: shouldEmitUnpopulatedFields(r, v),
 	}.Marshal(v.(proto.Message))
 	if err != nil {
 		return err
@@ -148,15 +149,19 @@ func CustomResponseEncoder(w http.ResponseWriter, r *http.Request, v interface{}
 	return err
 }
 
-func shouldEmitUnpopulatedFields(r *http.Request) bool {
-	if r == nil || r.URL == nil {
-		return false
-	}
-	path := strings.TrimPrefix(r.URL.Path, "/api")
-	switch path {
-	case "/v1/admin/system/subscribe_config", "/v1/common/site/config":
+func shouldEmitUnpopulatedFields(r *http.Request, v interface{}) bool {
+	switch v.(type) {
+	case *adminsystemv1.GetSubscribeConfigReply:
 		return true
-	default:
-		return false
 	}
+
+	if r != nil && r.URL != nil {
+		path := strings.TrimPrefix(r.URL.Path, "/api")
+		switch path {
+		case "/v1/admin/system/subscribe_config", "/v1/common/site/config":
+			return true
+		}
+	}
+
+	return false
 }
