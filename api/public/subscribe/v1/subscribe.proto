@@ -13,6 +13,12 @@ service PublicSubscribe {
     };
   }
 
+  rpc QuerySubscribeCatalog(QuerySubscribeCatalogRequest) returns (QuerySubscribeCatalogReply) {
+    option (google.api.http) = {
+      get: "/v1/public/subscribe/catalog"
+    };
+  }
+
   rpc QueryUserSubscribeNodeList(QueryUserSubscribeNodeListRequest) returns (QueryUserSubscribeNodeListReply) {
     option (google.api.http) = {
       get: "/v1/public/subscribe/node/list"
@@ -22,6 +28,7 @@ service PublicSubscribe {
 
 message QuerySubscribeListRequest {
   string language = 1;
+  int64 category_id = 2;
 }
 
 message QuerySubscribeListReply {
@@ -43,6 +50,8 @@ message Subscribe {
   int32 speed_limit = 11;
   int32 device_limit = 12;
   int32 quota = 13;
+  int64 category_id = 29;
+  string category_name = 30;
   repeated int64 nodes = 14;
   repeated string node_tags = 15;
   repeated int64 node_group_ids = 16;
@@ -58,6 +67,28 @@ message Subscribe {
   bool show_original_price = 26;
   int64 created_at = 27;
   int64 updated_at = 28;
+}
+
+message SubscribeCategory {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string name = 3;
+  string description = 4;
+  string language = 5;
+  bool show = 6;
+  int32 sort = 7;
+  repeated Subscribe list = 8;
+  repeated SubscribeCategory children = 9;
+}
+
+message QuerySubscribeCatalogRequest {
+  string language = 1;
+}
+
+message QuerySubscribeCatalogReply {
+  repeated SubscribeCategory categories = 1;
+  repeated Subscribe uncategorized = 2;
+  int32 total = 3;
 }
 
 message SubscribeDiscount {

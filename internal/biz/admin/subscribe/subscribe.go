@@ -60,6 +60,16 @@ type SubscribeRepo interface {
 	GetSubscribeMinSort(ctx context.Context, ids []int) (int64, error)
 	BatchUpdateSubscribeSort(ctx context.Context, subscribes []*ent.ProxySubscribe) error
 
+	// Subscribe category operations
+	CreateSubscribeCategory(ctx context.Context, category *model.SubscribeCategory) error
+	GetSubscribeCategoryByID(ctx context.Context, id int64) (*ent.ProxySubscribeCategory, error)
+	UpdateSubscribeCategory(ctx context.Context, category *model.SubscribeCategory) error
+	DeleteSubscribeCategory(ctx context.Context, id int64) error
+	BatchDeleteSubscribeCategory(ctx context.Context, ids []int64) error
+	GetSubscribeCategoryList(ctx context.Context, req *model.SubscribeCategoryListParams) ([]*ent.ProxySubscribeCategory, int32, error)
+	CountSubscribeByCategoryID(ctx context.Context, categoryID int64) (int, error)
+	CountSubscribeCategoryChildren(ctx context.Context, categoryID int64) (int, error)
+
 	// Subscribe group operations
 	CreateSubscribeGroup(ctx context.Context, group *model.SubscribeGroup) error
 	GetSubscribeGroupByID(ctx context.Context, id int) (*ent.ProxySubscribeGroup, error)
@@ -88,6 +98,9 @@ func (uc *SubscribeUseCase) CreateSubscribe(ctx context.Context, req *v1.CreateS
 		uc.log.WithContext(ctx).Errorw("msg", "Marshal traffic limit failed", "error", err)
 		return responsecode.NewKratosError(responsecode.ErrInternalError)
 	}
+	if err := uc.ensureSubscribeCategoryExists(ctx, req.CategoryId); err != nil {
+		return err
+	}
 
 	sub := &model.Subscribe{
 		Name:              req.Name,
@@ -102,6 +115,7 @@ func (uc *SubscribeUseCase) CreateSubscribe(ctx context.Context, req *v1.CreateS
 		SpeedLimit:        int64(req.SpeedLimit),
 		DeviceLimit:       int64(req.DeviceLimit),
 		Quota:             int64(req.Quota),
+		CategoryID:        req.CategoryId,
 		Nodes:             int64SliceToString(req.Nodes),
 		NodeTags:          stringSliceToString(req.NodeTags),
 		NodeGroupIDs:      cloneInt64Slice(req.NodeGroupIds),
@@ -153,6 +167,9 @@ func (uc *SubscribeUseCase) UpdateSubscribe(ctx context.Context, req *v1.UpdateS
 		uc.log.WithContext(ctx).Errorw("msg", "Marshal traffic limit failed", "error", err)
 		return responsecode.NewKratosError(responsecode.ErrInternalError)
 	}
+	if err := uc.ensureSubscribeCategoryExists(ctx, req.CategoryId); err != nil {
+		return err
+	}
 
 	sub := &model.Subscribe{
 		ID:                int64(id),
@@ -168,6 +185,7 @@ func (uc *SubscribeUseCase) UpdateSubscribe(ctx context.Context, req *v1.UpdateS
 		SpeedLimit:        int64(req.SpeedLimit),
 		DeviceLimit:       int64(req.DeviceLimit),
 		Quota:             int64(req.Quota),
+		CategoryID:        req.CategoryId,
 		Nodes:             int64SliceToString(req.Nodes),
 		NodeTags:          stringSliceToString(req.NodeTags),
 		NodeGroupIDs:      cloneInt64Slice(req.NodeGroupIds),
@@ -250,7 +268,13 @@ func (uc *SubscribeUseCase) GetSubscribeDetails(ctx context.Context, id int) (*v
 		return nil, responsecode.NewKratosError(responsecode.ErrInternalError)
 	}
 
-	return convertSubscribeToProto(sub), nil
+	item := convertSubscribeToProto(sub)
+	if sub.CategoryID > 0 {
+		if category, err := uc.repo.GetSubscribeCategoryByID(ctx, sub.CategoryID); err == nil {
+			item.CategoryName = category.Name
+		}
+	}
+	return item, nil
 }
 
 // GetSubscribeList get subscribe list
@@ -261,6 +285,7 @@ func (uc *SubscribeUseCase) GetSubscribeList(ctx context.Context, req *v1.GetSub
 		Language:    req.Language,
 		Search:      req.Search,
 		NodeGroupID: req.NodeGroupId,
+		CategoryID:  req.CategoryId,
 	}
 
 	list, total, err := uc.repo.GetSubscribeList(ctx, params)
@@ -286,9 +311,11 @@ func (uc *SubscribeUseCase) GetSubscribeList(ctx context.Context, req *v1.GetSub
 	}
 
 	// Convert to proto
+	categoryNames := uc.subscribeCategoryNames(ctx, list)
 	items := make([]*v1.SubscribeItem, 0, len(list))
 	for _, sub := range list {
 		item := convertSubscribeToProtoItem(sub)
+		item.CategoryName = categoryNames[sub.CategoryID]
 		item.Sold = soldCounts[int64(sub.ID)]
 		items = append(items, item)
 	}
@@ -354,6 +381,147 @@ func (uc *SubscribeUseCase) SubscribeSort(ctx context.Context, req *v1.Subscribe
 	}
 
 	return nil
+}
+
+// ==================== Subscribe Category Operations ====================
+
+// CreateSubscribeCategory create subscribe category.
+func (uc *SubscribeUseCase) CreateSubscribeCategory(ctx context.Context, req *v1.CreateSubscribeCategoryRequest) error {
+	if strings.TrimSpace(req.Name) == "" {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	if err := uc.ensureSubscribeCategoryParent(ctx, 0, req.ParentId); err != nil {
+		return err
+	}
+	category := &model.SubscribeCategory{
+		ParentID:    req.ParentId,
+		Name:        req.Name,
+		Description: req.Description,
+		Language:    req.Language,
+		Show:        getBoolValue(req.Show, true),
+		Sort:        int64(req.Sort),
+	}
+	if err := uc.repo.CreateSubscribeCategory(ctx, category); err != nil {
+		uc.log.WithContext(ctx).Errorw("msg", "CreateSubscribeCategory failed", "error", err)
+		return responsecode.NewKratosError(responsecode.ErrInternalError)
+	}
+	return nil
+}
+
+// UpdateSubscribeCategory update subscribe category.
+func (uc *SubscribeUseCase) UpdateSubscribeCategory(ctx context.Context, req *v1.UpdateSubscribeCategoryRequest) error {
+	if req.Id <= 0 || strings.TrimSpace(req.Name) == "" {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	if _, err := uc.repo.GetSubscribeCategoryByID(ctx, req.Id); err != nil {
+		if ent.IsNotFound(err) {
+			return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+		uc.log.WithContext(ctx).Errorw("msg", "UpdateSubscribeCategory GetSubscribeCategoryByID error", "error", err, "id", req.Id)
+		return responsecode.NewKratosError(responsecode.ErrInternalError)
+	}
+	if err := uc.ensureSubscribeCategoryParent(ctx, req.Id, req.ParentId); err != nil {
+		return err
+	}
+	category := &model.SubscribeCategory{
+		ID:          req.Id,
+		ParentID:    req.ParentId,
+		Name:        req.Name,
+		Description: req.Description,
+		Language:    req.Language,
+		Show:        getBoolValue(req.Show, true),
+		Sort:        int64(req.Sort),
+	}
+	if err := uc.repo.UpdateSubscribeCategory(ctx, category); err != nil {
+		uc.log.WithContext(ctx).Errorw("msg", "UpdateSubscribeCategory failed", "error", err, "id", req.Id)
+		return responsecode.NewKratosError(responsecode.ErrInternalError)
+	}
+	return nil
+}
+
+// DeleteSubscribeCategory delete subscribe category.
+func (uc *SubscribeUseCase) DeleteSubscribeCategory(ctx context.Context, id int64) error {
+	if id <= 0 {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	if err := uc.ensureSubscribeCategoryExists(ctx, id); err != nil {
+		return err
+	}
+	if childCount, err := uc.repo.CountSubscribeCategoryChildren(ctx, id); err != nil {
+		uc.log.WithContext(ctx).Errorw("msg", "DeleteSubscribeCategory CountSubscribeCategoryChildren error", "error", err, "id", id)
+		return responsecode.NewKratosError(responsecode.ErrInternalError)
+	} else if childCount > 0 {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	if planCount, err := uc.repo.CountSubscribeByCategoryID(ctx, id); err != nil {
+		uc.log.WithContext(ctx).Errorw("msg", "DeleteSubscribeCategory CountSubscribeByCategoryID error", "error", err, "id", id)
+		return responsecode.NewKratosError(responsecode.ErrInternalError)
+	} else if planCount > 0 {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	if err := uc.repo.DeleteSubscribeCategory(ctx, id); err != nil {
+		uc.log.WithContext(ctx).Errorw("msg", "DeleteSubscribeCategory failed", "error", err, "id", id)
+		return responsecode.NewKratosError(responsecode.ErrInternalError)
+	}
+	return nil
+}
+
+// BatchDeleteSubscribeCategory batch delete subscribe categories.
+func (uc *SubscribeUseCase) BatchDeleteSubscribeCategory(ctx context.Context, ids []int64) error {
+	if len(ids) == 0 {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	for _, id := range ids {
+		if id <= 0 {
+			return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+		if err := uc.ensureSubscribeCategoryExists(ctx, id); err != nil {
+			return err
+		}
+		if childCount, err := uc.repo.CountSubscribeCategoryChildren(ctx, id); err != nil {
+			uc.log.WithContext(ctx).Errorw("msg", "BatchDeleteSubscribeCategory CountSubscribeCategoryChildren error", "error", err, "id", id)
+			return responsecode.NewKratosError(responsecode.ErrInternalError)
+		} else if childCount > 0 {
+			return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+		if planCount, err := uc.repo.CountSubscribeByCategoryID(ctx, id); err != nil {
+			uc.log.WithContext(ctx).Errorw("msg", "BatchDeleteSubscribeCategory CountSubscribeByCategoryID error", "error", err, "id", id)
+			return responsecode.NewKratosError(responsecode.ErrInternalError)
+		} else if planCount > 0 {
+			return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+	}
+	if err := uc.repo.BatchDeleteSubscribeCategory(ctx, ids); err != nil {
+		uc.log.WithContext(ctx).Errorw("msg", "BatchDeleteSubscribeCategory failed", "error", err, "ids", ids)
+		return responsecode.NewKratosError(responsecode.ErrInternalError)
+	}
+	return nil
+}
+
+// GetSubscribeCategoryList get subscribe category list.
+func (uc *SubscribeUseCase) GetSubscribeCategoryList(ctx context.Context, req *v1.GetSubscribeCategoryListRequest) (*v1.GetSubscribeCategoryListData, error) {
+	params := &model.SubscribeCategoryListParams{
+		Language: req.Language,
+	}
+	if req.ParentId != nil {
+		params.ParentID = req.ParentId
+	}
+	if req.Show != nil {
+		params.Show = req.Show
+	}
+	list, total, err := uc.repo.GetSubscribeCategoryList(ctx, params)
+	if err != nil {
+		uc.log.WithContext(ctx).Errorw("msg", "GetSubscribeCategoryList failed", "error", err, "params", params)
+		return nil, responsecode.NewKratosError(responsecode.ErrInternalError)
+	}
+	items := make([]*v1.SubscribeCategoryInfo, 0, len(list))
+	for _, category := range list {
+		items = append(items, convertSubscribeCategoryToProto(category))
+	}
+	return &v1.GetSubscribeCategoryListData{
+		List:  items,
+		Total: total,
+	}, nil
 }
 
 // ==================== Subscribe Group Operations ====================
@@ -629,6 +797,103 @@ func derefInt64(v *int64) int64 {
 	return *v
 }
 
+func derefString(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
+}
+
+func (uc *SubscribeUseCase) ensureSubscribeCategoryExists(ctx context.Context, categoryID int64) error {
+	if categoryID < 0 {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	if categoryID == 0 {
+		return nil
+	}
+	if _, err := uc.repo.GetSubscribeCategoryByID(ctx, categoryID); err != nil {
+		if ent.IsNotFound(err) {
+			return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+		uc.log.WithContext(ctx).Errorw("msg", "GetSubscribeCategoryByID error", "error", err, "category_id", categoryID)
+		return responsecode.NewKratosError(responsecode.ErrInternalError)
+	}
+	return nil
+}
+
+func (uc *SubscribeUseCase) ensureSubscribeCategoryParent(ctx context.Context, categoryID, parentID int64) error {
+	if parentID < 0 {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	if parentID == 0 {
+		return nil
+	}
+
+	seen := make(map[int64]struct{})
+	currentID := parentID
+	for depth := 0; currentID > 0; depth++ {
+		if depth > 64 {
+			return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+		if categoryID > 0 && currentID == categoryID {
+			return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+		if _, ok := seen[currentID]; ok {
+			return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+		seen[currentID] = struct{}{}
+
+		category, err := uc.repo.GetSubscribeCategoryByID(ctx, currentID)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+			}
+			uc.log.WithContext(ctx).Errorw("msg", "GetSubscribeCategoryByID error", "error", err, "category_id", currentID)
+			return responsecode.NewKratosError(responsecode.ErrInternalError)
+		}
+		currentID = category.ParentID
+	}
+	return nil
+}
+
+func convertSubscribeCategoryToProto(category *ent.ProxySubscribeCategory) *v1.SubscribeCategoryInfo {
+	if category == nil {
+		return nil
+	}
+	return &v1.SubscribeCategoryInfo{
+		Id:          category.ID,
+		ParentId:    category.ParentID,
+		Name:        category.Name,
+		Description: derefString(category.Description),
+		Language:    category.Language,
+		Show:        category.Show,
+		Sort:        category.Sort,
+		CreatedAt:   category.CreatedAt.Unix(),
+		UpdatedAt:   category.UpdatedAt.Unix(),
+	}
+}
+
+func (uc *SubscribeUseCase) subscribeCategoryNames(ctx context.Context, subscribes []*ent.ProxySubscribe) map[int64]string {
+	ids := make(map[int64]struct{})
+	for _, sub := range subscribes {
+		if sub != nil && sub.CategoryID > 0 {
+			ids[sub.CategoryID] = struct{}{}
+		}
+	}
+	if len(ids) == 0 {
+		return map[int64]string{}
+	}
+	result := make(map[int64]string, len(ids))
+	for id := range ids {
+		category, err := uc.repo.GetSubscribeCategoryByID(ctx, id)
+		if err != nil {
+			continue
+		}
+		result[id] = category.Name
+	}
+	return result
+}
+
 // convertSubscribeToProto convert ent subscribe to proto subscribe info
 func convertSubscribeToProto(sub *ent.ProxySubscribe) *v1.SubscribeInfo {
 	desc := ""
@@ -668,6 +933,7 @@ func convertSubscribeToProto(sub *ent.ProxySubscribe) *v1.SubscribeInfo {
 		SpeedLimit:        int32(sub.SpeedLimit),
 		DeviceLimit:       int32(sub.DeviceLimit),
 		Quota:             int32(sub.Quota),
+		CategoryId:        sub.CategoryID,
 		Nodes:             stringToInt64Slice(sub.Nodes),
 		NodeTags:          stringToStringSlice(sub.NodeTags),
 		NodeGroupIds:      cloneInt64Slice(sub.NodeGroupIds),
@@ -725,6 +991,7 @@ func convertSubscribeToProtoItem(sub *ent.ProxySubscribe) *v1.SubscribeItem {
 		SpeedLimit:        int32(sub.SpeedLimit),
 		DeviceLimit:       int32(sub.DeviceLimit),
 		Quota:             int32(sub.Quota),
+		CategoryId:        sub.CategoryID,
 		Nodes:             stringToInt64Slice(sub.Nodes),
 		NodeTags:          stringToStringSlice(sub.NodeTags),
 		NodeGroupIds:      cloneInt64Slice(sub.NodeGroupIds),

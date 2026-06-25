@@ -57,6 +57,9 @@ type ProxySubscribe func(*sql.Selector)
 // ProxySubscribeApplication is the predicate function for proxysubscribeapplication builders.
 type ProxySubscribeApplication func(*sql.Selector)
 
+// ProxySubscribeCategory is the predicate function for proxysubscribecategory builders.
+type ProxySubscribeCategory func(*sql.Selector)
+
 // ProxySubscribeGroup is the predicate function for proxysubscribegroup builders.
 type ProxySubscribeGroup func(*sql.Selector)
 

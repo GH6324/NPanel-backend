@@ -36,6 +36,7 @@ func (ProxySubscribe) Fields() []ent.Field {
 		field.Int32("speed_limit").Default(0).Comment("速度限制"),
 		field.Int32("device_limit").Default(0).Comment("设备数限制"),
 		field.Int32("quota").Default(0).Comment("配额"),
+		field.Int64("category_id").Default(0).Comment("商品分类ID"),
 		field.String("nodes").MaxLen(255).Default("").Comment("节点IDs"),
 		field.String("node_tags").MaxLen(255).Default("").Comment("节点标签"),
 		field.JSON("node_group_ids", []int64{}).Optional().Comment("节点组ID列表"),

@@ -19,10 +19,12 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationPublicSubscribeQuerySubscribeCatalog = "/api.public.subscribe.v1.PublicSubscribe/QuerySubscribeCatalog"
 const OperationPublicSubscribeQuerySubscribeList = "/api.public.subscribe.v1.PublicSubscribe/QuerySubscribeList"
 const OperationPublicSubscribeQueryUserSubscribeNodeList = "/api.public.subscribe.v1.PublicSubscribe/QueryUserSubscribeNodeList"
 
 type PublicSubscribeHTTPServer interface {
+	QuerySubscribeCatalog(context.Context, *QuerySubscribeCatalogRequest) (*QuerySubscribeCatalogReply, error)
 	QuerySubscribeList(context.Context, *QuerySubscribeListRequest) (*QuerySubscribeListReply, error)
 	QueryUserSubscribeNodeList(context.Context, *QueryUserSubscribeNodeListRequest) (*QueryUserSubscribeNodeListReply, error)
 }
@@ -30,6 +32,7 @@ type PublicSubscribeHTTPServer interface {
 func RegisterPublicSubscribeHTTPServer(s *http.Server, srv PublicSubscribeHTTPServer) {
 	r := s.Route("/")
 	r.GET("/v1/public/subscribe/list", _PublicSubscribe_QuerySubscribeList0_HTTP_Handler(srv))
+	r.GET("/v1/public/subscribe/catalog", _PublicSubscribe_QuerySubscribeCatalog0_HTTP_Handler(srv))
 	r.GET("/v1/public/subscribe/node/list", _PublicSubscribe_QueryUserSubscribeNodeList0_HTTP_Handler(srv))
 }
 
@@ -48,6 +51,25 @@ func _PublicSubscribe_QuerySubscribeList0_HTTP_Handler(srv PublicSubscribeHTTPSe
 			return err
 		}
 		reply := out.(*QuerySubscribeListReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _PublicSubscribe_QuerySubscribeCatalog0_HTTP_Handler(srv PublicSubscribeHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in QuerySubscribeCatalogRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationPublicSubscribeQuerySubscribeCatalog)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.QuerySubscribeCatalog(ctx, req.(*QuerySubscribeCatalogRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*QuerySubscribeCatalogReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -72,6 +94,7 @@ func _PublicSubscribe_QueryUserSubscribeNodeList0_HTTP_Handler(srv PublicSubscri
 }
 
 type PublicSubscribeHTTPClient interface {
+	QuerySubscribeCatalog(ctx context.Context, req *QuerySubscribeCatalogRequest, opts ...http.CallOption) (rsp *QuerySubscribeCatalogReply, err error)
 	QuerySubscribeList(ctx context.Context, req *QuerySubscribeListRequest, opts ...http.CallOption) (rsp *QuerySubscribeListReply, err error)
 	QueryUserSubscribeNodeList(ctx context.Context, req *QueryUserSubscribeNodeListRequest, opts ...http.CallOption) (rsp *QueryUserSubscribeNodeListReply, err error)
 }
@@ -82,6 +105,19 @@ type PublicSubscribeHTTPClientImpl struct {
 
 func NewPublicSubscribeHTTPClient(client *http.Client) PublicSubscribeHTTPClient {
 	return &PublicSubscribeHTTPClientImpl{client}
+}
+
+func (c *PublicSubscribeHTTPClientImpl) QuerySubscribeCatalog(ctx context.Context, in *QuerySubscribeCatalogRequest, opts ...http.CallOption) (*QuerySubscribeCatalogReply, error) {
+	var out QuerySubscribeCatalogReply
+	pattern := "/v1/public/subscribe/catalog"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationPublicSubscribeQuerySubscribeCatalog))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *PublicSubscribeHTTPClientImpl) QuerySubscribeList(ctx context.Context, in *QuerySubscribeListRequest, opts ...http.CallOption) (*QuerySubscribeListReply, error) {

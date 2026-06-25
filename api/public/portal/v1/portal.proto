@@ -16,6 +16,12 @@ service Portal {
     };
   }
 
+  rpc GetSubscriptionCatalog(GetSubscriptionCatalogRequest) returns (GetSubscriptionCatalogReply) {
+    option (google.api.http) = {
+      get: "/v1/public/portal/subscribe/catalog"
+    };
+  }
+
   rpc PrePurchaseOrder(PrePurchaseOrderRequest) returns (PrePurchaseOrderReply) {
     option (google.api.http) = {
       post: "/v1/public/portal/pre"
@@ -52,6 +58,7 @@ service Portal {
 
 message GetSubscriptionRequest {
   optional string language = 1;
+  int64 category_id = 2;
 }
 
 message GetSubscriptionReply {
@@ -72,6 +79,8 @@ message SubscribeInfo {
   int32 speed_limit = 11;
   int32 device_limit = 12;
   int32 quota = 13;
+  int64 category_id = 29;
+  string category_name = 30;
   repeated int64 nodes = 14;
   repeated string node_tags = 15;
   repeated int64 node_group_ids = 16;
@@ -87,6 +96,28 @@ message SubscribeInfo {
   bool show_original_price = 26;
   int64 created_at = 27;
   int64 updated_at = 28;
+}
+
+message SubscribeCategory {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string name = 3;
+  string description = 4;
+  string language = 5;
+  bool show = 6;
+  int32 sort = 7;
+  repeated SubscribeInfo list = 8;
+  repeated SubscribeCategory children = 9;
+}
+
+message GetSubscriptionCatalogRequest {
+  optional string language = 1;
+}
+
+message GetSubscriptionCatalogReply {
+  repeated SubscribeCategory categories = 1;
+  repeated SubscribeInfo uncategorized = 2;
+  int32 total = 3;
 }
 
 message SubscribeDiscount {
@@ -186,5 +217,4 @@ message QueryPurchaseOrderReply {
   int64 created_at = 12;
   string token = 13;
 }
-
 

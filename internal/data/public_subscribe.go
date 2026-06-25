@@ -12,6 +12,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyserver"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyservergroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
+	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribecategory"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysystem"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyusersubscribe"
 	subscribeBiz "github.com/npanel-dev/NPanel-backend/internal/biz/public/subscribe"
@@ -41,7 +42,7 @@ func NewPublicSubscribeRepo(data *Data, logger log.Logger) subscribeBiz.Subscrib
 }
 
 // QuerySubscribeList 查询订阅列表
-func (r *publicSubscribeRepo) QuerySubscribeList(ctx context.Context, language string) ([]*subscribeBiz.Subscribe, int32, error) {
+func (r *publicSubscribeRepo) QuerySubscribeList(ctx context.Context, language string, categoryID int64) ([]*subscribeBiz.Subscribe, int32, error) {
 	// 查询条件: sell=true
 	query := r.data.db.ProxySubscribe.Query().
 		Where(
@@ -60,6 +61,10 @@ func (r *publicSubscribeRepo) QuerySubscribeList(ctx context.Context, language s
 		query = query.Where(proxysubscribe.Language(""))
 	}
 
+	if categoryID > 0 {
+		query = query.Where(proxysubscribe.CategoryIDEQ(categoryID))
+	}
+
 	// 查询
 	subscribes, err := query.Order(ent.Asc(proxysubscribe.FieldSort)).All(ctx)
 	if err != nil {
@@ -69,6 +74,7 @@ func (r *publicSubscribeRepo) QuerySubscribeList(ctx context.Context, language s
 
 	total := int32(len(subscribes))
 	result := make([]*subscribeBiz.Subscribe, 0, len(subscribes))
+	categoryNames := r.publicSubscribeCategoryNames(ctx, subscribes)
 
 	for _, s := range subscribes {
 		// 处理Description（指针类型）
@@ -138,6 +144,8 @@ func (r *publicSubscribeRepo) QuerySubscribeList(ctx context.Context, language s
 			SpeedLimit:        int64(s.SpeedLimit),
 			DeviceLimit:       int64(s.DeviceLimit),
 			Quota:             int64(s.Quota),
+			CategoryID:        s.CategoryID,
+			CategoryName:      categoryNames[s.CategoryID],
 			Nodes:             nodes,
 			NodeTags:          nodeTags,
 			NodeGroupIds:      append([]int64{}, s.NodeGroupIds...),
@@ -167,6 +175,101 @@ func (r *publicSubscribeRepo) QuerySubscribeList(ctx context.Context, language s
 	}
 
 	return result, total, nil
+}
+
+func (r *publicSubscribeRepo) QuerySubscribeCatalog(ctx context.Context, language string) (*subscribeBiz.SubscribeCatalog, error) {
+	subscribes, total, err := r.QuerySubscribeList(ctx, language, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	categoryQuery := r.data.db.ProxySubscribeCategory.Query().
+		Where(proxysubscribecategory.ShowEQ(true))
+	if language != "" {
+		categoryQuery = categoryQuery.Where(
+			proxysubscribecategory.Or(
+				proxysubscribecategory.LanguageEQ(language),
+				proxysubscribecategory.LanguageEQ(""),
+			),
+		)
+	} else {
+		categoryQuery = categoryQuery.Where(proxysubscribecategory.LanguageEQ(""))
+	}
+	categories, err := categoryQuery.
+		Order(ent.Asc(proxysubscribecategory.FieldSort), ent.Asc(proxysubscribecategory.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, responsecode.NewKratosError(responsecode.ErrDatabaseQuery)
+	}
+
+	categoryMap := make(map[int64]*subscribeBiz.SubscribeCategory, len(categories))
+	roots := make([]*subscribeBiz.SubscribeCategory, 0)
+	for _, category := range categories {
+		item := &subscribeBiz.SubscribeCategory{
+			ID:          category.ID,
+			ParentID:    category.ParentID,
+			Name:        category.Name,
+			Description: stringValue(category.Description),
+			Language:    category.Language,
+			Show:        category.Show,
+			Sort:        int64(category.Sort),
+		}
+		categoryMap[category.ID] = item
+	}
+	for _, category := range categories {
+		item := categoryMap[category.ID]
+		if item.ParentID > 0 {
+			if parent := categoryMap[item.ParentID]; parent != nil {
+				parent.Children = append(parent.Children, item)
+				continue
+			}
+		}
+		roots = append(roots, item)
+	}
+
+	uncategorized := make([]*subscribeBiz.Subscribe, 0)
+	for _, sub := range subscribes {
+		if sub.CategoryID > 0 {
+			if category := categoryMap[sub.CategoryID]; category != nil {
+				category.List = append(category.List, sub)
+				continue
+			}
+		}
+		uncategorized = append(uncategorized, sub)
+	}
+
+	return &subscribeBiz.SubscribeCatalog{
+		Categories:    roots,
+		Uncategorized: uncategorized,
+		Total:         total,
+	}, nil
+}
+
+func (r *publicSubscribeRepo) publicSubscribeCategoryNames(ctx context.Context, subscribes []*ent.ProxySubscribe) map[int64]string {
+	ids := make(map[int64]struct{})
+	for _, sub := range subscribes {
+		if sub != nil && sub.CategoryID > 0 {
+			ids[sub.CategoryID] = struct{}{}
+		}
+	}
+	if len(ids) == 0 {
+		return map[int64]string{}
+	}
+	idList := make([]int64, 0, len(ids))
+	for id := range ids {
+		idList = append(idList, id)
+	}
+	categories, err := r.data.db.ProxySubscribeCategory.Query().
+		Where(proxysubscribecategory.IDIn(idList...)).
+		All(ctx)
+	if err != nil {
+		return map[int64]string{}
+	}
+	result := make(map[int64]string, len(categories))
+	for _, category := range categories {
+		result[category.ID] = category.Name
+	}
+	return result
 }
 
 func (r *publicSubscribeRepo) QueryUserSubscribeNodeList(ctx context.Context, userID int64) ([]*subscribeBiz.UserSubscribeInfo, error) {

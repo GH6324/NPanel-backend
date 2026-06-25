@@ -37,6 +37,8 @@ const (
 	FieldDeviceLimit = "device_limit"
 	// FieldQuota holds the string denoting the quota field in the database.
 	FieldQuota = "quota"
+	// FieldCategoryID holds the string denoting the category_id field in the database.
+	FieldCategoryID = "category_id"
 	// FieldNodes holds the string denoting the nodes field in the database.
 	FieldNodes = "nodes"
 	// FieldNodeTags holds the string denoting the node_tags field in the database.
@@ -86,6 +88,7 @@ var Columns = []string{
 	FieldSpeedLimit,
 	FieldDeviceLimit,
 	FieldQuota,
+	FieldCategoryID,
 	FieldNodes,
 	FieldNodeTags,
 	FieldNodeGroupIds,
@@ -140,6 +143,8 @@ var (
 	DefaultDeviceLimit int32
 	// DefaultQuota holds the default value on creation for the "quota" field.
 	DefaultQuota int32
+	// DefaultCategoryID holds the default value on creation for the "category_id" field.
+	DefaultCategoryID int64
 	// DefaultNodes holds the default value on creation for the "nodes" field.
 	DefaultNodes string
 	// NodesValidator is a validator for the "nodes" field. It is called by the builders before save.
@@ -242,6 +247,11 @@ func ByDeviceLimit(opts ...sql.OrderTermOption) OrderOption {
 // ByQuota orders the results by the quota field.
 func ByQuota(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldQuota, opts...).ToFunc()
+}
+
+// ByCategoryID orders the results by the category_id field.
+func ByCategoryID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCategoryID, opts...).ToFunc()
 }
 
 // ByNodes orders the results by the nodes field.

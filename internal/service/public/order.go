@@ -178,6 +178,8 @@ func (s *PublicOrderService) convertToProtoOrderDetail(order *publicBiz.OrderDet
 			SpeedLimit:        int32(order.Subscribe.SpeedLimit),
 			DeviceLimit:       int32(order.Subscribe.DeviceLimit),
 			Quota:             int32(order.Subscribe.Quota),
+			CategoryId:        order.Subscribe.CategoryID,
+			CategoryName:      order.Subscribe.CategoryName,
 			Nodes:             convertIntSliceToInt64Slice(order.Subscribe.Nodes),
 			NodeTags:          order.Subscribe.NodeTags,
 			NodeGroupIds:      convertStringSliceToInt64Slice(order.Subscribe.NodeGroupIds),

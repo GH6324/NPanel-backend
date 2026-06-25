@@ -213,6 +213,18 @@ func (f ProxySubscribeApplicationFunc) Mutate(ctx context.Context, m ent.Mutatio
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProxySubscribeApplicationMutation", m)
 }
 
+// The ProxySubscribeCategoryFunc type is an adapter to allow the use of ordinary
+// function as ProxySubscribeCategory mutator.
+type ProxySubscribeCategoryFunc func(context.Context, *ent.ProxySubscribeCategoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProxySubscribeCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProxySubscribeCategoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProxySubscribeCategoryMutation", m)
+}
+
 // The ProxySubscribeGroupFunc type is an adapter to allow the use of ordinary
 // function as ProxySubscribeGroup mutator.
 type ProxySubscribeGroupFunc func(context.Context, *ent.ProxySubscribeGroupMutation) (ent.Value, error)

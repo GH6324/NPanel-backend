@@ -8,11 +8,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/log"
+	"github.com/hibiken/asynq"
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/ent/proxycoupon"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyorder"
 	"github.com/npanel-dev/NPanel-backend/ent/proxypayment"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
+	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribecategory"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyuser"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyuserauthmethod"
 	portalBiz "github.com/npanel-dev/NPanel-backend/internal/biz/public/portal"
@@ -26,9 +30,6 @@ import (
 	"github.com/npanel-dev/NPanel-backend/pkg/payment/epay"
 	"github.com/npanel-dev/NPanel-backend/pkg/payment/stripe"
 	"github.com/npanel-dev/NPanel-backend/pkg/tool"
-	"github.com/go-kratos/kratos/v2/errors"
-	"github.com/go-kratos/kratos/v2/log"
-	"github.com/hibiken/asynq"
 )
 
 // ============================================================================
@@ -73,7 +74,7 @@ func (r *publicPortalRepo) CheckUserExists(ctx context.Context, authType, identi
 // GetSubscribeList 获取订阅列表
 // ⚠️ 包含租户过滤和语言过滤
 // language: 如果不为空，过滤指定语言；如果为空，返回默认语言（language=”）
-func (r *publicPortalRepo) GetSubscribeList(ctx context.Context, language string) ([]*portalBiz.SubscribeInfo, error) {
+func (r *publicPortalRepo) GetSubscribeList(ctx context.Context, language string, categoryID int64) ([]*portalBiz.SubscribeInfo, error) {
 	r.logger.Infof("[GetSubscribeList] language: %s", language)
 
 	// 构建查询条件
@@ -94,6 +95,10 @@ func (r *publicPortalRepo) GetSubscribeList(ctx context.Context, language string
 		query = query.Where(proxysubscribe.LanguageEQ(""))
 	}
 
+	if categoryID > 0 {
+		query = query.Where(proxysubscribe.CategoryIDEQ(categoryID))
+	}
+
 	subscribes, err := query.
 		Order(ent.Asc(proxysubscribe.FieldSort)).
 		All(ctx)
@@ -104,6 +109,7 @@ func (r *publicPortalRepo) GetSubscribeList(ctx context.Context, language string
 	}
 
 	result := make([]*portalBiz.SubscribeInfo, 0, len(subscribes))
+	categoryNames := r.portalSubscribeCategoryNames(ctx, subscribes)
 	for _, sub := range subscribes {
 		// 解析Discount JSON为数组（复刻原项目 getSubscriptionLogic.go line 35-39）
 		var discounts []portalBiz.SubscribeDiscount
@@ -162,6 +168,8 @@ func (r *publicPortalRepo) GetSubscribeList(ctx context.Context, language string
 			SpeedLimit:        int64(sub.SpeedLimit),
 			DeviceLimit:       int64(sub.DeviceLimit),
 			Quota:             int64(sub.Quota),
+			CategoryID:        sub.CategoryID,
+			CategoryName:      categoryNames[sub.CategoryID],
 			Nodes:             nodes,
 			NodeTags:          nodeTags,
 			NodeGroupIds:      tool.Int64SliceToStringSlice(sub.NodeGroupIds),
@@ -181,6 +189,100 @@ func (r *publicPortalRepo) GetSubscribeList(ctx context.Context, language string
 	}
 
 	return result, nil
+}
+
+func (r *publicPortalRepo) GetSubscribeCatalog(ctx context.Context, language string) (*portalBiz.SubscribeCatalog, error) {
+	subscribes, err := r.GetSubscribeList(ctx, language, 0)
+	if err != nil {
+		return nil, err
+	}
+	categoryQuery := r.data.db.ProxySubscribeCategory.Query().
+		Where(proxysubscribecategory.ShowEQ(true))
+	if language != "" {
+		categoryQuery = categoryQuery.Where(
+			proxysubscribecategory.Or(
+				proxysubscribecategory.LanguageEQ(language),
+				proxysubscribecategory.LanguageEQ(""),
+			),
+		)
+	} else {
+		categoryQuery = categoryQuery.Where(proxysubscribecategory.LanguageEQ(""))
+	}
+	categories, err := categoryQuery.
+		Order(ent.Asc(proxysubscribecategory.FieldSort), ent.Asc(proxysubscribecategory.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, errors.InternalServer("DATABASE_ERROR", "查询订阅分类失败")
+	}
+
+	categoryMap := make(map[int64]*portalBiz.SubscribeCategory, len(categories))
+	roots := make([]*portalBiz.SubscribeCategory, 0)
+	for _, category := range categories {
+		item := &portalBiz.SubscribeCategory{
+			ID:          category.ID,
+			ParentID:    category.ParentID,
+			Name:        category.Name,
+			Description: stringValue(category.Description),
+			Language:    category.Language,
+			Show:        category.Show,
+			Sort:        int64(category.Sort),
+		}
+		categoryMap[category.ID] = item
+	}
+	for _, category := range categories {
+		item := categoryMap[category.ID]
+		if item.ParentID > 0 {
+			if parent := categoryMap[item.ParentID]; parent != nil {
+				parent.Children = append(parent.Children, item)
+				continue
+			}
+		}
+		roots = append(roots, item)
+	}
+
+	uncategorized := make([]*portalBiz.SubscribeInfo, 0)
+	for _, sub := range subscribes {
+		if sub.CategoryID > 0 {
+			if category := categoryMap[sub.CategoryID]; category != nil {
+				category.List = append(category.List, sub)
+				continue
+			}
+		}
+		uncategorized = append(uncategorized, sub)
+	}
+
+	return &portalBiz.SubscribeCatalog{
+		Categories:    roots,
+		Uncategorized: uncategorized,
+		Total:         int32(len(subscribes)),
+	}, nil
+}
+
+func (r *publicPortalRepo) portalSubscribeCategoryNames(ctx context.Context, subscribes []*ent.ProxySubscribe) map[int64]string {
+	ids := make(map[int64]struct{})
+	for _, sub := range subscribes {
+		if sub != nil && sub.CategoryID > 0 {
+			ids[sub.CategoryID] = struct{}{}
+		}
+	}
+	if len(ids) == 0 {
+		return map[int64]string{}
+	}
+	idList := make([]int64, 0, len(ids))
+	for id := range ids {
+		idList = append(idList, id)
+	}
+	categories, err := r.data.db.ProxySubscribeCategory.Query().
+		Where(proxysubscribecategory.IDIn(idList...)).
+		All(ctx)
+	if err != nil {
+		return map[int64]string{}
+	}
+	result := make(map[int64]string, len(categories))
+	for _, category := range categories {
+		result[category.ID] = category.Name
+	}
+	return result
 }
 
 // CalculateOrderPrice 计算订单价格（含折扣、优惠券、手续费）
@@ -802,6 +904,14 @@ func (r *publicPortalRepo) CheckOrderStatus(ctx context.Context, orderNo, authTy
 		if subscribeEntity.TrafficLimit != nil {
 			trafficLimit = parsePortalTrafficLimits(*subscribeEntity.TrafficLimit)
 		}
+		categoryName := ""
+		if subscribeEntity.CategoryID > 0 {
+			if category, err := r.data.db.ProxySubscribeCategory.Query().
+				Where(proxysubscribecategory.IDEQ(subscribeEntity.CategoryID)).
+				Only(ctx); err == nil {
+				categoryName = category.Name
+			}
+		}
 
 		subscribe = &portalBiz.SubscribeInfo{
 			ID:                int64(subscribeEntity.ID),
@@ -817,6 +927,8 @@ func (r *publicPortalRepo) CheckOrderStatus(ctx context.Context, orderNo, authTy
 			SpeedLimit:        int64(subscribeEntity.SpeedLimit),
 			DeviceLimit:       int64(subscribeEntity.DeviceLimit),
 			Quota:             int64(subscribeEntity.Quota),
+			CategoryID:        subscribeEntity.CategoryID,
+			CategoryName:      categoryName,
 			Nodes:             nodes,
 			NodeTags:          nodeTags,
 			NodeGroupIds:      tool.Int64SliceToStringSlice(subscribeEntity.NodeGroupIds),

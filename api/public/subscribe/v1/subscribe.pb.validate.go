@@ -59,6 +59,8 @@ func (m *QuerySubscribeListRequest) validate(all bool) error {
 
 	// no validation rules for Language
 
+	// no validation rules for CategoryId
+
 	if len(errors) > 0 {
 		return QuerySubscribeListRequestMultiError(errors)
 	}
@@ -357,6 +359,10 @@ func (m *Subscribe) validate(all bool) error {
 
 	// no validation rules for Quota
 
+	// no validation rules for CategoryId
+
+	// no validation rules for CategoryName
+
 	// no validation rules for NodeGroupId
 
 	for idx, item := range m.GetTrafficLimit() {
@@ -489,6 +495,467 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SubscribeValidationError{}
+
+// Validate checks the field values on SubscribeCategory with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *SubscribeCategory) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubscribeCategory with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SubscribeCategoryMultiError, or nil if none found.
+func (m *SubscribeCategory) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubscribeCategory) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for ParentId
+
+	// no validation rules for Name
+
+	// no validation rules for Description
+
+	// no validation rules for Language
+
+	// no validation rules for Show
+
+	// no validation rules for Sort
+
+	for idx, item := range m.GetList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SubscribeCategoryValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SubscribeCategoryValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SubscribeCategoryValidationError{
+					field:  fmt.Sprintf("List[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetChildren() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SubscribeCategoryValidationError{
+						field:  fmt.Sprintf("Children[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SubscribeCategoryValidationError{
+						field:  fmt.Sprintf("Children[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SubscribeCategoryValidationError{
+					field:  fmt.Sprintf("Children[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return SubscribeCategoryMultiError(errors)
+	}
+
+	return nil
+}
+
+// SubscribeCategoryMultiError is an error wrapping multiple validation errors
+// returned by SubscribeCategory.ValidateAll() if the designated constraints
+// aren't met.
+type SubscribeCategoryMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubscribeCategoryMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubscribeCategoryMultiError) AllErrors() []error { return m }
+
+// SubscribeCategoryValidationError is the validation error returned by
+// SubscribeCategory.Validate if the designated constraints aren't met.
+type SubscribeCategoryValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubscribeCategoryValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubscribeCategoryValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubscribeCategoryValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubscribeCategoryValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubscribeCategoryValidationError) ErrorName() string {
+	return "SubscribeCategoryValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SubscribeCategoryValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubscribeCategory.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubscribeCategoryValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubscribeCategoryValidationError{}
+
+// Validate checks the field values on QuerySubscribeCatalogRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *QuerySubscribeCatalogRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QuerySubscribeCatalogRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// QuerySubscribeCatalogRequestMultiError, or nil if none found.
+func (m *QuerySubscribeCatalogRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QuerySubscribeCatalogRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Language
+
+	if len(errors) > 0 {
+		return QuerySubscribeCatalogRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// QuerySubscribeCatalogRequestMultiError is an error wrapping multiple
+// validation errors returned by QuerySubscribeCatalogRequest.ValidateAll() if
+// the designated constraints aren't met.
+type QuerySubscribeCatalogRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QuerySubscribeCatalogRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QuerySubscribeCatalogRequestMultiError) AllErrors() []error { return m }
+
+// QuerySubscribeCatalogRequestValidationError is the validation error returned
+// by QuerySubscribeCatalogRequest.Validate if the designated constraints
+// aren't met.
+type QuerySubscribeCatalogRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QuerySubscribeCatalogRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QuerySubscribeCatalogRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QuerySubscribeCatalogRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QuerySubscribeCatalogRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QuerySubscribeCatalogRequestValidationError) ErrorName() string {
+	return "QuerySubscribeCatalogRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e QuerySubscribeCatalogRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQuerySubscribeCatalogRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QuerySubscribeCatalogRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QuerySubscribeCatalogRequestValidationError{}
+
+// Validate checks the field values on QuerySubscribeCatalogReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *QuerySubscribeCatalogReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QuerySubscribeCatalogReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// QuerySubscribeCatalogReplyMultiError, or nil if none found.
+func (m *QuerySubscribeCatalogReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QuerySubscribeCatalogReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetCategories() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, QuerySubscribeCatalogReplyValidationError{
+						field:  fmt.Sprintf("Categories[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, QuerySubscribeCatalogReplyValidationError{
+						field:  fmt.Sprintf("Categories[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return QuerySubscribeCatalogReplyValidationError{
+					field:  fmt.Sprintf("Categories[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetUncategorized() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, QuerySubscribeCatalogReplyValidationError{
+						field:  fmt.Sprintf("Uncategorized[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, QuerySubscribeCatalogReplyValidationError{
+						field:  fmt.Sprintf("Uncategorized[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return QuerySubscribeCatalogReplyValidationError{
+					field:  fmt.Sprintf("Uncategorized[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Total
+
+	if len(errors) > 0 {
+		return QuerySubscribeCatalogReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// QuerySubscribeCatalogReplyMultiError is an error wrapping multiple
+// validation errors returned by QuerySubscribeCatalogReply.ValidateAll() if
+// the designated constraints aren't met.
+type QuerySubscribeCatalogReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QuerySubscribeCatalogReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QuerySubscribeCatalogReplyMultiError) AllErrors() []error { return m }
+
+// QuerySubscribeCatalogReplyValidationError is the validation error returned
+// by QuerySubscribeCatalogReply.Validate if the designated constraints aren't met.
+type QuerySubscribeCatalogReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QuerySubscribeCatalogReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QuerySubscribeCatalogReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QuerySubscribeCatalogReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QuerySubscribeCatalogReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QuerySubscribeCatalogReplyValidationError) ErrorName() string {
+	return "QuerySubscribeCatalogReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e QuerySubscribeCatalogReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQuerySubscribeCatalogReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QuerySubscribeCatalogReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QuerySubscribeCatalogReplyValidationError{}
 
 // Validate checks the field values on SubscribeDiscount with the rules defined
 // in the proto definition for this message. If any rules are violated, the

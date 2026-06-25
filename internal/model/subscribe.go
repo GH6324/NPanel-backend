@@ -37,6 +37,7 @@ type Subscribe struct {
 	SpeedLimit        int64
 	DeviceLimit       int64
 	Quota             int64
+	CategoryID        int64
 	Nodes             string // Comma-separated int64 IDs
 	NodeTags          string // Comma-separated tags
 	NodeGroupIDs      []int64
@@ -65,7 +66,26 @@ type SubscribeListParams struct {
 	Language    string
 	Search      string
 	NodeGroupID int64
+	CategoryID  int64
 	IDs         []int64 // For filtering by specific IDs
+}
+
+// SubscribeCategory subscribe product category model.
+type SubscribeCategory struct {
+	ID          int64
+	ParentID    int64
+	Name        string
+	Description string
+	Language    string
+	Show        bool
+	Sort        int64
+}
+
+// SubscribeCategoryListParams subscribe product category query parameters.
+type SubscribeCategoryListParams struct {
+	Language string
+	ParentID *int64
+	Show     *bool
 }
 
 // SubscribeGroup subscribe group model

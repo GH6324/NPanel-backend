@@ -168,6 +168,10 @@ func NewData(c *conf.Data, serverConf *conf.Server, appConf *conf.Application, l
 			}
 		} else {
 			log.NewHelper(logger).Warn("schema_migrations table not found; skipping legacy default data sync for existing database")
+			if err := migrator.EnsureLegacyCompatibilitySchema(bootstrapCtx); err != nil {
+				log.NewHelper(logger).Errorf("failed to ensure legacy compatibility schema: %v", err)
+				return nil, nil, fmt.Errorf("failed to ensure legacy compatibility schema: %w", err)
+			}
 		}
 		if err := migrator.CreateDefaultAdminUser(bootstrapCtx); err != nil {
 			log.NewHelper(logger).Errorf("failed to ensure default admin user: %v", err)

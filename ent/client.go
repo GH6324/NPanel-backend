@@ -32,6 +32,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyservergroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribeapplication"
+	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribecategory"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribegroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysystem"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysystemlog"
@@ -86,6 +87,8 @@ type Client struct {
 	ProxySubscribe *ProxySubscribeClient
 	// ProxySubscribeApplication is the client for interacting with the ProxySubscribeApplication builders.
 	ProxySubscribeApplication *ProxySubscribeApplicationClient
+	// ProxySubscribeCategory is the client for interacting with the ProxySubscribeCategory builders.
+	ProxySubscribeCategory *ProxySubscribeCategoryClient
 	// ProxySubscribeGroup is the client for interacting with the ProxySubscribeGroup builders.
 	ProxySubscribeGroup *ProxySubscribeGroupClient
 	// ProxySystem is the client for interacting with the ProxySystem builders.
@@ -140,6 +143,7 @@ func (c *Client) init() {
 	c.ProxyServerGroup = NewProxyServerGroupClient(c.config)
 	c.ProxySubscribe = NewProxySubscribeClient(c.config)
 	c.ProxySubscribeApplication = NewProxySubscribeApplicationClient(c.config)
+	c.ProxySubscribeCategory = NewProxySubscribeCategoryClient(c.config)
 	c.ProxySubscribeGroup = NewProxySubscribeGroupClient(c.config)
 	c.ProxySystem = NewProxySystemClient(c.config)
 	c.ProxySystemLog = NewProxySystemLogClient(c.config)
@@ -262,6 +266,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ProxyServerGroup:            NewProxyServerGroupClient(cfg),
 		ProxySubscribe:              NewProxySubscribeClient(cfg),
 		ProxySubscribeApplication:   NewProxySubscribeApplicationClient(cfg),
+		ProxySubscribeCategory:      NewProxySubscribeCategoryClient(cfg),
 		ProxySubscribeGroup:         NewProxySubscribeGroupClient(cfg),
 		ProxySystem:                 NewProxySystemClient(cfg),
 		ProxySystemLog:              NewProxySystemLogClient(cfg),
@@ -311,6 +316,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ProxyServerGroup:            NewProxyServerGroupClient(cfg),
 		ProxySubscribe:              NewProxySubscribeClient(cfg),
 		ProxySubscribeApplication:   NewProxySubscribeApplicationClient(cfg),
+		ProxySubscribeCategory:      NewProxySubscribeCategoryClient(cfg),
 		ProxySubscribeGroup:         NewProxySubscribeGroupClient(cfg),
 		ProxySystem:                 NewProxySystemClient(cfg),
 		ProxySystemLog:              NewProxySystemLogClient(cfg),
@@ -357,10 +363,11 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ProxyDocument, c.ProxyGroupHistory, c.ProxyGroupHistoryDetail, c.ProxyNode,
 		c.ProxyOrder, c.ProxyPayment, c.ProxyRedemptionCode, c.ProxyRedemptionRecord,
 		c.ProxySchemaMigrations, c.ProxyServer, c.ProxyServerGroup, c.ProxySubscribe,
-		c.ProxySubscribeApplication, c.ProxySubscribeGroup, c.ProxySystem,
-		c.ProxySystemLog, c.ProxyTask, c.ProxyTicket, c.ProxyTicketFollow,
-		c.ProxyTrafficLog, c.ProxyUser, c.ProxyUserAuthMethod, c.ProxyUserDevice,
-		c.ProxyUserDeviceOnlineRecord, c.ProxyUserSubscribe, c.ProxyUserWithdrawal,
+		c.ProxySubscribeApplication, c.ProxySubscribeCategory, c.ProxySubscribeGroup,
+		c.ProxySystem, c.ProxySystemLog, c.ProxyTask, c.ProxyTicket,
+		c.ProxyTicketFollow, c.ProxyTrafficLog, c.ProxyUser, c.ProxyUserAuthMethod,
+		c.ProxyUserDevice, c.ProxyUserDeviceOnlineRecord, c.ProxyUserSubscribe,
+		c.ProxyUserWithdrawal,
 	} {
 		n.Use(hooks...)
 	}
@@ -374,10 +381,11 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ProxyDocument, c.ProxyGroupHistory, c.ProxyGroupHistoryDetail, c.ProxyNode,
 		c.ProxyOrder, c.ProxyPayment, c.ProxyRedemptionCode, c.ProxyRedemptionRecord,
 		c.ProxySchemaMigrations, c.ProxyServer, c.ProxyServerGroup, c.ProxySubscribe,
-		c.ProxySubscribeApplication, c.ProxySubscribeGroup, c.ProxySystem,
-		c.ProxySystemLog, c.ProxyTask, c.ProxyTicket, c.ProxyTicketFollow,
-		c.ProxyTrafficLog, c.ProxyUser, c.ProxyUserAuthMethod, c.ProxyUserDevice,
-		c.ProxyUserDeviceOnlineRecord, c.ProxyUserSubscribe, c.ProxyUserWithdrawal,
+		c.ProxySubscribeApplication, c.ProxySubscribeCategory, c.ProxySubscribeGroup,
+		c.ProxySystem, c.ProxySystemLog, c.ProxyTask, c.ProxyTicket,
+		c.ProxyTicketFollow, c.ProxyTrafficLog, c.ProxyUser, c.ProxyUserAuthMethod,
+		c.ProxyUserDevice, c.ProxyUserDeviceOnlineRecord, c.ProxyUserSubscribe,
+		c.ProxyUserWithdrawal,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -420,6 +428,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ProxySubscribe.mutate(ctx, m)
 	case *ProxySubscribeApplicationMutation:
 		return c.ProxySubscribeApplication.mutate(ctx, m)
+	case *ProxySubscribeCategoryMutation:
+		return c.ProxySubscribeCategory.mutate(ctx, m)
 	case *ProxySubscribeGroupMutation:
 		return c.ProxySubscribeGroup.mutate(ctx, m)
 	case *ProxySystemMutation:
@@ -2760,6 +2770,139 @@ func (c *ProxySubscribeApplicationClient) mutate(ctx context.Context, m *ProxySu
 	}
 }
 
+// ProxySubscribeCategoryClient is a client for the ProxySubscribeCategory schema.
+type ProxySubscribeCategoryClient struct {
+	config
+}
+
+// NewProxySubscribeCategoryClient returns a client for the ProxySubscribeCategory from the given config.
+func NewProxySubscribeCategoryClient(c config) *ProxySubscribeCategoryClient {
+	return &ProxySubscribeCategoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `proxysubscribecategory.Hooks(f(g(h())))`.
+func (c *ProxySubscribeCategoryClient) Use(hooks ...Hook) {
+	c.hooks.ProxySubscribeCategory = append(c.hooks.ProxySubscribeCategory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `proxysubscribecategory.Intercept(f(g(h())))`.
+func (c *ProxySubscribeCategoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProxySubscribeCategory = append(c.inters.ProxySubscribeCategory, interceptors...)
+}
+
+// Create returns a builder for creating a ProxySubscribeCategory entity.
+func (c *ProxySubscribeCategoryClient) Create() *ProxySubscribeCategoryCreate {
+	mutation := newProxySubscribeCategoryMutation(c.config, OpCreate)
+	return &ProxySubscribeCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProxySubscribeCategory entities.
+func (c *ProxySubscribeCategoryClient) CreateBulk(builders ...*ProxySubscribeCategoryCreate) *ProxySubscribeCategoryCreateBulk {
+	return &ProxySubscribeCategoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProxySubscribeCategoryClient) MapCreateBulk(slice any, setFunc func(*ProxySubscribeCategoryCreate, int)) *ProxySubscribeCategoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProxySubscribeCategoryCreateBulk{err: fmt.Errorf("calling to ProxySubscribeCategoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProxySubscribeCategoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProxySubscribeCategoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProxySubscribeCategory.
+func (c *ProxySubscribeCategoryClient) Update() *ProxySubscribeCategoryUpdate {
+	mutation := newProxySubscribeCategoryMutation(c.config, OpUpdate)
+	return &ProxySubscribeCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProxySubscribeCategoryClient) UpdateOne(_m *ProxySubscribeCategory) *ProxySubscribeCategoryUpdateOne {
+	mutation := newProxySubscribeCategoryMutation(c.config, OpUpdateOne, withProxySubscribeCategory(_m))
+	return &ProxySubscribeCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProxySubscribeCategoryClient) UpdateOneID(id int64) *ProxySubscribeCategoryUpdateOne {
+	mutation := newProxySubscribeCategoryMutation(c.config, OpUpdateOne, withProxySubscribeCategoryID(id))
+	return &ProxySubscribeCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProxySubscribeCategory.
+func (c *ProxySubscribeCategoryClient) Delete() *ProxySubscribeCategoryDelete {
+	mutation := newProxySubscribeCategoryMutation(c.config, OpDelete)
+	return &ProxySubscribeCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProxySubscribeCategoryClient) DeleteOne(_m *ProxySubscribeCategory) *ProxySubscribeCategoryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProxySubscribeCategoryClient) DeleteOneID(id int64) *ProxySubscribeCategoryDeleteOne {
+	builder := c.Delete().Where(proxysubscribecategory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProxySubscribeCategoryDeleteOne{builder}
+}
+
+// Query returns a query builder for ProxySubscribeCategory.
+func (c *ProxySubscribeCategoryClient) Query() *ProxySubscribeCategoryQuery {
+	return &ProxySubscribeCategoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProxySubscribeCategory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProxySubscribeCategory entity by its id.
+func (c *ProxySubscribeCategoryClient) Get(ctx context.Context, id int64) (*ProxySubscribeCategory, error) {
+	return c.Query().Where(proxysubscribecategory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProxySubscribeCategoryClient) GetX(ctx context.Context, id int64) *ProxySubscribeCategory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProxySubscribeCategoryClient) Hooks() []Hook {
+	return c.hooks.ProxySubscribeCategory
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProxySubscribeCategoryClient) Interceptors() []Interceptor {
+	return c.inters.ProxySubscribeCategory
+}
+
+func (c *ProxySubscribeCategoryClient) mutate(ctx context.Context, m *ProxySubscribeCategoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProxySubscribeCategoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProxySubscribeCategoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProxySubscribeCategoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProxySubscribeCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProxySubscribeCategory mutation op: %q", m.Op())
+	}
+}
+
 // ProxySubscribeGroupClient is a client for the ProxySubscribeGroup schema.
 type ProxySubscribeGroupClient struct {
 	config
@@ -4544,19 +4687,20 @@ type (
 		ProxyGroupHistory, ProxyGroupHistoryDetail, ProxyNode, ProxyOrder,
 		ProxyPayment, ProxyRedemptionCode, ProxyRedemptionRecord,
 		ProxySchemaMigrations, ProxyServer, ProxyServerGroup, ProxySubscribe,
-		ProxySubscribeApplication, ProxySubscribeGroup, ProxySystem, ProxySystemLog,
-		ProxyTask, ProxyTicket, ProxyTicketFollow, ProxyTrafficLog, ProxyUser,
-		ProxyUserAuthMethod, ProxyUserDevice, ProxyUserDeviceOnlineRecord,
-		ProxyUserSubscribe, ProxyUserWithdrawal []ent.Hook
+		ProxySubscribeApplication, ProxySubscribeCategory, ProxySubscribeGroup,
+		ProxySystem, ProxySystemLog, ProxyTask, ProxyTicket, ProxyTicketFollow,
+		ProxyTrafficLog, ProxyUser, ProxyUserAuthMethod, ProxyUserDevice,
+		ProxyUserDeviceOnlineRecord, ProxyUserSubscribe, ProxyUserWithdrawal []ent.Hook
 	}
 	inters struct {
 		ProxyAds, ProxyAnnouncement, ProxyAuthMethod, ProxyCoupon, ProxyDocument,
 		ProxyGroupHistory, ProxyGroupHistoryDetail, ProxyNode, ProxyOrder,
 		ProxyPayment, ProxyRedemptionCode, ProxyRedemptionRecord,
 		ProxySchemaMigrations, ProxyServer, ProxyServerGroup, ProxySubscribe,
-		ProxySubscribeApplication, ProxySubscribeGroup, ProxySystem, ProxySystemLog,
-		ProxyTask, ProxyTicket, ProxyTicketFollow, ProxyTrafficLog, ProxyUser,
-		ProxyUserAuthMethod, ProxyUserDevice, ProxyUserDeviceOnlineRecord,
-		ProxyUserSubscribe, ProxyUserWithdrawal []ent.Interceptor
+		ProxySubscribeApplication, ProxySubscribeCategory, ProxySubscribeGroup,
+		ProxySystem, ProxySystemLog, ProxyTask, ProxyTicket, ProxyTicketFollow,
+		ProxyTrafficLog, ProxyUser, ProxyUserAuthMethod, ProxyUserDevice,
+		ProxyUserDeviceOnlineRecord, ProxyUserSubscribe,
+		ProxyUserWithdrawal []ent.Interceptor
 	}
 )

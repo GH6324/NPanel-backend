@@ -55,6 +55,8 @@ func convertPortalSubscribe(item *portalBiz.SubscribeInfo) *v1.SubscribeInfo {
 		SpeedLimit:        int32(item.SpeedLimit),
 		DeviceLimit:       int32(item.DeviceLimit),
 		Quota:             int32(item.Quota),
+		CategoryId:        item.CategoryID,
+		CategoryName:      item.CategoryName,
 		Nodes:             convertIntSliceToInt64Slice(item.Nodes),
 		NodeTags:          item.NodeTags,
 		NodeGroupIds:      convertStringSliceToInt64Slice(item.NodeGroupIds),
@@ -88,7 +90,7 @@ func (s *PortalService) GetSubscription(ctx context.Context, req *v1.GetSubscrip
 		language = *req.Language
 	}
 
-	list, err := s.uc.GetSubscribeList(ctx, language)
+	list, err := s.uc.GetSubscribeList(ctx, language, req.CategoryId)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +101,55 @@ func (s *PortalService) GetSubscription(ctx context.Context, req *v1.GetSubscrip
 	}
 
 	return &v1.GetSubscriptionReply{List: items}, nil
+}
+
+func (s *PortalService) GetSubscriptionCatalog(ctx context.Context, req *v1.GetSubscriptionCatalogRequest) (*v1.GetSubscriptionCatalogReply, error) {
+	language := ""
+	if req.Language != nil {
+		language = *req.Language
+	}
+	catalog, err := s.uc.GetSubscribeCatalog(ctx, language)
+	if err != nil {
+		return nil, err
+	}
+	categories := make([]*v1.SubscribeCategory, 0, len(catalog.Categories))
+	for _, category := range catalog.Categories {
+		categories = append(categories, convertPortalSubscribeCategory(category))
+	}
+	uncategorized := make([]*v1.SubscribeInfo, 0, len(catalog.Uncategorized))
+	for _, item := range catalog.Uncategorized {
+		uncategorized = append(uncategorized, convertPortalSubscribe(item))
+	}
+	return &v1.GetSubscriptionCatalogReply{
+		Categories:    categories,
+		Uncategorized: uncategorized,
+		Total:         catalog.Total,
+	}, nil
+}
+
+func convertPortalSubscribeCategory(category *portalBiz.SubscribeCategory) *v1.SubscribeCategory {
+	if category == nil {
+		return nil
+	}
+	list := make([]*v1.SubscribeInfo, 0, len(category.List))
+	for _, item := range category.List {
+		list = append(list, convertPortalSubscribe(item))
+	}
+	children := make([]*v1.SubscribeCategory, 0, len(category.Children))
+	for _, child := range category.Children {
+		children = append(children, convertPortalSubscribeCategory(child))
+	}
+	return &v1.SubscribeCategory{
+		Id:          category.ID,
+		ParentId:    category.ParentID,
+		Name:        category.Name,
+		Description: category.Description,
+		Language:    category.Language,
+		Show:        category.Show,
+		Sort:        int32(category.Sort),
+		List:        list,
+		Children:    children,
+	}
 }
 
 func (s *PortalService) PrePurchaseOrder(ctx context.Context, req *v1.PrePurchaseOrderRequest) (*v1.PrePurchaseOrderReply, error) {

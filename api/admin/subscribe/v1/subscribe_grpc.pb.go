@@ -19,19 +19,24 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Subscribe_CreateSubscribe_FullMethodName           = "/api.admin.subscribe.v1.Subscribe/CreateSubscribe"
-	Subscribe_UpdateSubscribe_FullMethodName           = "/api.admin.subscribe.v1.Subscribe/UpdateSubscribe"
-	Subscribe_DeleteSubscribe_FullMethodName           = "/api.admin.subscribe.v1.Subscribe/DeleteSubscribe"
-	Subscribe_BatchDeleteSubscribe_FullMethodName      = "/api.admin.subscribe.v1.Subscribe/BatchDeleteSubscribe"
-	Subscribe_GetSubscribeDetails_FullMethodName       = "/api.admin.subscribe.v1.Subscribe/GetSubscribeDetails"
-	Subscribe_GetSubscribeList_FullMethodName          = "/api.admin.subscribe.v1.Subscribe/GetSubscribeList"
-	Subscribe_SubscribeSort_FullMethodName             = "/api.admin.subscribe.v1.Subscribe/SubscribeSort"
-	Subscribe_CreateSubscribeGroup_FullMethodName      = "/api.admin.subscribe.v1.Subscribe/CreateSubscribeGroup"
-	Subscribe_UpdateSubscribeGroup_FullMethodName      = "/api.admin.subscribe.v1.Subscribe/UpdateSubscribeGroup"
-	Subscribe_DeleteSubscribeGroup_FullMethodName      = "/api.admin.subscribe.v1.Subscribe/DeleteSubscribeGroup"
-	Subscribe_BatchDeleteSubscribeGroup_FullMethodName = "/api.admin.subscribe.v1.Subscribe/BatchDeleteSubscribeGroup"
-	Subscribe_GetSubscribeGroupList_FullMethodName     = "/api.admin.subscribe.v1.Subscribe/GetSubscribeGroupList"
-	Subscribe_ResetAllSubscribeToken_FullMethodName    = "/api.admin.subscribe.v1.Subscribe/ResetAllSubscribeToken"
+	Subscribe_CreateSubscribe_FullMethodName              = "/api.admin.subscribe.v1.Subscribe/CreateSubscribe"
+	Subscribe_UpdateSubscribe_FullMethodName              = "/api.admin.subscribe.v1.Subscribe/UpdateSubscribe"
+	Subscribe_DeleteSubscribe_FullMethodName              = "/api.admin.subscribe.v1.Subscribe/DeleteSubscribe"
+	Subscribe_BatchDeleteSubscribe_FullMethodName         = "/api.admin.subscribe.v1.Subscribe/BatchDeleteSubscribe"
+	Subscribe_GetSubscribeDetails_FullMethodName          = "/api.admin.subscribe.v1.Subscribe/GetSubscribeDetails"
+	Subscribe_GetSubscribeList_FullMethodName             = "/api.admin.subscribe.v1.Subscribe/GetSubscribeList"
+	Subscribe_SubscribeSort_FullMethodName                = "/api.admin.subscribe.v1.Subscribe/SubscribeSort"
+	Subscribe_CreateSubscribeCategory_FullMethodName      = "/api.admin.subscribe.v1.Subscribe/CreateSubscribeCategory"
+	Subscribe_UpdateSubscribeCategory_FullMethodName      = "/api.admin.subscribe.v1.Subscribe/UpdateSubscribeCategory"
+	Subscribe_DeleteSubscribeCategory_FullMethodName      = "/api.admin.subscribe.v1.Subscribe/DeleteSubscribeCategory"
+	Subscribe_BatchDeleteSubscribeCategory_FullMethodName = "/api.admin.subscribe.v1.Subscribe/BatchDeleteSubscribeCategory"
+	Subscribe_GetSubscribeCategoryList_FullMethodName     = "/api.admin.subscribe.v1.Subscribe/GetSubscribeCategoryList"
+	Subscribe_CreateSubscribeGroup_FullMethodName         = "/api.admin.subscribe.v1.Subscribe/CreateSubscribeGroup"
+	Subscribe_UpdateSubscribeGroup_FullMethodName         = "/api.admin.subscribe.v1.Subscribe/UpdateSubscribeGroup"
+	Subscribe_DeleteSubscribeGroup_FullMethodName         = "/api.admin.subscribe.v1.Subscribe/DeleteSubscribeGroup"
+	Subscribe_BatchDeleteSubscribeGroup_FullMethodName    = "/api.admin.subscribe.v1.Subscribe/BatchDeleteSubscribeGroup"
+	Subscribe_GetSubscribeGroupList_FullMethodName        = "/api.admin.subscribe.v1.Subscribe/GetSubscribeGroupList"
+	Subscribe_ResetAllSubscribeToken_FullMethodName       = "/api.admin.subscribe.v1.Subscribe/ResetAllSubscribeToken"
 )
 
 // SubscribeClient is the client API for Subscribe service.
@@ -52,6 +57,16 @@ type SubscribeClient interface {
 	GetSubscribeList(ctx context.Context, in *GetSubscribeListRequest, opts ...grpc.CallOption) (*GetSubscribeListReply, error)
 	// SubscribeSort 订阅套餐排序
 	SubscribeSort(ctx context.Context, in *SubscribeSortRequest, opts ...grpc.CallOption) (*SubscribeSortReply, error)
+	// CreateSubscribeCategory 创建商品分类
+	CreateSubscribeCategory(ctx context.Context, in *CreateSubscribeCategoryRequest, opts ...grpc.CallOption) (*CreateSubscribeCategoryReply, error)
+	// UpdateSubscribeCategory 更新商品分类
+	UpdateSubscribeCategory(ctx context.Context, in *UpdateSubscribeCategoryRequest, opts ...grpc.CallOption) (*UpdateSubscribeCategoryReply, error)
+	// DeleteSubscribeCategory 删除商品分类
+	DeleteSubscribeCategory(ctx context.Context, in *DeleteSubscribeCategoryRequest, opts ...grpc.CallOption) (*DeleteSubscribeCategoryReply, error)
+	// BatchDeleteSubscribeCategory 批量删除商品分类
+	BatchDeleteSubscribeCategory(ctx context.Context, in *BatchDeleteSubscribeCategoryRequest, opts ...grpc.CallOption) (*BatchDeleteSubscribeCategoryReply, error)
+	// GetSubscribeCategoryList 获取商品分类列表
+	GetSubscribeCategoryList(ctx context.Context, in *GetSubscribeCategoryListRequest, opts ...grpc.CallOption) (*GetSubscribeCategoryListReply, error)
 	// CreateSubscribeGroup 创建订阅组
 	CreateSubscribeGroup(ctx context.Context, in *CreateSubscribeGroupRequest, opts ...grpc.CallOption) (*CreateSubscribeGroupReply, error)
 	// UpdateSubscribeGroup 更新订阅组
@@ -144,6 +159,56 @@ func (c *subscribeClient) SubscribeSort(ctx context.Context, in *SubscribeSortRe
 	return out, nil
 }
 
+func (c *subscribeClient) CreateSubscribeCategory(ctx context.Context, in *CreateSubscribeCategoryRequest, opts ...grpc.CallOption) (*CreateSubscribeCategoryReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateSubscribeCategoryReply)
+	err := c.cc.Invoke(ctx, Subscribe_CreateSubscribeCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *subscribeClient) UpdateSubscribeCategory(ctx context.Context, in *UpdateSubscribeCategoryRequest, opts ...grpc.CallOption) (*UpdateSubscribeCategoryReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateSubscribeCategoryReply)
+	err := c.cc.Invoke(ctx, Subscribe_UpdateSubscribeCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *subscribeClient) DeleteSubscribeCategory(ctx context.Context, in *DeleteSubscribeCategoryRequest, opts ...grpc.CallOption) (*DeleteSubscribeCategoryReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteSubscribeCategoryReply)
+	err := c.cc.Invoke(ctx, Subscribe_DeleteSubscribeCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *subscribeClient) BatchDeleteSubscribeCategory(ctx context.Context, in *BatchDeleteSubscribeCategoryRequest, opts ...grpc.CallOption) (*BatchDeleteSubscribeCategoryReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BatchDeleteSubscribeCategoryReply)
+	err := c.cc.Invoke(ctx, Subscribe_BatchDeleteSubscribeCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *subscribeClient) GetSubscribeCategoryList(ctx context.Context, in *GetSubscribeCategoryListRequest, opts ...grpc.CallOption) (*GetSubscribeCategoryListReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSubscribeCategoryListReply)
+	err := c.cc.Invoke(ctx, Subscribe_GetSubscribeCategoryList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *subscribeClient) CreateSubscribeGroup(ctx context.Context, in *CreateSubscribeGroupRequest, opts ...grpc.CallOption) (*CreateSubscribeGroupReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateSubscribeGroupReply)
@@ -222,6 +287,16 @@ type SubscribeServer interface {
 	GetSubscribeList(context.Context, *GetSubscribeListRequest) (*GetSubscribeListReply, error)
 	// SubscribeSort 订阅套餐排序
 	SubscribeSort(context.Context, *SubscribeSortRequest) (*SubscribeSortReply, error)
+	// CreateSubscribeCategory 创建商品分类
+	CreateSubscribeCategory(context.Context, *CreateSubscribeCategoryRequest) (*CreateSubscribeCategoryReply, error)
+	// UpdateSubscribeCategory 更新商品分类
+	UpdateSubscribeCategory(context.Context, *UpdateSubscribeCategoryRequest) (*UpdateSubscribeCategoryReply, error)
+	// DeleteSubscribeCategory 删除商品分类
+	DeleteSubscribeCategory(context.Context, *DeleteSubscribeCategoryRequest) (*DeleteSubscribeCategoryReply, error)
+	// BatchDeleteSubscribeCategory 批量删除商品分类
+	BatchDeleteSubscribeCategory(context.Context, *BatchDeleteSubscribeCategoryRequest) (*BatchDeleteSubscribeCategoryReply, error)
+	// GetSubscribeCategoryList 获取商品分类列表
+	GetSubscribeCategoryList(context.Context, *GetSubscribeCategoryListRequest) (*GetSubscribeCategoryListReply, error)
 	// CreateSubscribeGroup 创建订阅组
 	CreateSubscribeGroup(context.Context, *CreateSubscribeGroupRequest) (*CreateSubscribeGroupReply, error)
 	// UpdateSubscribeGroup 更新订阅组
@@ -264,6 +339,21 @@ func (UnimplementedSubscribeServer) GetSubscribeList(context.Context, *GetSubscr
 }
 func (UnimplementedSubscribeServer) SubscribeSort(context.Context, *SubscribeSortRequest) (*SubscribeSortReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubscribeSort not implemented")
+}
+func (UnimplementedSubscribeServer) CreateSubscribeCategory(context.Context, *CreateSubscribeCategoryRequest) (*CreateSubscribeCategoryReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSubscribeCategory not implemented")
+}
+func (UnimplementedSubscribeServer) UpdateSubscribeCategory(context.Context, *UpdateSubscribeCategoryRequest) (*UpdateSubscribeCategoryReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubscribeCategory not implemented")
+}
+func (UnimplementedSubscribeServer) DeleteSubscribeCategory(context.Context, *DeleteSubscribeCategoryRequest) (*DeleteSubscribeCategoryReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSubscribeCategory not implemented")
+}
+func (UnimplementedSubscribeServer) BatchDeleteSubscribeCategory(context.Context, *BatchDeleteSubscribeCategoryRequest) (*BatchDeleteSubscribeCategoryReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteSubscribeCategory not implemented")
+}
+func (UnimplementedSubscribeServer) GetSubscribeCategoryList(context.Context, *GetSubscribeCategoryListRequest) (*GetSubscribeCategoryListReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubscribeCategoryList not implemented")
 }
 func (UnimplementedSubscribeServer) CreateSubscribeGroup(context.Context, *CreateSubscribeGroupRequest) (*CreateSubscribeGroupReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSubscribeGroup not implemented")
@@ -430,6 +520,96 @@ func _Subscribe_SubscribeSort_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Subscribe_CreateSubscribeCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSubscribeCategoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubscribeServer).CreateSubscribeCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Subscribe_CreateSubscribeCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubscribeServer).CreateSubscribeCategory(ctx, req.(*CreateSubscribeCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Subscribe_UpdateSubscribeCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateSubscribeCategoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubscribeServer).UpdateSubscribeCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Subscribe_UpdateSubscribeCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubscribeServer).UpdateSubscribeCategory(ctx, req.(*UpdateSubscribeCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Subscribe_DeleteSubscribeCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSubscribeCategoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubscribeServer).DeleteSubscribeCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Subscribe_DeleteSubscribeCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubscribeServer).DeleteSubscribeCategory(ctx, req.(*DeleteSubscribeCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Subscribe_BatchDeleteSubscribeCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteSubscribeCategoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubscribeServer).BatchDeleteSubscribeCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Subscribe_BatchDeleteSubscribeCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubscribeServer).BatchDeleteSubscribeCategory(ctx, req.(*BatchDeleteSubscribeCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Subscribe_GetSubscribeCategoryList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSubscribeCategoryListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubscribeServer).GetSubscribeCategoryList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Subscribe_GetSubscribeCategoryList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubscribeServer).GetSubscribeCategoryList(ctx, req.(*GetSubscribeCategoryListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Subscribe_CreateSubscribeGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateSubscribeGroupRequest)
 	if err := dec(in); err != nil {
@@ -572,6 +752,26 @@ var Subscribe_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SubscribeSort",
 			Handler:    _Subscribe_SubscribeSort_Handler,
+		},
+		{
+			MethodName: "CreateSubscribeCategory",
+			Handler:    _Subscribe_CreateSubscribeCategory_Handler,
+		},
+		{
+			MethodName: "UpdateSubscribeCategory",
+			Handler:    _Subscribe_UpdateSubscribeCategory_Handler,
+		},
+		{
+			MethodName: "DeleteSubscribeCategory",
+			Handler:    _Subscribe_DeleteSubscribeCategory_Handler,
+		},
+		{
+			MethodName: "BatchDeleteSubscribeCategory",
+			Handler:    _Subscribe_BatchDeleteSubscribeCategory_Handler,
+		},
+		{
+			MethodName: "GetSubscribeCategoryList",
+			Handler:    _Subscribe_GetSubscribeCategoryList_Handler,
 		},
 		{
 			MethodName: "CreateSubscribeGroup",

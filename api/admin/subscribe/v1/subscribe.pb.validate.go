@@ -328,6 +328,10 @@ func (m *SubscribeInfo) validate(all bool) error {
 
 	// no validation rules for Quota
 
+	// no validation rules for CategoryId
+
+	// no validation rules for CategoryName
+
 	// no validation rules for NodeGroupId
 
 	for idx, item := range m.GetTrafficLimit() {
@@ -542,6 +546,10 @@ func (m *SubscribeItem) validate(all bool) error {
 
 	// no validation rules for Quota
 
+	// no validation rules for CategoryId
+
+	// no validation rules for CategoryName
+
 	// no validation rules for NodeGroupId
 
 	for idx, item := range m.GetTrafficLimit() {
@@ -755,6 +763,8 @@ func (m *CreateSubscribeRequest) validate(all bool) error {
 	// no validation rules for DeviceLimit
 
 	// no validation rules for Quota
+
+	// no validation rules for CategoryId
 
 	// no validation rules for NodeGroupId
 
@@ -1216,6 +1226,8 @@ func (m *UpdateSubscribeRequest) validate(all bool) error {
 	// no validation rules for DeviceLimit
 
 	// no validation rules for Quota
+
+	// no validation rules for CategoryId
 
 	// no validation rules for NodeGroupId
 
@@ -2683,6 +2695,8 @@ func (m *GetSubscribeListRequest) validate(all bool) error {
 
 	// no validation rules for NodeGroupId
 
+	// no validation rules for CategoryId
+
 	if len(errors) > 0 {
 		return GetSubscribeListRequestMultiError(errors)
 	}
@@ -3513,6 +3527,1928 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SubscribeSortReplyValidationError{}
+
+// Validate checks the field values on SubscribeCategoryInfo with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SubscribeCategoryInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubscribeCategoryInfo with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SubscribeCategoryInfoMultiError, or nil if none found.
+func (m *SubscribeCategoryInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubscribeCategoryInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for ParentId
+
+	// no validation rules for Name
+
+	// no validation rules for Description
+
+	// no validation rules for Language
+
+	// no validation rules for Show
+
+	// no validation rules for Sort
+
+	// no validation rules for CreatedAt
+
+	// no validation rules for UpdatedAt
+
+	if len(errors) > 0 {
+		return SubscribeCategoryInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// SubscribeCategoryInfoMultiError is an error wrapping multiple validation
+// errors returned by SubscribeCategoryInfo.ValidateAll() if the designated
+// constraints aren't met.
+type SubscribeCategoryInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubscribeCategoryInfoMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubscribeCategoryInfoMultiError) AllErrors() []error { return m }
+
+// SubscribeCategoryInfoValidationError is the validation error returned by
+// SubscribeCategoryInfo.Validate if the designated constraints aren't met.
+type SubscribeCategoryInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubscribeCategoryInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubscribeCategoryInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubscribeCategoryInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubscribeCategoryInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubscribeCategoryInfoValidationError) ErrorName() string {
+	return "SubscribeCategoryInfoValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SubscribeCategoryInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubscribeCategoryInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubscribeCategoryInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubscribeCategoryInfoValidationError{}
+
+// Validate checks the field values on CreateSubscribeCategoryRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateSubscribeCategoryRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateSubscribeCategoryRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// CreateSubscribeCategoryRequestMultiError, or nil if none found.
+func (m *CreateSubscribeCategoryRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateSubscribeCategoryRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ParentId
+
+	// no validation rules for Name
+
+	// no validation rules for Description
+
+	// no validation rules for Language
+
+	// no validation rules for Sort
+
+	if m.Show != nil {
+		// no validation rules for Show
+	}
+
+	if len(errors) > 0 {
+		return CreateSubscribeCategoryRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateSubscribeCategoryRequestMultiError is an error wrapping multiple
+// validation errors returned by CreateSubscribeCategoryRequest.ValidateAll()
+// if the designated constraints aren't met.
+type CreateSubscribeCategoryRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateSubscribeCategoryRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateSubscribeCategoryRequestMultiError) AllErrors() []error { return m }
+
+// CreateSubscribeCategoryRequestValidationError is the validation error
+// returned by CreateSubscribeCategoryRequest.Validate if the designated
+// constraints aren't met.
+type CreateSubscribeCategoryRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateSubscribeCategoryRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateSubscribeCategoryRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateSubscribeCategoryRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateSubscribeCategoryRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateSubscribeCategoryRequestValidationError) ErrorName() string {
+	return "CreateSubscribeCategoryRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateSubscribeCategoryRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateSubscribeCategoryRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateSubscribeCategoryRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateSubscribeCategoryRequestValidationError{}
+
+// Validate checks the field values on CreateSubscribeCategoryData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateSubscribeCategoryData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateSubscribeCategoryData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateSubscribeCategoryDataMultiError, or nil if none found.
+func (m *CreateSubscribeCategoryData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateSubscribeCategoryData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Success
+
+	if len(errors) > 0 {
+		return CreateSubscribeCategoryDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateSubscribeCategoryDataMultiError is an error wrapping multiple
+// validation errors returned by CreateSubscribeCategoryData.ValidateAll() if
+// the designated constraints aren't met.
+type CreateSubscribeCategoryDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateSubscribeCategoryDataMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateSubscribeCategoryDataMultiError) AllErrors() []error { return m }
+
+// CreateSubscribeCategoryDataValidationError is the validation error returned
+// by CreateSubscribeCategoryData.Validate if the designated constraints
+// aren't met.
+type CreateSubscribeCategoryDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateSubscribeCategoryDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateSubscribeCategoryDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateSubscribeCategoryDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateSubscribeCategoryDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateSubscribeCategoryDataValidationError) ErrorName() string {
+	return "CreateSubscribeCategoryDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateSubscribeCategoryDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateSubscribeCategoryData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateSubscribeCategoryDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateSubscribeCategoryDataValidationError{}
+
+// Validate checks the field values on CreateSubscribeCategoryReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateSubscribeCategoryReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateSubscribeCategoryReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateSubscribeCategoryReplyMultiError, or nil if none found.
+func (m *CreateSubscribeCategoryReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateSubscribeCategoryReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateSubscribeCategoryReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateSubscribeCategoryReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateSubscribeCategoryReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateSubscribeCategoryReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateSubscribeCategoryReplyMultiError is an error wrapping multiple
+// validation errors returned by CreateSubscribeCategoryReply.ValidateAll() if
+// the designated constraints aren't met.
+type CreateSubscribeCategoryReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateSubscribeCategoryReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateSubscribeCategoryReplyMultiError) AllErrors() []error { return m }
+
+// CreateSubscribeCategoryReplyValidationError is the validation error returned
+// by CreateSubscribeCategoryReply.Validate if the designated constraints
+// aren't met.
+type CreateSubscribeCategoryReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateSubscribeCategoryReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateSubscribeCategoryReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateSubscribeCategoryReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateSubscribeCategoryReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateSubscribeCategoryReplyValidationError) ErrorName() string {
+	return "CreateSubscribeCategoryReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateSubscribeCategoryReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateSubscribeCategoryReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateSubscribeCategoryReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateSubscribeCategoryReplyValidationError{}
+
+// Validate checks the field values on UpdateSubscribeCategoryRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateSubscribeCategoryRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateSubscribeCategoryRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// UpdateSubscribeCategoryRequestMultiError, or nil if none found.
+func (m *UpdateSubscribeCategoryRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateSubscribeCategoryRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for ParentId
+
+	// no validation rules for Name
+
+	// no validation rules for Description
+
+	// no validation rules for Language
+
+	// no validation rules for Sort
+
+	if m.Show != nil {
+		// no validation rules for Show
+	}
+
+	if len(errors) > 0 {
+		return UpdateSubscribeCategoryRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateSubscribeCategoryRequestMultiError is an error wrapping multiple
+// validation errors returned by UpdateSubscribeCategoryRequest.ValidateAll()
+// if the designated constraints aren't met.
+type UpdateSubscribeCategoryRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateSubscribeCategoryRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateSubscribeCategoryRequestMultiError) AllErrors() []error { return m }
+
+// UpdateSubscribeCategoryRequestValidationError is the validation error
+// returned by UpdateSubscribeCategoryRequest.Validate if the designated
+// constraints aren't met.
+type UpdateSubscribeCategoryRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateSubscribeCategoryRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateSubscribeCategoryRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateSubscribeCategoryRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateSubscribeCategoryRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateSubscribeCategoryRequestValidationError) ErrorName() string {
+	return "UpdateSubscribeCategoryRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateSubscribeCategoryRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateSubscribeCategoryRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateSubscribeCategoryRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateSubscribeCategoryRequestValidationError{}
+
+// Validate checks the field values on UpdateSubscribeCategoryData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateSubscribeCategoryData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateSubscribeCategoryData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateSubscribeCategoryDataMultiError, or nil if none found.
+func (m *UpdateSubscribeCategoryData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateSubscribeCategoryData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Success
+
+	if len(errors) > 0 {
+		return UpdateSubscribeCategoryDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateSubscribeCategoryDataMultiError is an error wrapping multiple
+// validation errors returned by UpdateSubscribeCategoryData.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateSubscribeCategoryDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateSubscribeCategoryDataMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateSubscribeCategoryDataMultiError) AllErrors() []error { return m }
+
+// UpdateSubscribeCategoryDataValidationError is the validation error returned
+// by UpdateSubscribeCategoryData.Validate if the designated constraints
+// aren't met.
+type UpdateSubscribeCategoryDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateSubscribeCategoryDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateSubscribeCategoryDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateSubscribeCategoryDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateSubscribeCategoryDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateSubscribeCategoryDataValidationError) ErrorName() string {
+	return "UpdateSubscribeCategoryDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateSubscribeCategoryDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateSubscribeCategoryData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateSubscribeCategoryDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateSubscribeCategoryDataValidationError{}
+
+// Validate checks the field values on UpdateSubscribeCategoryReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateSubscribeCategoryReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateSubscribeCategoryReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateSubscribeCategoryReplyMultiError, or nil if none found.
+func (m *UpdateSubscribeCategoryReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateSubscribeCategoryReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateSubscribeCategoryReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateSubscribeCategoryReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateSubscribeCategoryReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return UpdateSubscribeCategoryReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateSubscribeCategoryReplyMultiError is an error wrapping multiple
+// validation errors returned by UpdateSubscribeCategoryReply.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateSubscribeCategoryReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateSubscribeCategoryReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateSubscribeCategoryReplyMultiError) AllErrors() []error { return m }
+
+// UpdateSubscribeCategoryReplyValidationError is the validation error returned
+// by UpdateSubscribeCategoryReply.Validate if the designated constraints
+// aren't met.
+type UpdateSubscribeCategoryReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateSubscribeCategoryReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateSubscribeCategoryReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateSubscribeCategoryReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateSubscribeCategoryReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateSubscribeCategoryReplyValidationError) ErrorName() string {
+	return "UpdateSubscribeCategoryReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateSubscribeCategoryReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateSubscribeCategoryReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateSubscribeCategoryReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateSubscribeCategoryReplyValidationError{}
+
+// Validate checks the field values on DeleteSubscribeCategoryRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteSubscribeCategoryRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteSubscribeCategoryRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// DeleteSubscribeCategoryRequestMultiError, or nil if none found.
+func (m *DeleteSubscribeCategoryRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteSubscribeCategoryRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if len(errors) > 0 {
+		return DeleteSubscribeCategoryRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteSubscribeCategoryRequestMultiError is an error wrapping multiple
+// validation errors returned by DeleteSubscribeCategoryRequest.ValidateAll()
+// if the designated constraints aren't met.
+type DeleteSubscribeCategoryRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteSubscribeCategoryRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteSubscribeCategoryRequestMultiError) AllErrors() []error { return m }
+
+// DeleteSubscribeCategoryRequestValidationError is the validation error
+// returned by DeleteSubscribeCategoryRequest.Validate if the designated
+// constraints aren't met.
+type DeleteSubscribeCategoryRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteSubscribeCategoryRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteSubscribeCategoryRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteSubscribeCategoryRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteSubscribeCategoryRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteSubscribeCategoryRequestValidationError) ErrorName() string {
+	return "DeleteSubscribeCategoryRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteSubscribeCategoryRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteSubscribeCategoryRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteSubscribeCategoryRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteSubscribeCategoryRequestValidationError{}
+
+// Validate checks the field values on DeleteSubscribeCategoryData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteSubscribeCategoryData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteSubscribeCategoryData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteSubscribeCategoryDataMultiError, or nil if none found.
+func (m *DeleteSubscribeCategoryData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteSubscribeCategoryData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Success
+
+	if len(errors) > 0 {
+		return DeleteSubscribeCategoryDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteSubscribeCategoryDataMultiError is an error wrapping multiple
+// validation errors returned by DeleteSubscribeCategoryData.ValidateAll() if
+// the designated constraints aren't met.
+type DeleteSubscribeCategoryDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteSubscribeCategoryDataMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteSubscribeCategoryDataMultiError) AllErrors() []error { return m }
+
+// DeleteSubscribeCategoryDataValidationError is the validation error returned
+// by DeleteSubscribeCategoryData.Validate if the designated constraints
+// aren't met.
+type DeleteSubscribeCategoryDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteSubscribeCategoryDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteSubscribeCategoryDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteSubscribeCategoryDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteSubscribeCategoryDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteSubscribeCategoryDataValidationError) ErrorName() string {
+	return "DeleteSubscribeCategoryDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteSubscribeCategoryDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteSubscribeCategoryData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteSubscribeCategoryDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteSubscribeCategoryDataValidationError{}
+
+// Validate checks the field values on DeleteSubscribeCategoryReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteSubscribeCategoryReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteSubscribeCategoryReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteSubscribeCategoryReplyMultiError, or nil if none found.
+func (m *DeleteSubscribeCategoryReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteSubscribeCategoryReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, DeleteSubscribeCategoryReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, DeleteSubscribeCategoryReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteSubscribeCategoryReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return DeleteSubscribeCategoryReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteSubscribeCategoryReplyMultiError is an error wrapping multiple
+// validation errors returned by DeleteSubscribeCategoryReply.ValidateAll() if
+// the designated constraints aren't met.
+type DeleteSubscribeCategoryReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteSubscribeCategoryReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteSubscribeCategoryReplyMultiError) AllErrors() []error { return m }
+
+// DeleteSubscribeCategoryReplyValidationError is the validation error returned
+// by DeleteSubscribeCategoryReply.Validate if the designated constraints
+// aren't met.
+type DeleteSubscribeCategoryReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteSubscribeCategoryReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteSubscribeCategoryReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteSubscribeCategoryReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteSubscribeCategoryReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteSubscribeCategoryReplyValidationError) ErrorName() string {
+	return "DeleteSubscribeCategoryReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteSubscribeCategoryReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteSubscribeCategoryReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteSubscribeCategoryReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteSubscribeCategoryReplyValidationError{}
+
+// Validate checks the field values on BatchDeleteSubscribeCategoryRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *BatchDeleteSubscribeCategoryRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BatchDeleteSubscribeCategoryRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// BatchDeleteSubscribeCategoryRequestMultiError, or nil if none found.
+func (m *BatchDeleteSubscribeCategoryRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BatchDeleteSubscribeCategoryRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return BatchDeleteSubscribeCategoryRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// BatchDeleteSubscribeCategoryRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// BatchDeleteSubscribeCategoryRequest.ValidateAll() if the designated
+// constraints aren't met.
+type BatchDeleteSubscribeCategoryRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BatchDeleteSubscribeCategoryRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BatchDeleteSubscribeCategoryRequestMultiError) AllErrors() []error { return m }
+
+// BatchDeleteSubscribeCategoryRequestValidationError is the validation error
+// returned by BatchDeleteSubscribeCategoryRequest.Validate if the designated
+// constraints aren't met.
+type BatchDeleteSubscribeCategoryRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BatchDeleteSubscribeCategoryRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BatchDeleteSubscribeCategoryRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BatchDeleteSubscribeCategoryRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BatchDeleteSubscribeCategoryRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BatchDeleteSubscribeCategoryRequestValidationError) ErrorName() string {
+	return "BatchDeleteSubscribeCategoryRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e BatchDeleteSubscribeCategoryRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBatchDeleteSubscribeCategoryRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BatchDeleteSubscribeCategoryRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BatchDeleteSubscribeCategoryRequestValidationError{}
+
+// Validate checks the field values on BatchDeleteSubscribeCategoryData with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *BatchDeleteSubscribeCategoryData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BatchDeleteSubscribeCategoryData with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// BatchDeleteSubscribeCategoryDataMultiError, or nil if none found.
+func (m *BatchDeleteSubscribeCategoryData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BatchDeleteSubscribeCategoryData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Success
+
+	if len(errors) > 0 {
+		return BatchDeleteSubscribeCategoryDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// BatchDeleteSubscribeCategoryDataMultiError is an error wrapping multiple
+// validation errors returned by
+// BatchDeleteSubscribeCategoryData.ValidateAll() if the designated
+// constraints aren't met.
+type BatchDeleteSubscribeCategoryDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BatchDeleteSubscribeCategoryDataMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BatchDeleteSubscribeCategoryDataMultiError) AllErrors() []error { return m }
+
+// BatchDeleteSubscribeCategoryDataValidationError is the validation error
+// returned by BatchDeleteSubscribeCategoryData.Validate if the designated
+// constraints aren't met.
+type BatchDeleteSubscribeCategoryDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BatchDeleteSubscribeCategoryDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BatchDeleteSubscribeCategoryDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BatchDeleteSubscribeCategoryDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BatchDeleteSubscribeCategoryDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BatchDeleteSubscribeCategoryDataValidationError) ErrorName() string {
+	return "BatchDeleteSubscribeCategoryDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e BatchDeleteSubscribeCategoryDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBatchDeleteSubscribeCategoryData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BatchDeleteSubscribeCategoryDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BatchDeleteSubscribeCategoryDataValidationError{}
+
+// Validate checks the field values on BatchDeleteSubscribeCategoryReply with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *BatchDeleteSubscribeCategoryReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BatchDeleteSubscribeCategoryReply
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// BatchDeleteSubscribeCategoryReplyMultiError, or nil if none found.
+func (m *BatchDeleteSubscribeCategoryReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BatchDeleteSubscribeCategoryReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, BatchDeleteSubscribeCategoryReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, BatchDeleteSubscribeCategoryReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return BatchDeleteSubscribeCategoryReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return BatchDeleteSubscribeCategoryReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// BatchDeleteSubscribeCategoryReplyMultiError is an error wrapping multiple
+// validation errors returned by
+// BatchDeleteSubscribeCategoryReply.ValidateAll() if the designated
+// constraints aren't met.
+type BatchDeleteSubscribeCategoryReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BatchDeleteSubscribeCategoryReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BatchDeleteSubscribeCategoryReplyMultiError) AllErrors() []error { return m }
+
+// BatchDeleteSubscribeCategoryReplyValidationError is the validation error
+// returned by BatchDeleteSubscribeCategoryReply.Validate if the designated
+// constraints aren't met.
+type BatchDeleteSubscribeCategoryReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BatchDeleteSubscribeCategoryReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BatchDeleteSubscribeCategoryReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BatchDeleteSubscribeCategoryReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BatchDeleteSubscribeCategoryReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BatchDeleteSubscribeCategoryReplyValidationError) ErrorName() string {
+	return "BatchDeleteSubscribeCategoryReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e BatchDeleteSubscribeCategoryReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBatchDeleteSubscribeCategoryReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BatchDeleteSubscribeCategoryReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BatchDeleteSubscribeCategoryReplyValidationError{}
+
+// Validate checks the field values on GetSubscribeCategoryListRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetSubscribeCategoryListRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetSubscribeCategoryListRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetSubscribeCategoryListRequestMultiError, or nil if none found.
+func (m *GetSubscribeCategoryListRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetSubscribeCategoryListRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Language
+
+	if m.ParentId != nil {
+		// no validation rules for ParentId
+	}
+
+	if m.Show != nil {
+		// no validation rules for Show
+	}
+
+	if len(errors) > 0 {
+		return GetSubscribeCategoryListRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetSubscribeCategoryListRequestMultiError is an error wrapping multiple
+// validation errors returned by GetSubscribeCategoryListRequest.ValidateAll()
+// if the designated constraints aren't met.
+type GetSubscribeCategoryListRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetSubscribeCategoryListRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetSubscribeCategoryListRequestMultiError) AllErrors() []error { return m }
+
+// GetSubscribeCategoryListRequestValidationError is the validation error
+// returned by GetSubscribeCategoryListRequest.Validate if the designated
+// constraints aren't met.
+type GetSubscribeCategoryListRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetSubscribeCategoryListRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetSubscribeCategoryListRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetSubscribeCategoryListRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetSubscribeCategoryListRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetSubscribeCategoryListRequestValidationError) ErrorName() string {
+	return "GetSubscribeCategoryListRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetSubscribeCategoryListRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetSubscribeCategoryListRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetSubscribeCategoryListRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetSubscribeCategoryListRequestValidationError{}
+
+// Validate checks the field values on GetSubscribeCategoryListData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetSubscribeCategoryListData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetSubscribeCategoryListData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetSubscribeCategoryListDataMultiError, or nil if none found.
+func (m *GetSubscribeCategoryListData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetSubscribeCategoryListData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetSubscribeCategoryListDataValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetSubscribeCategoryListDataValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetSubscribeCategoryListDataValidationError{
+					field:  fmt.Sprintf("List[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Total
+
+	if len(errors) > 0 {
+		return GetSubscribeCategoryListDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetSubscribeCategoryListDataMultiError is an error wrapping multiple
+// validation errors returned by GetSubscribeCategoryListData.ValidateAll() if
+// the designated constraints aren't met.
+type GetSubscribeCategoryListDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetSubscribeCategoryListDataMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetSubscribeCategoryListDataMultiError) AllErrors() []error { return m }
+
+// GetSubscribeCategoryListDataValidationError is the validation error returned
+// by GetSubscribeCategoryListData.Validate if the designated constraints
+// aren't met.
+type GetSubscribeCategoryListDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetSubscribeCategoryListDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetSubscribeCategoryListDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetSubscribeCategoryListDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetSubscribeCategoryListDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetSubscribeCategoryListDataValidationError) ErrorName() string {
+	return "GetSubscribeCategoryListDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetSubscribeCategoryListDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetSubscribeCategoryListData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetSubscribeCategoryListDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetSubscribeCategoryListDataValidationError{}
+
+// Validate checks the field values on GetSubscribeCategoryListReply with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetSubscribeCategoryListReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetSubscribeCategoryListReply with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetSubscribeCategoryListReplyMultiError, or nil if none found.
+func (m *GetSubscribeCategoryListReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetSubscribeCategoryListReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetSubscribeCategoryListReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetSubscribeCategoryListReplyValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetSubscribeCategoryListReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetSubscribeCategoryListReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetSubscribeCategoryListReplyMultiError is an error wrapping multiple
+// validation errors returned by GetSubscribeCategoryListReply.ValidateAll()
+// if the designated constraints aren't met.
+type GetSubscribeCategoryListReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetSubscribeCategoryListReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetSubscribeCategoryListReplyMultiError) AllErrors() []error { return m }
+
+// GetSubscribeCategoryListReplyValidationError is the validation error
+// returned by GetSubscribeCategoryListReply.Validate if the designated
+// constraints aren't met.
+type GetSubscribeCategoryListReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetSubscribeCategoryListReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetSubscribeCategoryListReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetSubscribeCategoryListReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetSubscribeCategoryListReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetSubscribeCategoryListReplyValidationError) ErrorName() string {
+	return "GetSubscribeCategoryListReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetSubscribeCategoryListReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetSubscribeCategoryListReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetSubscribeCategoryListReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetSubscribeCategoryListReplyValidationError{}
 
 // Validate checks the field values on SubscribeGroupInfo with the rules
 // defined in the proto definition for this message. If any rules are

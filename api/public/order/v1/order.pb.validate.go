@@ -1957,6 +1957,10 @@ func (m *Subscribe) validate(all bool) error {
 
 	// no validation rules for Quota
 
+	// no validation rules for CategoryId
+
+	// no validation rules for CategoryName
+
 	// no validation rules for NodeGroupId
 
 	for idx, item := range m.GetTrafficLimit() {

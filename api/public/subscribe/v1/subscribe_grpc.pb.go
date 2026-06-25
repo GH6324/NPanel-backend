@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	PublicSubscribe_QuerySubscribeList_FullMethodName         = "/api.public.subscribe.v1.PublicSubscribe/QuerySubscribeList"
+	PublicSubscribe_QuerySubscribeCatalog_FullMethodName      = "/api.public.subscribe.v1.PublicSubscribe/QuerySubscribeCatalog"
 	PublicSubscribe_QueryUserSubscribeNodeList_FullMethodName = "/api.public.subscribe.v1.PublicSubscribe/QueryUserSubscribeNodeList"
 )
 
@@ -28,6 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PublicSubscribeClient interface {
 	QuerySubscribeList(ctx context.Context, in *QuerySubscribeListRequest, opts ...grpc.CallOption) (*QuerySubscribeListReply, error)
+	QuerySubscribeCatalog(ctx context.Context, in *QuerySubscribeCatalogRequest, opts ...grpc.CallOption) (*QuerySubscribeCatalogReply, error)
 	QueryUserSubscribeNodeList(ctx context.Context, in *QueryUserSubscribeNodeListRequest, opts ...grpc.CallOption) (*QueryUserSubscribeNodeListReply, error)
 }
 
@@ -49,6 +51,16 @@ func (c *publicSubscribeClient) QuerySubscribeList(ctx context.Context, in *Quer
 	return out, nil
 }
 
+func (c *publicSubscribeClient) QuerySubscribeCatalog(ctx context.Context, in *QuerySubscribeCatalogRequest, opts ...grpc.CallOption) (*QuerySubscribeCatalogReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QuerySubscribeCatalogReply)
+	err := c.cc.Invoke(ctx, PublicSubscribe_QuerySubscribeCatalog_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *publicSubscribeClient) QueryUserSubscribeNodeList(ctx context.Context, in *QueryUserSubscribeNodeListRequest, opts ...grpc.CallOption) (*QueryUserSubscribeNodeListReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(QueryUserSubscribeNodeListReply)
@@ -64,6 +76,7 @@ func (c *publicSubscribeClient) QueryUserSubscribeNodeList(ctx context.Context, 
 // for forward compatibility.
 type PublicSubscribeServer interface {
 	QuerySubscribeList(context.Context, *QuerySubscribeListRequest) (*QuerySubscribeListReply, error)
+	QuerySubscribeCatalog(context.Context, *QuerySubscribeCatalogRequest) (*QuerySubscribeCatalogReply, error)
 	QueryUserSubscribeNodeList(context.Context, *QueryUserSubscribeNodeListRequest) (*QueryUserSubscribeNodeListReply, error)
 	mustEmbedUnimplementedPublicSubscribeServer()
 }
@@ -77,6 +90,9 @@ type UnimplementedPublicSubscribeServer struct{}
 
 func (UnimplementedPublicSubscribeServer) QuerySubscribeList(context.Context, *QuerySubscribeListRequest) (*QuerySubscribeListReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QuerySubscribeList not implemented")
+}
+func (UnimplementedPublicSubscribeServer) QuerySubscribeCatalog(context.Context, *QuerySubscribeCatalogRequest) (*QuerySubscribeCatalogReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QuerySubscribeCatalog not implemented")
 }
 func (UnimplementedPublicSubscribeServer) QueryUserSubscribeNodeList(context.Context, *QueryUserSubscribeNodeListRequest) (*QueryUserSubscribeNodeListReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryUserSubscribeNodeList not implemented")
@@ -120,6 +136,24 @@ func _PublicSubscribe_QuerySubscribeList_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PublicSubscribe_QuerySubscribeCatalog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySubscribeCatalogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PublicSubscribeServer).QuerySubscribeCatalog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PublicSubscribe_QuerySubscribeCatalog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PublicSubscribeServer).QuerySubscribeCatalog(ctx, req.(*QuerySubscribeCatalogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PublicSubscribe_QueryUserSubscribeNodeList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryUserSubscribeNodeListRequest)
 	if err := dec(in); err != nil {
@@ -148,6 +182,10 @@ var PublicSubscribe_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QuerySubscribeList",
 			Handler:    _PublicSubscribe_QuerySubscribeList_Handler,
+		},
+		{
+			MethodName: "QuerySubscribeCatalog",
+			Handler:    _PublicSubscribe_QuerySubscribeCatalog_Handler,
 		},
 		{
 			MethodName: "QueryUserSubscribeNodeList",

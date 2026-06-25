@@ -18,70 +18,124 @@ func NewSubscribeService(uc *subscribeBiz.SubscribeUseCase) *SubscribeService {
 }
 
 func (s *SubscribeService) QuerySubscribeList(ctx context.Context, req *v1.QuerySubscribeListRequest) (*v1.QuerySubscribeListReply, error) {
-	subscribes, total, err := s.uc.QuerySubscribeList(ctx, req.Language)
+	subscribes, total, err := s.uc.QuerySubscribeList(ctx, req.Language, req.CategoryId)
 	if err != nil {
 		return nil, err
 	}
 
 	list := make([]*v1.Subscribe, 0, len(subscribes))
 	for _, sub := range subscribes {
-		discounts := make([]*v1.SubscribeDiscount, 0, len(sub.Discount))
-		for _, discount := range sub.Discount {
-			if discount == nil {
-				continue
-			}
-			discounts = append(discounts, &v1.SubscribeDiscount{
-				Quantity: discount.Quantity,
-				Discount: discount.Discount,
-			})
-		}
-
-		trafficLimits := make([]*v1.TrafficLimit, 0, len(sub.TrafficLimit))
-		for _, limit := range sub.TrafficLimit {
-			if limit == nil {
-				continue
-			}
-			trafficLimits = append(trafficLimits, &v1.TrafficLimit{
-				StatType:     limit.StatType,
-				StatValue:    limit.StatValue,
-				TrafficUsage: limit.TrafficUsage,
-				SpeedLimit:   int32(limit.SpeedLimit),
-			})
-		}
-
-		list = append(list, &v1.Subscribe{
-			Id:                sub.ID,
-			Name:              sub.Name,
-			Language:          sub.Language,
-			Description:       sub.Description,
-			UnitPrice:         sub.UnitPrice,
-			UnitTime:          sub.UnitTime,
-			Discount:          discounts,
-			Replacement:       sub.Replacement,
-			Inventory:         int32(sub.Inventory),
-			Traffic:           sub.Traffic,
-			SpeedLimit:        int32(sub.SpeedLimit),
-			DeviceLimit:       int32(sub.DeviceLimit),
-			Quota:             int32(sub.Quota),
-			Nodes:             convertIntSliceToInt64Slice(sub.Nodes),
-			NodeTags:          sub.NodeTags,
-			NodeGroupIds:      sub.NodeGroupIds,
-			NodeGroupId:       sub.NodeGroupId,
-			TrafficLimit:      trafficLimits,
-			Show:              sub.Show,
-			Sell:              sub.Sell,
-			Sort:              int32(sub.Sort),
-			DeductionRatio:    int32(sub.DeductionRatio),
-			AllowDeduction:    sub.AllowDeduction,
-			ResetCycle:        int32(sub.ResetCycle),
-			RenewalReset:      sub.RenewalReset,
-			ShowOriginalPrice: sub.ShowOriginalPrice,
-			CreatedAt:         sub.CreatedAt,
-			UpdatedAt:         sub.UpdatedAt,
-		})
+		list = append(list, convertPublicSubscribe(sub))
 	}
 
 	return &v1.QuerySubscribeListReply{List: list, Total: total}, nil
+}
+
+func (s *SubscribeService) QuerySubscribeCatalog(ctx context.Context, req *v1.QuerySubscribeCatalogRequest) (*v1.QuerySubscribeCatalogReply, error) {
+	catalog, err := s.uc.QuerySubscribeCatalog(ctx, req.Language)
+	if err != nil {
+		return nil, err
+	}
+	categories := make([]*v1.SubscribeCategory, 0, len(catalog.Categories))
+	for _, category := range catalog.Categories {
+		categories = append(categories, convertPublicSubscribeCategory(category))
+	}
+	uncategorized := make([]*v1.Subscribe, 0, len(catalog.Uncategorized))
+	for _, sub := range catalog.Uncategorized {
+		uncategorized = append(uncategorized, convertPublicSubscribe(sub))
+	}
+	return &v1.QuerySubscribeCatalogReply{
+		Categories:    categories,
+		Uncategorized: uncategorized,
+		Total:         catalog.Total,
+	}, nil
+}
+
+func convertPublicSubscribe(sub *subscribeBiz.Subscribe) *v1.Subscribe {
+	if sub == nil {
+		return nil
+	}
+	discounts := make([]*v1.SubscribeDiscount, 0, len(sub.Discount))
+	for _, discount := range sub.Discount {
+		if discount == nil {
+			continue
+		}
+		discounts = append(discounts, &v1.SubscribeDiscount{
+			Quantity: discount.Quantity,
+			Discount: discount.Discount,
+		})
+	}
+
+	trafficLimits := make([]*v1.TrafficLimit, 0, len(sub.TrafficLimit))
+	for _, limit := range sub.TrafficLimit {
+		if limit == nil {
+			continue
+		}
+		trafficLimits = append(trafficLimits, &v1.TrafficLimit{
+			StatType:     limit.StatType,
+			StatValue:    limit.StatValue,
+			TrafficUsage: limit.TrafficUsage,
+			SpeedLimit:   int32(limit.SpeedLimit),
+		})
+	}
+
+	return &v1.Subscribe{
+		Id:                sub.ID,
+		Name:              sub.Name,
+		Language:          sub.Language,
+		Description:       sub.Description,
+		UnitPrice:         sub.UnitPrice,
+		UnitTime:          sub.UnitTime,
+		Discount:          discounts,
+		Replacement:       sub.Replacement,
+		Inventory:         int32(sub.Inventory),
+		Traffic:           sub.Traffic,
+		SpeedLimit:        int32(sub.SpeedLimit),
+		DeviceLimit:       int32(sub.DeviceLimit),
+		Quota:             int32(sub.Quota),
+		CategoryId:        sub.CategoryID,
+		CategoryName:      sub.CategoryName,
+		Nodes:             convertIntSliceToInt64Slice(sub.Nodes),
+		NodeTags:          sub.NodeTags,
+		NodeGroupIds:      sub.NodeGroupIds,
+		NodeGroupId:       sub.NodeGroupId,
+		TrafficLimit:      trafficLimits,
+		Show:              sub.Show,
+		Sell:              sub.Sell,
+		Sort:              int32(sub.Sort),
+		DeductionRatio:    int32(sub.DeductionRatio),
+		AllowDeduction:    sub.AllowDeduction,
+		ResetCycle:        int32(sub.ResetCycle),
+		RenewalReset:      sub.RenewalReset,
+		ShowOriginalPrice: sub.ShowOriginalPrice,
+		CreatedAt:         sub.CreatedAt,
+		UpdatedAt:         sub.UpdatedAt,
+	}
+}
+
+func convertPublicSubscribeCategory(category *subscribeBiz.SubscribeCategory) *v1.SubscribeCategory {
+	if category == nil {
+		return nil
+	}
+	list := make([]*v1.Subscribe, 0, len(category.List))
+	for _, sub := range category.List {
+		list = append(list, convertPublicSubscribe(sub))
+	}
+	children := make([]*v1.SubscribeCategory, 0, len(category.Children))
+	for _, child := range category.Children {
+		children = append(children, convertPublicSubscribeCategory(child))
+	}
+	return &v1.SubscribeCategory{
+		Id:          category.ID,
+		ParentId:    category.ParentID,
+		Name:        category.Name,
+		Description: category.Description,
+		Language:    category.Language,
+		Show:        category.Show,
+		Sort:        int32(category.Sort),
+		List:        list,
+		Children:    children,
+	}
 }
 
 func (s *SubscribeService) QueryUserSubscribeNodeList(ctx context.Context, req *v1.QueryUserSubscribeNodeListRequest) (*v1.QueryUserSubscribeNodeListReply, error) {

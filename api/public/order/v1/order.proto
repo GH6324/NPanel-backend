@@ -177,6 +177,8 @@ message Subscribe {
   int32 speed_limit = 11;
   int32 device_limit = 12;
   int32 quota = 13;
+  int64 category_id = 29;
+  string category_name = 30;
   repeated int64 nodes = 14;
   repeated string node_tags = 15;
   repeated int64 node_group_ids = 16;
@@ -217,5 +219,4 @@ message OrderDetail {
   int64 created_at = 20;
   int64 updated_at = 21;
 }
-
 

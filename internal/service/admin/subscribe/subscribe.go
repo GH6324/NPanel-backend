@@ -135,6 +135,85 @@ func (s *SubscribeService) SubscribeSort(ctx context.Context, req *v1.SubscribeS
 	}, nil
 }
 
+// ==================== Subscribe Category Operations ====================
+
+// CreateSubscribeCategory create subscribe category
+func (s *SubscribeService) CreateSubscribeCategory(ctx context.Context, req *v1.CreateSubscribeCategoryRequest) (*v1.CreateSubscribeCategoryReply, error) {
+	if err := s.uc.CreateSubscribeCategory(ctx, req); err != nil {
+		return nil, err
+	}
+	return &v1.CreateSubscribeCategoryReply{
+		Code:    200,
+		Message: responsecode.CodeMessages[200],
+		Data: &v1.CreateSubscribeCategoryData{
+			Success: true,
+		},
+	}, nil
+}
+
+// UpdateSubscribeCategory update subscribe category
+func (s *SubscribeService) UpdateSubscribeCategory(ctx context.Context, req *v1.UpdateSubscribeCategoryRequest) (*v1.UpdateSubscribeCategoryReply, error) {
+	if err := s.uc.UpdateSubscribeCategory(ctx, req); err != nil {
+		return nil, err
+	}
+	return &v1.UpdateSubscribeCategoryReply{
+		Code:    200,
+		Message: responsecode.CodeMessages[200],
+		Data: &v1.UpdateSubscribeCategoryData{
+			Success: true,
+		},
+	}, nil
+}
+
+// DeleteSubscribeCategory delete subscribe category
+func (s *SubscribeService) DeleteSubscribeCategory(ctx context.Context, req *v1.DeleteSubscribeCategoryRequest) (*v1.DeleteSubscribeCategoryReply, error) {
+	if err := s.uc.DeleteSubscribeCategory(ctx, req.Id); err != nil {
+		return nil, err
+	}
+	return &v1.DeleteSubscribeCategoryReply{
+		Code:    200,
+		Message: responsecode.CodeMessages[200],
+		Data: &v1.DeleteSubscribeCategoryData{
+			Success: true,
+		},
+	}, nil
+}
+
+// BatchDeleteSubscribeCategory batch delete subscribe categories
+func (s *SubscribeService) BatchDeleteSubscribeCategory(ctx context.Context, req *v1.BatchDeleteSubscribeCategoryRequest) (*v1.BatchDeleteSubscribeCategoryReply, error) {
+	if len(req.Ids) == 0 {
+		return nil, responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	for _, id := range req.Ids {
+		if id <= 0 {
+			return nil, responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+		}
+	}
+	if err := s.uc.BatchDeleteSubscribeCategory(ctx, req.Ids); err != nil {
+		return nil, err
+	}
+	return &v1.BatchDeleteSubscribeCategoryReply{
+		Code:    200,
+		Message: responsecode.CodeMessages[200],
+		Data: &v1.BatchDeleteSubscribeCategoryData{
+			Success: true,
+		},
+	}, nil
+}
+
+// GetSubscribeCategoryList get subscribe category list
+func (s *SubscribeService) GetSubscribeCategoryList(ctx context.Context, req *v1.GetSubscribeCategoryListRequest) (*v1.GetSubscribeCategoryListReply, error) {
+	data, err := s.uc.GetSubscribeCategoryList(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GetSubscribeCategoryListReply{
+		Code:    200,
+		Message: responsecode.CodeMessages[200],
+		Data:    data,
+	}, nil
+}
+
 // ==================== Subscribe Group Operations ====================
 
 // CreateSubscribeGroup create subscribe group

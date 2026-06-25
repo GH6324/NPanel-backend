@@ -29,6 +29,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyservergroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribeapplication"
+	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribecategory"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribegroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysystem"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysystemlog"
@@ -70,6 +71,7 @@ const (
 	TypeProxyServerGroup            = "ProxyServerGroup"
 	TypeProxySubscribe              = "ProxySubscribe"
 	TypeProxySubscribeApplication   = "ProxySubscribeApplication"
+	TypeProxySubscribeCategory      = "ProxySubscribeCategory"
 	TypeProxySubscribeGroup         = "ProxySubscribeGroup"
 	TypeProxySystem                 = "ProxySystem"
 	TypeProxySystemLog              = "ProxySystemLog"
@@ -14715,6 +14717,8 @@ type ProxySubscribeMutation struct {
 	adddevice_limit      *int32
 	quota                *int32
 	addquota             *int32
+	category_id          *int64
+	addcategory_id       *int64
 	nodes                *string
 	node_tags            *string
 	node_group_ids       *[]int64
@@ -15441,6 +15445,62 @@ func (m *ProxySubscribeMutation) AddedQuota() (r int32, exists bool) {
 func (m *ProxySubscribeMutation) ResetQuota() {
 	m.quota = nil
 	m.addquota = nil
+}
+
+// SetCategoryID sets the "category_id" field.
+func (m *ProxySubscribeMutation) SetCategoryID(i int64) {
+	m.category_id = &i
+	m.addcategory_id = nil
+}
+
+// CategoryID returns the value of the "category_id" field in the mutation.
+func (m *ProxySubscribeMutation) CategoryID() (r int64, exists bool) {
+	v := m.category_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCategoryID returns the old "category_id" field's value of the ProxySubscribe entity.
+// If the ProxySubscribe object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeMutation) OldCategoryID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCategoryID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCategoryID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCategoryID: %w", err)
+	}
+	return oldValue.CategoryID, nil
+}
+
+// AddCategoryID adds i to the "category_id" field.
+func (m *ProxySubscribeMutation) AddCategoryID(i int64) {
+	if m.addcategory_id != nil {
+		*m.addcategory_id += i
+	} else {
+		m.addcategory_id = &i
+	}
+}
+
+// AddedCategoryID returns the value that was added to the "category_id" field in this mutation.
+func (m *ProxySubscribeMutation) AddedCategoryID() (r int64, exists bool) {
+	v := m.addcategory_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCategoryID resets all changes to the "category_id" field.
+func (m *ProxySubscribeMutation) ResetCategoryID() {
+	m.category_id = nil
+	m.addcategory_id = nil
 }
 
 // SetNodes sets the "nodes" field.
@@ -16181,7 +16241,7 @@ func (m *ProxySubscribeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProxySubscribeMutation) Fields() []string {
-	fields := make([]string, 0, 27)
+	fields := make([]string, 0, 28)
 	if m.name != nil {
 		fields = append(fields, proxysubscribe.FieldName)
 	}
@@ -16217,6 +16277,9 @@ func (m *ProxySubscribeMutation) Fields() []string {
 	}
 	if m.quota != nil {
 		fields = append(fields, proxysubscribe.FieldQuota)
+	}
+	if m.category_id != nil {
+		fields = append(fields, proxysubscribe.FieldCategoryID)
 	}
 	if m.nodes != nil {
 		fields = append(fields, proxysubscribe.FieldNodes)
@@ -16295,6 +16358,8 @@ func (m *ProxySubscribeMutation) Field(name string) (ent.Value, bool) {
 		return m.DeviceLimit()
 	case proxysubscribe.FieldQuota:
 		return m.Quota()
+	case proxysubscribe.FieldCategoryID:
+		return m.CategoryID()
 	case proxysubscribe.FieldNodes:
 		return m.Nodes()
 	case proxysubscribe.FieldNodeTags:
@@ -16358,6 +16423,8 @@ func (m *ProxySubscribeMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldDeviceLimit(ctx)
 	case proxysubscribe.FieldQuota:
 		return m.OldQuota(ctx)
+	case proxysubscribe.FieldCategoryID:
+		return m.OldCategoryID(ctx)
 	case proxysubscribe.FieldNodes:
 		return m.OldNodes(ctx)
 	case proxysubscribe.FieldNodeTags:
@@ -16480,6 +16547,13 @@ func (m *ProxySubscribeMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetQuota(v)
+		return nil
+	case proxysubscribe.FieldCategoryID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCategoryID(v)
 		return nil
 	case proxysubscribe.FieldNodes:
 		v, ok := value.(string)
@@ -16615,6 +16689,9 @@ func (m *ProxySubscribeMutation) AddedFields() []string {
 	if m.addquota != nil {
 		fields = append(fields, proxysubscribe.FieldQuota)
 	}
+	if m.addcategory_id != nil {
+		fields = append(fields, proxysubscribe.FieldCategoryID)
+	}
 	if m.addnode_group_id != nil {
 		fields = append(fields, proxysubscribe.FieldNodeGroupID)
 	}
@@ -16649,6 +16726,8 @@ func (m *ProxySubscribeMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedDeviceLimit()
 	case proxysubscribe.FieldQuota:
 		return m.AddedQuota()
+	case proxysubscribe.FieldCategoryID:
+		return m.AddedCategoryID()
 	case proxysubscribe.FieldNodeGroupID:
 		return m.AddedNodeGroupID()
 	case proxysubscribe.FieldSort:
@@ -16714,6 +16793,13 @@ func (m *ProxySubscribeMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddQuota(v)
+		return nil
+	case proxysubscribe.FieldCategoryID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCategoryID(v)
 		return nil
 	case proxysubscribe.FieldNodeGroupID:
 		v, ok := value.(int64)
@@ -16850,6 +16936,9 @@ func (m *ProxySubscribeMutation) ResetField(name string) error {
 		return nil
 	case proxysubscribe.FieldQuota:
 		m.ResetQuota()
+		return nil
+	case proxysubscribe.FieldCategoryID:
+		m.ResetCategoryID()
 		return nil
 	case proxysubscribe.FieldNodes:
 		m.ResetNodes()
@@ -17916,6 +18005,807 @@ func (m *ProxySubscribeApplicationMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ProxySubscribeApplicationMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown ProxySubscribeApplication edge %s", name)
+}
+
+// ProxySubscribeCategoryMutation represents an operation that mutates the ProxySubscribeCategory nodes in the graph.
+type ProxySubscribeCategoryMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int64
+	parent_id     *int64
+	addparent_id  *int64
+	name          *string
+	description   *string
+	language      *string
+	show          *bool
+	sort          *int32
+	addsort       *int32
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*ProxySubscribeCategory, error)
+	predicates    []predicate.ProxySubscribeCategory
+}
+
+var _ ent.Mutation = (*ProxySubscribeCategoryMutation)(nil)
+
+// proxysubscribecategoryOption allows management of the mutation configuration using functional options.
+type proxysubscribecategoryOption func(*ProxySubscribeCategoryMutation)
+
+// newProxySubscribeCategoryMutation creates new mutation for the ProxySubscribeCategory entity.
+func newProxySubscribeCategoryMutation(c config, op Op, opts ...proxysubscribecategoryOption) *ProxySubscribeCategoryMutation {
+	m := &ProxySubscribeCategoryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeProxySubscribeCategory,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withProxySubscribeCategoryID sets the ID field of the mutation.
+func withProxySubscribeCategoryID(id int64) proxysubscribecategoryOption {
+	return func(m *ProxySubscribeCategoryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ProxySubscribeCategory
+		)
+		m.oldValue = func(ctx context.Context) (*ProxySubscribeCategory, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ProxySubscribeCategory.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withProxySubscribeCategory sets the old ProxySubscribeCategory of the mutation.
+func withProxySubscribeCategory(node *ProxySubscribeCategory) proxysubscribecategoryOption {
+	return func(m *ProxySubscribeCategoryMutation) {
+		m.oldValue = func(context.Context) (*ProxySubscribeCategory, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ProxySubscribeCategoryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ProxySubscribeCategoryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ProxySubscribeCategory entities.
+func (m *ProxySubscribeCategoryMutation) SetID(id int64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ProxySubscribeCategoryMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ProxySubscribeCategoryMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ProxySubscribeCategory.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetParentID sets the "parent_id" field.
+func (m *ProxySubscribeCategoryMutation) SetParentID(i int64) {
+	m.parent_id = &i
+	m.addparent_id = nil
+}
+
+// ParentID returns the value of the "parent_id" field in the mutation.
+func (m *ProxySubscribeCategoryMutation) ParentID() (r int64, exists bool) {
+	v := m.parent_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParentID returns the old "parent_id" field's value of the ProxySubscribeCategory entity.
+// If the ProxySubscribeCategory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeCategoryMutation) OldParentID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParentID: %w", err)
+	}
+	return oldValue.ParentID, nil
+}
+
+// AddParentID adds i to the "parent_id" field.
+func (m *ProxySubscribeCategoryMutation) AddParentID(i int64) {
+	if m.addparent_id != nil {
+		*m.addparent_id += i
+	} else {
+		m.addparent_id = &i
+	}
+}
+
+// AddedParentID returns the value that was added to the "parent_id" field in this mutation.
+func (m *ProxySubscribeCategoryMutation) AddedParentID() (r int64, exists bool) {
+	v := m.addparent_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetParentID resets all changes to the "parent_id" field.
+func (m *ProxySubscribeCategoryMutation) ResetParentID() {
+	m.parent_id = nil
+	m.addparent_id = nil
+}
+
+// SetName sets the "name" field.
+func (m *ProxySubscribeCategoryMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ProxySubscribeCategoryMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the ProxySubscribeCategory entity.
+// If the ProxySubscribeCategory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeCategoryMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ProxySubscribeCategoryMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *ProxySubscribeCategoryMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *ProxySubscribeCategoryMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the ProxySubscribeCategory entity.
+// If the ProxySubscribeCategory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeCategoryMutation) OldDescription(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *ProxySubscribeCategoryMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[proxysubscribecategory.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *ProxySubscribeCategoryMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[proxysubscribecategory.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *ProxySubscribeCategoryMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, proxysubscribecategory.FieldDescription)
+}
+
+// SetLanguage sets the "language" field.
+func (m *ProxySubscribeCategoryMutation) SetLanguage(s string) {
+	m.language = &s
+}
+
+// Language returns the value of the "language" field in the mutation.
+func (m *ProxySubscribeCategoryMutation) Language() (r string, exists bool) {
+	v := m.language
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLanguage returns the old "language" field's value of the ProxySubscribeCategory entity.
+// If the ProxySubscribeCategory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeCategoryMutation) OldLanguage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLanguage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLanguage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLanguage: %w", err)
+	}
+	return oldValue.Language, nil
+}
+
+// ResetLanguage resets all changes to the "language" field.
+func (m *ProxySubscribeCategoryMutation) ResetLanguage() {
+	m.language = nil
+}
+
+// SetShow sets the "show" field.
+func (m *ProxySubscribeCategoryMutation) SetShow(b bool) {
+	m.show = &b
+}
+
+// Show returns the value of the "show" field in the mutation.
+func (m *ProxySubscribeCategoryMutation) Show() (r bool, exists bool) {
+	v := m.show
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldShow returns the old "show" field's value of the ProxySubscribeCategory entity.
+// If the ProxySubscribeCategory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeCategoryMutation) OldShow(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldShow is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldShow requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldShow: %w", err)
+	}
+	return oldValue.Show, nil
+}
+
+// ResetShow resets all changes to the "show" field.
+func (m *ProxySubscribeCategoryMutation) ResetShow() {
+	m.show = nil
+}
+
+// SetSort sets the "sort" field.
+func (m *ProxySubscribeCategoryMutation) SetSort(i int32) {
+	m.sort = &i
+	m.addsort = nil
+}
+
+// Sort returns the value of the "sort" field in the mutation.
+func (m *ProxySubscribeCategoryMutation) Sort() (r int32, exists bool) {
+	v := m.sort
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSort returns the old "sort" field's value of the ProxySubscribeCategory entity.
+// If the ProxySubscribeCategory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeCategoryMutation) OldSort(ctx context.Context) (v int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSort is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSort requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSort: %w", err)
+	}
+	return oldValue.Sort, nil
+}
+
+// AddSort adds i to the "sort" field.
+func (m *ProxySubscribeCategoryMutation) AddSort(i int32) {
+	if m.addsort != nil {
+		*m.addsort += i
+	} else {
+		m.addsort = &i
+	}
+}
+
+// AddedSort returns the value that was added to the "sort" field in this mutation.
+func (m *ProxySubscribeCategoryMutation) AddedSort() (r int32, exists bool) {
+	v := m.addsort
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSort resets all changes to the "sort" field.
+func (m *ProxySubscribeCategoryMutation) ResetSort() {
+	m.sort = nil
+	m.addsort = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ProxySubscribeCategoryMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ProxySubscribeCategoryMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ProxySubscribeCategory entity.
+// If the ProxySubscribeCategory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeCategoryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ProxySubscribeCategoryMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ProxySubscribeCategoryMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ProxySubscribeCategoryMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ProxySubscribeCategory entity.
+// If the ProxySubscribeCategory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxySubscribeCategoryMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ProxySubscribeCategoryMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the ProxySubscribeCategoryMutation builder.
+func (m *ProxySubscribeCategoryMutation) Where(ps ...predicate.ProxySubscribeCategory) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ProxySubscribeCategoryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ProxySubscribeCategoryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ProxySubscribeCategory, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ProxySubscribeCategoryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ProxySubscribeCategoryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ProxySubscribeCategory).
+func (m *ProxySubscribeCategoryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ProxySubscribeCategoryMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.parent_id != nil {
+		fields = append(fields, proxysubscribecategory.FieldParentID)
+	}
+	if m.name != nil {
+		fields = append(fields, proxysubscribecategory.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, proxysubscribecategory.FieldDescription)
+	}
+	if m.language != nil {
+		fields = append(fields, proxysubscribecategory.FieldLanguage)
+	}
+	if m.show != nil {
+		fields = append(fields, proxysubscribecategory.FieldShow)
+	}
+	if m.sort != nil {
+		fields = append(fields, proxysubscribecategory.FieldSort)
+	}
+	if m.created_at != nil {
+		fields = append(fields, proxysubscribecategory.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, proxysubscribecategory.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ProxySubscribeCategoryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case proxysubscribecategory.FieldParentID:
+		return m.ParentID()
+	case proxysubscribecategory.FieldName:
+		return m.Name()
+	case proxysubscribecategory.FieldDescription:
+		return m.Description()
+	case proxysubscribecategory.FieldLanguage:
+		return m.Language()
+	case proxysubscribecategory.FieldShow:
+		return m.Show()
+	case proxysubscribecategory.FieldSort:
+		return m.Sort()
+	case proxysubscribecategory.FieldCreatedAt:
+		return m.CreatedAt()
+	case proxysubscribecategory.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ProxySubscribeCategoryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case proxysubscribecategory.FieldParentID:
+		return m.OldParentID(ctx)
+	case proxysubscribecategory.FieldName:
+		return m.OldName(ctx)
+	case proxysubscribecategory.FieldDescription:
+		return m.OldDescription(ctx)
+	case proxysubscribecategory.FieldLanguage:
+		return m.OldLanguage(ctx)
+	case proxysubscribecategory.FieldShow:
+		return m.OldShow(ctx)
+	case proxysubscribecategory.FieldSort:
+		return m.OldSort(ctx)
+	case proxysubscribecategory.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case proxysubscribecategory.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ProxySubscribeCategory field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProxySubscribeCategoryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case proxysubscribecategory.FieldParentID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParentID(v)
+		return nil
+	case proxysubscribecategory.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case proxysubscribecategory.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case proxysubscribecategory.FieldLanguage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLanguage(v)
+		return nil
+	case proxysubscribecategory.FieldShow:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetShow(v)
+		return nil
+	case proxysubscribecategory.FieldSort:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSort(v)
+		return nil
+	case proxysubscribecategory.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case proxysubscribecategory.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProxySubscribeCategory field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ProxySubscribeCategoryMutation) AddedFields() []string {
+	var fields []string
+	if m.addparent_id != nil {
+		fields = append(fields, proxysubscribecategory.FieldParentID)
+	}
+	if m.addsort != nil {
+		fields = append(fields, proxysubscribecategory.FieldSort)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ProxySubscribeCategoryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case proxysubscribecategory.FieldParentID:
+		return m.AddedParentID()
+	case proxysubscribecategory.FieldSort:
+		return m.AddedSort()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProxySubscribeCategoryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case proxysubscribecategory.FieldParentID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddParentID(v)
+		return nil
+	case proxysubscribecategory.FieldSort:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSort(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProxySubscribeCategory numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ProxySubscribeCategoryMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(proxysubscribecategory.FieldDescription) {
+		fields = append(fields, proxysubscribecategory.FieldDescription)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ProxySubscribeCategoryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ProxySubscribeCategoryMutation) ClearField(name string) error {
+	switch name {
+	case proxysubscribecategory.FieldDescription:
+		m.ClearDescription()
+		return nil
+	}
+	return fmt.Errorf("unknown ProxySubscribeCategory nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ProxySubscribeCategoryMutation) ResetField(name string) error {
+	switch name {
+	case proxysubscribecategory.FieldParentID:
+		m.ResetParentID()
+		return nil
+	case proxysubscribecategory.FieldName:
+		m.ResetName()
+		return nil
+	case proxysubscribecategory.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case proxysubscribecategory.FieldLanguage:
+		m.ResetLanguage()
+		return nil
+	case proxysubscribecategory.FieldShow:
+		m.ResetShow()
+		return nil
+	case proxysubscribecategory.FieldSort:
+		m.ResetSort()
+		return nil
+	case proxysubscribecategory.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case proxysubscribecategory.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ProxySubscribeCategory field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ProxySubscribeCategoryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ProxySubscribeCategoryMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ProxySubscribeCategoryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ProxySubscribeCategoryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ProxySubscribeCategoryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ProxySubscribeCategoryMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ProxySubscribeCategoryMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ProxySubscribeCategory unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ProxySubscribeCategoryMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ProxySubscribeCategory edge %s", name)
 }
 
 // ProxySubscribeGroupMutation represents an operation that mutates the ProxySubscribeGroup nodes in the graph.

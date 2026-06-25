@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Portal_GetSubscription_FullMethodName            = "/api.public.portal.v1.Portal/GetSubscription"
+	Portal_GetSubscriptionCatalog_FullMethodName     = "/api.public.portal.v1.Portal/GetSubscriptionCatalog"
 	Portal_PrePurchaseOrder_FullMethodName           = "/api.public.portal.v1.Portal/PrePurchaseOrder"
 	Portal_Purchase_FullMethodName                   = "/api.public.portal.v1.Portal/Purchase"
 	Portal_GetAvailablePaymentMethods_FullMethodName = "/api.public.portal.v1.Portal/GetAvailablePaymentMethods"
@@ -33,6 +34,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PortalClient interface {
 	GetSubscription(ctx context.Context, in *GetSubscriptionRequest, opts ...grpc.CallOption) (*GetSubscriptionReply, error)
+	GetSubscriptionCatalog(ctx context.Context, in *GetSubscriptionCatalogRequest, opts ...grpc.CallOption) (*GetSubscriptionCatalogReply, error)
 	PrePurchaseOrder(ctx context.Context, in *PrePurchaseOrderRequest, opts ...grpc.CallOption) (*PrePurchaseOrderReply, error)
 	Purchase(ctx context.Context, in *PurchaseRequest, opts ...grpc.CallOption) (*PurchaseReply, error)
 	GetAvailablePaymentMethods(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAvailablePaymentMethodsReply, error)
@@ -52,6 +54,16 @@ func (c *portalClient) GetSubscription(ctx context.Context, in *GetSubscriptionR
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetSubscriptionReply)
 	err := c.cc.Invoke(ctx, Portal_GetSubscription_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalClient) GetSubscriptionCatalog(ctx context.Context, in *GetSubscriptionCatalogRequest, opts ...grpc.CallOption) (*GetSubscriptionCatalogReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSubscriptionCatalogReply)
+	err := c.cc.Invoke(ctx, Portal_GetSubscriptionCatalog_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +125,7 @@ func (c *portalClient) QueryPurchaseOrder(ctx context.Context, in *QueryPurchase
 // for forward compatibility.
 type PortalServer interface {
 	GetSubscription(context.Context, *GetSubscriptionRequest) (*GetSubscriptionReply, error)
+	GetSubscriptionCatalog(context.Context, *GetSubscriptionCatalogRequest) (*GetSubscriptionCatalogReply, error)
 	PrePurchaseOrder(context.Context, *PrePurchaseOrderRequest) (*PrePurchaseOrderReply, error)
 	Purchase(context.Context, *PurchaseRequest) (*PurchaseReply, error)
 	GetAvailablePaymentMethods(context.Context, *emptypb.Empty) (*GetAvailablePaymentMethodsReply, error)
@@ -130,6 +143,9 @@ type UnimplementedPortalServer struct{}
 
 func (UnimplementedPortalServer) GetSubscription(context.Context, *GetSubscriptionRequest) (*GetSubscriptionReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubscription not implemented")
+}
+func (UnimplementedPortalServer) GetSubscriptionCatalog(context.Context, *GetSubscriptionCatalogRequest) (*GetSubscriptionCatalogReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubscriptionCatalog not implemented")
 }
 func (UnimplementedPortalServer) PrePurchaseOrder(context.Context, *PrePurchaseOrderRequest) (*PrePurchaseOrderReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PrePurchaseOrder not implemented")
@@ -181,6 +197,24 @@ func _Portal_GetSubscription_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortalServer).GetSubscription(ctx, req.(*GetSubscriptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Portal_GetSubscriptionCatalog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSubscriptionCatalogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServer).GetSubscriptionCatalog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Portal_GetSubscriptionCatalog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServer).GetSubscriptionCatalog(ctx, req.(*GetSubscriptionCatalogRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -285,6 +319,10 @@ var Portal_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSubscription",
 			Handler:    _Portal_GetSubscription_Handler,
+		},
+		{
+			MethodName: "GetSubscriptionCatalog",
+			Handler:    _Portal_GetSubscriptionCatalog_Handler,
 		},
 		{
 			MethodName: "PrePurchaseOrder",

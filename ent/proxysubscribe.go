@@ -43,6 +43,8 @@ type ProxySubscribe struct {
 	DeviceLimit int32 `json:"device_limit,omitempty"`
 	// 配额
 	Quota int32 `json:"quota,omitempty"`
+	// 商品分类ID
+	CategoryID int64 `json:"category_id,omitempty"`
 	// 节点IDs
 	Nodes string `json:"nodes,omitempty"`
 	// 节点标签
@@ -85,7 +87,7 @@ func (*ProxySubscribe) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case proxysubscribe.FieldShow, proxysubscribe.FieldSell, proxysubscribe.FieldAllowDeduction, proxysubscribe.FieldRenewalReset, proxysubscribe.FieldShowOriginalPrice:
 			values[i] = new(sql.NullBool)
-		case proxysubscribe.FieldID, proxysubscribe.FieldUnitPrice, proxysubscribe.FieldReplacement, proxysubscribe.FieldInventory, proxysubscribe.FieldTraffic, proxysubscribe.FieldSpeedLimit, proxysubscribe.FieldDeviceLimit, proxysubscribe.FieldQuota, proxysubscribe.FieldNodeGroupID, proxysubscribe.FieldSort, proxysubscribe.FieldDeductionRatio, proxysubscribe.FieldResetCycle:
+		case proxysubscribe.FieldID, proxysubscribe.FieldUnitPrice, proxysubscribe.FieldReplacement, proxysubscribe.FieldInventory, proxysubscribe.FieldTraffic, proxysubscribe.FieldSpeedLimit, proxysubscribe.FieldDeviceLimit, proxysubscribe.FieldQuota, proxysubscribe.FieldCategoryID, proxysubscribe.FieldNodeGroupID, proxysubscribe.FieldSort, proxysubscribe.FieldDeductionRatio, proxysubscribe.FieldResetCycle:
 			values[i] = new(sql.NullInt64)
 		case proxysubscribe.FieldName, proxysubscribe.FieldLanguage, proxysubscribe.FieldDescription, proxysubscribe.FieldUnitTime, proxysubscribe.FieldDiscount, proxysubscribe.FieldNodes, proxysubscribe.FieldNodeTags, proxysubscribe.FieldTrafficLimit:
 			values[i] = new(sql.NullString)
@@ -185,6 +187,12 @@ func (_m *ProxySubscribe) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field quota", values[i])
 			} else if value.Valid {
 				_m.Quota = int32(value.Int64)
+			}
+		case proxysubscribe.FieldCategoryID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field category_id", values[i])
+			} else if value.Valid {
+				_m.CategoryID = value.Int64
 			}
 		case proxysubscribe.FieldNodes:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -357,6 +365,9 @@ func (_m *ProxySubscribe) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("quota=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Quota))
+	builder.WriteString(", ")
+	builder.WriteString("category_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CategoryID))
 	builder.WriteString(", ")
 	builder.WriteString("nodes=")
 	builder.WriteString(_m.Nodes)

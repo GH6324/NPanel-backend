@@ -363,6 +363,7 @@ var (
 		{Name: "speed_limit", Type: field.TypeInt32, Comment: "速度限制", Default: 0},
 		{Name: "device_limit", Type: field.TypeInt32, Comment: "设备数限制", Default: 0},
 		{Name: "quota", Type: field.TypeInt32, Comment: "配额", Default: 0},
+		{Name: "category_id", Type: field.TypeInt64, Comment: "商品分类ID", Default: 0},
 		{Name: "nodes", Type: field.TypeString, Size: 255, Comment: "节点IDs", Default: ""},
 		{Name: "node_tags", Type: field.TypeString, Size: 255, Comment: "节点标签", Default: ""},
 		{Name: "node_group_ids", Type: field.TypeJSON, Nullable: true, Comment: "节点组ID列表"},
@@ -405,6 +406,24 @@ var (
 		Name:       "subscribe_application",
 		Columns:    SubscribeApplicationColumns,
 		PrimaryKey: []*schema.Column{SubscribeApplicationColumns[0]},
+	}
+	// SubscribeCategoryColumns holds the columns for the "subscribe_category" table.
+	SubscribeCategoryColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "商品分类ID"},
+		{Name: "parent_id", Type: field.TypeInt64, Comment: "父分类ID", Default: 0},
+		{Name: "name", Type: field.TypeString, Size: 255, Comment: "分类名称", Default: ""},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647, Comment: "分类描述"},
+		{Name: "language", Type: field.TypeString, Size: 255, Comment: "语言", Default: ""},
+		{Name: "show", Type: field.TypeBool, Comment: "是否显示", Default: true},
+		{Name: "sort", Type: field.TypeInt32, Comment: "排序", Default: 0},
+		{Name: "created_at", Type: field.TypeTime, Comment: "创建时间"},
+		{Name: "updated_at", Type: field.TypeTime, Comment: "更新时间"},
+	}
+	// SubscribeCategoryTable holds the schema information for the "subscribe_category" table.
+	SubscribeCategoryTable = &schema.Table{
+		Name:       "subscribe_category",
+		Columns:    SubscribeCategoryColumns,
+		PrimaryKey: []*schema.Column{SubscribeCategoryColumns[0]},
 	}
 	// SubscribeGroupColumns holds the columns for the "subscribe_group" table.
 	SubscribeGroupColumns = []*schema.Column{
@@ -691,6 +710,7 @@ var (
 		NodeGroupTable,
 		SubscribeTable,
 		SubscribeApplicationTable,
+		SubscribeCategoryTable,
 		SubscribeGroupTable,
 		SystemTable,
 		SystemLogsTable,
@@ -760,6 +780,9 @@ func init() {
 	}
 	SubscribeApplicationTable.Annotation = &entsql.Annotation{
 		Table: "subscribe_application",
+	}
+	SubscribeCategoryTable.Annotation = &entsql.Annotation{
+		Table: "subscribe_category",
 	}
 	SubscribeGroupTable.Annotation = &entsql.Annotation{
 		Table: "subscribe_group",

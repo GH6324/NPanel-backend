@@ -20,32 +20,45 @@ var _ = binding.EncodeURL
 const _ = http.SupportPackageIsVersion1
 
 const OperationSubscribeBatchDeleteSubscribe = "/api.admin.subscribe.v1.Subscribe/BatchDeleteSubscribe"
+const OperationSubscribeBatchDeleteSubscribeCategory = "/api.admin.subscribe.v1.Subscribe/BatchDeleteSubscribeCategory"
 const OperationSubscribeBatchDeleteSubscribeGroup = "/api.admin.subscribe.v1.Subscribe/BatchDeleteSubscribeGroup"
 const OperationSubscribeCreateSubscribe = "/api.admin.subscribe.v1.Subscribe/CreateSubscribe"
+const OperationSubscribeCreateSubscribeCategory = "/api.admin.subscribe.v1.Subscribe/CreateSubscribeCategory"
 const OperationSubscribeCreateSubscribeGroup = "/api.admin.subscribe.v1.Subscribe/CreateSubscribeGroup"
 const OperationSubscribeDeleteSubscribe = "/api.admin.subscribe.v1.Subscribe/DeleteSubscribe"
+const OperationSubscribeDeleteSubscribeCategory = "/api.admin.subscribe.v1.Subscribe/DeleteSubscribeCategory"
 const OperationSubscribeDeleteSubscribeGroup = "/api.admin.subscribe.v1.Subscribe/DeleteSubscribeGroup"
+const OperationSubscribeGetSubscribeCategoryList = "/api.admin.subscribe.v1.Subscribe/GetSubscribeCategoryList"
 const OperationSubscribeGetSubscribeDetails = "/api.admin.subscribe.v1.Subscribe/GetSubscribeDetails"
 const OperationSubscribeGetSubscribeGroupList = "/api.admin.subscribe.v1.Subscribe/GetSubscribeGroupList"
 const OperationSubscribeGetSubscribeList = "/api.admin.subscribe.v1.Subscribe/GetSubscribeList"
 const OperationSubscribeResetAllSubscribeToken = "/api.admin.subscribe.v1.Subscribe/ResetAllSubscribeToken"
 const OperationSubscribeSubscribeSort = "/api.admin.subscribe.v1.Subscribe/SubscribeSort"
 const OperationSubscribeUpdateSubscribe = "/api.admin.subscribe.v1.Subscribe/UpdateSubscribe"
+const OperationSubscribeUpdateSubscribeCategory = "/api.admin.subscribe.v1.Subscribe/UpdateSubscribeCategory"
 const OperationSubscribeUpdateSubscribeGroup = "/api.admin.subscribe.v1.Subscribe/UpdateSubscribeGroup"
 
 type SubscribeHTTPServer interface {
 	// BatchDeleteSubscribe BatchDeleteSubscribe 批量删除订阅套餐
 	BatchDeleteSubscribe(context.Context, *BatchDeleteSubscribeRequest) (*BatchDeleteSubscribeReply, error)
+	// BatchDeleteSubscribeCategory BatchDeleteSubscribeCategory 批量删除商品分类
+	BatchDeleteSubscribeCategory(context.Context, *BatchDeleteSubscribeCategoryRequest) (*BatchDeleteSubscribeCategoryReply, error)
 	// BatchDeleteSubscribeGroup BatchDeleteSubscribeGroup 批量删除订阅组
 	BatchDeleteSubscribeGroup(context.Context, *BatchDeleteSubscribeGroupRequest) (*BatchDeleteSubscribeGroupReply, error)
 	// CreateSubscribe CreateSubscribe 创建订阅套餐
 	CreateSubscribe(context.Context, *CreateSubscribeRequest) (*CreateSubscribeReply, error)
+	// CreateSubscribeCategory CreateSubscribeCategory 创建商品分类
+	CreateSubscribeCategory(context.Context, *CreateSubscribeCategoryRequest) (*CreateSubscribeCategoryReply, error)
 	// CreateSubscribeGroup CreateSubscribeGroup 创建订阅组
 	CreateSubscribeGroup(context.Context, *CreateSubscribeGroupRequest) (*CreateSubscribeGroupReply, error)
 	// DeleteSubscribe DeleteSubscribe 删除订阅套餐
 	DeleteSubscribe(context.Context, *DeleteSubscribeRequest) (*DeleteSubscribeReply, error)
+	// DeleteSubscribeCategory DeleteSubscribeCategory 删除商品分类
+	DeleteSubscribeCategory(context.Context, *DeleteSubscribeCategoryRequest) (*DeleteSubscribeCategoryReply, error)
 	// DeleteSubscribeGroup DeleteSubscribeGroup 删除订阅组
 	DeleteSubscribeGroup(context.Context, *DeleteSubscribeGroupRequest) (*DeleteSubscribeGroupReply, error)
+	// GetSubscribeCategoryList GetSubscribeCategoryList 获取商品分类列表
+	GetSubscribeCategoryList(context.Context, *GetSubscribeCategoryListRequest) (*GetSubscribeCategoryListReply, error)
 	// GetSubscribeDetails GetSubscribeDetails 获取订阅套餐详情
 	GetSubscribeDetails(context.Context, *GetSubscribeDetailsRequest) (*GetSubscribeDetailsReply, error)
 	// GetSubscribeGroupList GetSubscribeGroupList 获取订阅组列表
@@ -58,6 +71,8 @@ type SubscribeHTTPServer interface {
 	SubscribeSort(context.Context, *SubscribeSortRequest) (*SubscribeSortReply, error)
 	// UpdateSubscribe UpdateSubscribe 更新订阅套餐
 	UpdateSubscribe(context.Context, *UpdateSubscribeRequest) (*UpdateSubscribeReply, error)
+	// UpdateSubscribeCategory UpdateSubscribeCategory 更新商品分类
+	UpdateSubscribeCategory(context.Context, *UpdateSubscribeCategoryRequest) (*UpdateSubscribeCategoryReply, error)
 	// UpdateSubscribeGroup UpdateSubscribeGroup 更新订阅组
 	UpdateSubscribeGroup(context.Context, *UpdateSubscribeGroupRequest) (*UpdateSubscribeGroupReply, error)
 }
@@ -71,6 +86,11 @@ func RegisterSubscribeHTTPServer(s *http.Server, srv SubscribeHTTPServer) {
 	r.GET("/v1/admin/subscribe/details", _Subscribe_GetSubscribeDetails0_HTTP_Handler(srv))
 	r.GET("/v1/admin/subscribe/list", _Subscribe_GetSubscribeList0_HTTP_Handler(srv))
 	r.POST("/v1/admin/subscribe/sort", _Subscribe_SubscribeSort0_HTTP_Handler(srv))
+	r.POST("/v1/admin/subscribe/category", _Subscribe_CreateSubscribeCategory0_HTTP_Handler(srv))
+	r.PUT("/v1/admin/subscribe/category", _Subscribe_UpdateSubscribeCategory0_HTTP_Handler(srv))
+	r.DELETE("/v1/admin/subscribe/category", _Subscribe_DeleteSubscribeCategory0_HTTP_Handler(srv))
+	r.DELETE("/v1/admin/subscribe/category/batch", _Subscribe_BatchDeleteSubscribeCategory0_HTTP_Handler(srv))
+	r.GET("/v1/admin/subscribe/category/list", _Subscribe_GetSubscribeCategoryList0_HTTP_Handler(srv))
 	r.POST("/v1/admin/subscribe/group", _Subscribe_CreateSubscribeGroup0_HTTP_Handler(srv))
 	r.PUT("/v1/admin/subscribe/group", _Subscribe_UpdateSubscribeGroup0_HTTP_Handler(srv))
 	r.DELETE("/v1/admin/subscribe/group", _Subscribe_DeleteSubscribeGroup0_HTTP_Handler(srv))
@@ -227,6 +247,113 @@ func _Subscribe_SubscribeSort0_HTTP_Handler(srv SubscribeHTTPServer) func(ctx ht
 	}
 }
 
+func _Subscribe_CreateSubscribeCategory0_HTTP_Handler(srv SubscribeHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CreateSubscribeCategoryRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationSubscribeCreateSubscribeCategory)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CreateSubscribeCategory(ctx, req.(*CreateSubscribeCategoryRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CreateSubscribeCategoryReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Subscribe_UpdateSubscribeCategory0_HTTP_Handler(srv SubscribeHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateSubscribeCategoryRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationSubscribeUpdateSubscribeCategory)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateSubscribeCategory(ctx, req.(*UpdateSubscribeCategoryRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UpdateSubscribeCategoryReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Subscribe_DeleteSubscribeCategory0_HTTP_Handler(srv SubscribeHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in DeleteSubscribeCategoryRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationSubscribeDeleteSubscribeCategory)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.DeleteSubscribeCategory(ctx, req.(*DeleteSubscribeCategoryRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*DeleteSubscribeCategoryReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Subscribe_BatchDeleteSubscribeCategory0_HTTP_Handler(srv SubscribeHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in BatchDeleteSubscribeCategoryRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationSubscribeBatchDeleteSubscribeCategory)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.BatchDeleteSubscribeCategory(ctx, req.(*BatchDeleteSubscribeCategoryRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*BatchDeleteSubscribeCategoryReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Subscribe_GetSubscribeCategoryList0_HTTP_Handler(srv SubscribeHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetSubscribeCategoryListRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationSubscribeGetSubscribeCategoryList)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetSubscribeCategoryList(ctx, req.(*GetSubscribeCategoryListRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetSubscribeCategoryListReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _Subscribe_CreateSubscribeGroup0_HTTP_Handler(srv SubscribeHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CreateSubscribeGroupRequest
@@ -359,16 +486,24 @@ func _Subscribe_ResetAllSubscribeToken0_HTTP_Handler(srv SubscribeHTTPServer) fu
 type SubscribeHTTPClient interface {
 	// BatchDeleteSubscribe BatchDeleteSubscribe 批量删除订阅套餐
 	BatchDeleteSubscribe(ctx context.Context, req *BatchDeleteSubscribeRequest, opts ...http.CallOption) (rsp *BatchDeleteSubscribeReply, err error)
+	// BatchDeleteSubscribeCategory BatchDeleteSubscribeCategory 批量删除商品分类
+	BatchDeleteSubscribeCategory(ctx context.Context, req *BatchDeleteSubscribeCategoryRequest, opts ...http.CallOption) (rsp *BatchDeleteSubscribeCategoryReply, err error)
 	// BatchDeleteSubscribeGroup BatchDeleteSubscribeGroup 批量删除订阅组
 	BatchDeleteSubscribeGroup(ctx context.Context, req *BatchDeleteSubscribeGroupRequest, opts ...http.CallOption) (rsp *BatchDeleteSubscribeGroupReply, err error)
 	// CreateSubscribe CreateSubscribe 创建订阅套餐
 	CreateSubscribe(ctx context.Context, req *CreateSubscribeRequest, opts ...http.CallOption) (rsp *CreateSubscribeReply, err error)
+	// CreateSubscribeCategory CreateSubscribeCategory 创建商品分类
+	CreateSubscribeCategory(ctx context.Context, req *CreateSubscribeCategoryRequest, opts ...http.CallOption) (rsp *CreateSubscribeCategoryReply, err error)
 	// CreateSubscribeGroup CreateSubscribeGroup 创建订阅组
 	CreateSubscribeGroup(ctx context.Context, req *CreateSubscribeGroupRequest, opts ...http.CallOption) (rsp *CreateSubscribeGroupReply, err error)
 	// DeleteSubscribe DeleteSubscribe 删除订阅套餐
 	DeleteSubscribe(ctx context.Context, req *DeleteSubscribeRequest, opts ...http.CallOption) (rsp *DeleteSubscribeReply, err error)
+	// DeleteSubscribeCategory DeleteSubscribeCategory 删除商品分类
+	DeleteSubscribeCategory(ctx context.Context, req *DeleteSubscribeCategoryRequest, opts ...http.CallOption) (rsp *DeleteSubscribeCategoryReply, err error)
 	// DeleteSubscribeGroup DeleteSubscribeGroup 删除订阅组
 	DeleteSubscribeGroup(ctx context.Context, req *DeleteSubscribeGroupRequest, opts ...http.CallOption) (rsp *DeleteSubscribeGroupReply, err error)
+	// GetSubscribeCategoryList GetSubscribeCategoryList 获取商品分类列表
+	GetSubscribeCategoryList(ctx context.Context, req *GetSubscribeCategoryListRequest, opts ...http.CallOption) (rsp *GetSubscribeCategoryListReply, err error)
 	// GetSubscribeDetails GetSubscribeDetails 获取订阅套餐详情
 	GetSubscribeDetails(ctx context.Context, req *GetSubscribeDetailsRequest, opts ...http.CallOption) (rsp *GetSubscribeDetailsReply, err error)
 	// GetSubscribeGroupList GetSubscribeGroupList 获取订阅组列表
@@ -381,6 +516,8 @@ type SubscribeHTTPClient interface {
 	SubscribeSort(ctx context.Context, req *SubscribeSortRequest, opts ...http.CallOption) (rsp *SubscribeSortReply, err error)
 	// UpdateSubscribe UpdateSubscribe 更新订阅套餐
 	UpdateSubscribe(ctx context.Context, req *UpdateSubscribeRequest, opts ...http.CallOption) (rsp *UpdateSubscribeReply, err error)
+	// UpdateSubscribeCategory UpdateSubscribeCategory 更新商品分类
+	UpdateSubscribeCategory(ctx context.Context, req *UpdateSubscribeCategoryRequest, opts ...http.CallOption) (rsp *UpdateSubscribeCategoryReply, err error)
 	// UpdateSubscribeGroup UpdateSubscribeGroup 更新订阅组
 	UpdateSubscribeGroup(ctx context.Context, req *UpdateSubscribeGroupRequest, opts ...http.CallOption) (rsp *UpdateSubscribeGroupReply, err error)
 }
@@ -399,6 +536,20 @@ func (c *SubscribeHTTPClientImpl) BatchDeleteSubscribe(ctx context.Context, in *
 	pattern := "/v1/admin/subscribe/batch"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationSubscribeBatchDeleteSubscribe))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// BatchDeleteSubscribeCategory BatchDeleteSubscribeCategory 批量删除商品分类
+func (c *SubscribeHTTPClientImpl) BatchDeleteSubscribeCategory(ctx context.Context, in *BatchDeleteSubscribeCategoryRequest, opts ...http.CallOption) (*BatchDeleteSubscribeCategoryReply, error) {
+	var out BatchDeleteSubscribeCategoryReply
+	pattern := "/v1/admin/subscribe/category/batch"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationSubscribeBatchDeleteSubscribeCategory))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "DELETE", path, in, &out, opts...)
 	if err != nil {
@@ -435,6 +586,20 @@ func (c *SubscribeHTTPClientImpl) CreateSubscribe(ctx context.Context, in *Creat
 	return &out, nil
 }
 
+// CreateSubscribeCategory CreateSubscribeCategory 创建商品分类
+func (c *SubscribeHTTPClientImpl) CreateSubscribeCategory(ctx context.Context, in *CreateSubscribeCategoryRequest, opts ...http.CallOption) (*CreateSubscribeCategoryReply, error) {
+	var out CreateSubscribeCategoryReply
+	pattern := "/v1/admin/subscribe/category"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationSubscribeCreateSubscribeCategory))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // CreateSubscribeGroup CreateSubscribeGroup 创建订阅组
 func (c *SubscribeHTTPClientImpl) CreateSubscribeGroup(ctx context.Context, in *CreateSubscribeGroupRequest, opts ...http.CallOption) (*CreateSubscribeGroupReply, error) {
 	var out CreateSubscribeGroupReply
@@ -463,6 +628,20 @@ func (c *SubscribeHTTPClientImpl) DeleteSubscribe(ctx context.Context, in *Delet
 	return &out, nil
 }
 
+// DeleteSubscribeCategory DeleteSubscribeCategory 删除商品分类
+func (c *SubscribeHTTPClientImpl) DeleteSubscribeCategory(ctx context.Context, in *DeleteSubscribeCategoryRequest, opts ...http.CallOption) (*DeleteSubscribeCategoryReply, error) {
+	var out DeleteSubscribeCategoryReply
+	pattern := "/v1/admin/subscribe/category"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationSubscribeDeleteSubscribeCategory))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // DeleteSubscribeGroup DeleteSubscribeGroup 删除订阅组
 func (c *SubscribeHTTPClientImpl) DeleteSubscribeGroup(ctx context.Context, in *DeleteSubscribeGroupRequest, opts ...http.CallOption) (*DeleteSubscribeGroupReply, error) {
 	var out DeleteSubscribeGroupReply
@@ -471,6 +650,20 @@ func (c *SubscribeHTTPClientImpl) DeleteSubscribeGroup(ctx context.Context, in *
 	opts = append(opts, http.Operation(OperationSubscribeDeleteSubscribeGroup))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "DELETE", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GetSubscribeCategoryList GetSubscribeCategoryList 获取商品分类列表
+func (c *SubscribeHTTPClientImpl) GetSubscribeCategoryList(ctx context.Context, in *GetSubscribeCategoryListRequest, opts ...http.CallOption) (*GetSubscribeCategoryListReply, error) {
+	var out GetSubscribeCategoryListReply
+	pattern := "/v1/admin/subscribe/category/list"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationSubscribeGetSubscribeCategoryList))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -553,6 +746,20 @@ func (c *SubscribeHTTPClientImpl) UpdateSubscribe(ctx context.Context, in *Updat
 	pattern := "/v1/admin/subscribe"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationSubscribeUpdateSubscribe))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// UpdateSubscribeCategory UpdateSubscribeCategory 更新商品分类
+func (c *SubscribeHTTPClientImpl) UpdateSubscribeCategory(ctx context.Context, in *UpdateSubscribeCategoryRequest, opts ...http.CallOption) (*UpdateSubscribeCategoryReply, error) {
+	var out UpdateSubscribeCategoryReply
+	pattern := "/v1/admin/subscribe/category"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationSubscribeUpdateSubscribeCategory))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
+	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribecategory"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribegroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyusersubscribe"
 	"github.com/npanel-dev/NPanel-backend/internal/biz/admin/subscribe"
@@ -49,6 +50,7 @@ func (r *subscribeRepo) CreateSubscribe(ctx context.Context, sub *model.Subscrib
 		SetSpeedLimit(int32(sub.SpeedLimit)).
 		SetDeviceLimit(int32(sub.DeviceLimit)).
 		SetQuota(int32(sub.Quota)).
+		SetCategoryID(sub.CategoryID).
 		SetNodes(sub.Nodes).
 		SetNodeTags(sub.NodeTags).
 		SetNodeGroupIds(sub.NodeGroupIDs).
@@ -90,6 +92,7 @@ func (r *subscribeRepo) UpdateSubscribe(ctx context.Context, sub *model.Subscrib
 		SetSpeedLimit(int32(sub.SpeedLimit)).
 		SetDeviceLimit(int32(sub.DeviceLimit)).
 		SetQuota(int32(sub.Quota)).
+		SetCategoryID(sub.CategoryID).
 		SetNodes(sub.Nodes).
 		SetNodeTags(sub.NodeTags).
 		SetNodeGroupIds(sub.NodeGroupIDs).
@@ -129,6 +132,10 @@ func (r *subscribeRepo) GetSubscribeList(ctx context.Context, req *model.Subscri
 
 	if req.NodeGroupID > 0 {
 		query = query.Where(proxysubscribe.NodeGroupIDEQ(req.NodeGroupID))
+	}
+
+	if req.CategoryID > 0 {
+		query = query.Where(proxysubscribe.CategoryIDEQ(req.CategoryID))
 	}
 
 	if len(req.IDs) > 0 {
@@ -223,6 +230,98 @@ func (r *subscribeRepo) BatchUpdateSubscribeSort(ctx context.Context, subscribes
 	}
 
 	return tx.Commit()
+}
+
+// ==================== Subscribe Category Operations ====================
+
+// CreateSubscribeCategory create subscribe category.
+func (r *subscribeRepo) CreateSubscribeCategory(ctx context.Context, category *model.SubscribeCategory) error {
+	_, err := r.data.db.ProxySubscribeCategory.Create().
+		SetParentID(category.ParentID).
+		SetName(category.Name).
+		SetDescription(category.Description).
+		SetLanguage(category.Language).
+		SetShow(category.Show).
+		SetSort(int32(category.Sort)).
+		Save(ctx)
+	return err
+}
+
+// GetSubscribeCategoryByID get subscribe category by ID.
+func (r *subscribeRepo) GetSubscribeCategoryByID(ctx context.Context, id int64) (*ent.ProxySubscribeCategory, error) {
+	return r.data.db.ProxySubscribeCategory.Query().
+		Where(proxysubscribecategory.ID(id)).
+		Only(ctx)
+}
+
+// UpdateSubscribeCategory update subscribe category.
+func (r *subscribeRepo) UpdateSubscribeCategory(ctx context.Context, category *model.SubscribeCategory) error {
+	return r.data.db.ProxySubscribeCategory.Update().
+		Where(proxysubscribecategory.ID(category.ID)).
+		SetParentID(category.ParentID).
+		SetName(category.Name).
+		SetDescription(category.Description).
+		SetLanguage(category.Language).
+		SetShow(category.Show).
+		SetSort(int32(category.Sort)).
+		Exec(ctx)
+}
+
+// DeleteSubscribeCategory delete subscribe category.
+func (r *subscribeRepo) DeleteSubscribeCategory(ctx context.Context, id int64) error {
+	_, err := r.data.db.ProxySubscribeCategory.Delete().
+		Where(proxysubscribecategory.ID(id)).
+		Exec(ctx)
+	return err
+}
+
+// BatchDeleteSubscribeCategory batch delete subscribe categories.
+func (r *subscribeRepo) BatchDeleteSubscribeCategory(ctx context.Context, ids []int64) error {
+	_, err := r.data.db.ProxySubscribeCategory.Delete().
+		Where(proxysubscribecategory.IDIn(ids...)).
+		Exec(ctx)
+	return err
+}
+
+// GetSubscribeCategoryList get subscribe category list.
+func (r *subscribeRepo) GetSubscribeCategoryList(ctx context.Context, req *model.SubscribeCategoryListParams) ([]*ent.ProxySubscribeCategory, int32, error) {
+	query := r.data.db.ProxySubscribeCategory.Query()
+	if req.Language != "" {
+		query = query.Where(proxysubscribecategory.Language(req.Language))
+	}
+	if req.ParentID != nil {
+		query = query.Where(proxysubscribecategory.ParentIDEQ(*req.ParentID))
+	}
+	if req.Show != nil {
+		query = query.Where(proxysubscribecategory.ShowEQ(*req.Show))
+	}
+
+	total, err := query.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	list, err := query.
+		Order(ent.Asc(proxysubscribecategory.FieldSort), ent.Asc(proxysubscribecategory.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	return list, int32(total), nil
+}
+
+// CountSubscribeByCategoryID counts subscribe plans bound to a category.
+func (r *subscribeRepo) CountSubscribeByCategoryID(ctx context.Context, categoryID int64) (int, error) {
+	return r.data.db.ProxySubscribe.Query().
+		Where(proxysubscribe.CategoryIDEQ(categoryID)).
+		Count(ctx)
+}
+
+// CountSubscribeCategoryChildren counts child categories.
+func (r *subscribeRepo) CountSubscribeCategoryChildren(ctx context.Context, categoryID int64) (int, error) {
+	return r.data.db.ProxySubscribeCategory.Query().
+		Where(proxysubscribecategory.ParentIDEQ(categoryID)).
+		Count(ctx)
 }
 
 // ==================== Subscribe Group Operations ====================

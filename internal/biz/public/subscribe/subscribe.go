@@ -8,7 +8,8 @@ import (
 // SubscribeRepo Public Subscribe数据仓库接口
 type SubscribeRepo interface {
 	// QuerySubscribeList 查询订阅列表
-	QuerySubscribeList(ctx context.Context, language string) ([]*Subscribe, int32, error)
+	QuerySubscribeList(ctx context.Context, language string, categoryID int64) ([]*Subscribe, int32, error)
+	QuerySubscribeCatalog(ctx context.Context, language string) (*SubscribeCatalog, error)
 	QueryUserSubscribeNodeList(ctx context.Context, userID int64) ([]*UserSubscribeInfo, error)
 }
 
@@ -27,6 +28,8 @@ type Subscribe struct {
 	SpeedLimit        int64
 	DeviceLimit       int64
 	Quota             int64
+	CategoryID        int64
+	CategoryName      string
 	Nodes             []int
 	NodeTags          []string
 	NodeGroupIds      []int64
@@ -42,6 +45,24 @@ type Subscribe struct {
 	ShowOriginalPrice bool
 	CreatedAt         int64
 	UpdatedAt         int64
+}
+
+type SubscribeCategory struct {
+	ID          int64
+	ParentID    int64
+	Name        string
+	Description string
+	Language    string
+	Show        bool
+	Sort        int64
+	List        []*Subscribe
+	Children    []*SubscribeCategory
+}
+
+type SubscribeCatalog struct {
+	Categories    []*SubscribeCategory
+	Uncategorized []*Subscribe
+	Total         int32
 }
 
 // SubscribeDiscount 订阅折扣
@@ -125,8 +146,12 @@ func NewSubscribeUseCase(repo SubscribeRepo) *SubscribeUseCase {
 }
 
 // QuerySubscribeList 查询订阅列表
-func (uc *SubscribeUseCase) QuerySubscribeList(ctx context.Context, language string) ([]*Subscribe, int32, error) {
-	return uc.repo.QuerySubscribeList(ctx, language)
+func (uc *SubscribeUseCase) QuerySubscribeList(ctx context.Context, language string, categoryID int64) ([]*Subscribe, int32, error) {
+	return uc.repo.QuerySubscribeList(ctx, language, categoryID)
+}
+
+func (uc *SubscribeUseCase) QuerySubscribeCatalog(ctx context.Context, language string) (*SubscribeCatalog, error) {
+	return uc.repo.QuerySubscribeCatalog(ctx, language)
 }
 
 func (uc *SubscribeUseCase) QueryUserSubscribeNodeList(ctx context.Context, userID int64) ([]*UserSubscribeInfo, error) {

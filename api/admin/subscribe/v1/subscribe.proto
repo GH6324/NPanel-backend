@@ -63,6 +63,45 @@ service Subscribe {
     };
   }
 
+  // CreateSubscribeCategory 创建商品分类
+  rpc CreateSubscribeCategory (CreateSubscribeCategoryRequest) returns (CreateSubscribeCategoryReply) {
+    option (google.api.http) = {
+      post: "/v1/admin/subscribe/category"
+      body: "*"
+    };
+  }
+
+  // UpdateSubscribeCategory 更新商品分类
+  rpc UpdateSubscribeCategory (UpdateSubscribeCategoryRequest) returns (UpdateSubscribeCategoryReply) {
+    option (google.api.http) = {
+      put: "/v1/admin/subscribe/category"
+      body: "*"
+    };
+  }
+
+  // DeleteSubscribeCategory 删除商品分类
+  rpc DeleteSubscribeCategory (DeleteSubscribeCategoryRequest) returns (DeleteSubscribeCategoryReply) {
+    option (google.api.http) = {
+      delete: "/v1/admin/subscribe/category"
+      body: "*"
+    };
+  }
+
+  // BatchDeleteSubscribeCategory 批量删除商品分类
+  rpc BatchDeleteSubscribeCategory (BatchDeleteSubscribeCategoryRequest) returns (BatchDeleteSubscribeCategoryReply) {
+    option (google.api.http) = {
+      delete: "/v1/admin/subscribe/category/batch"
+      body: "*"
+    };
+  }
+
+  // GetSubscribeCategoryList 获取商品分类列表
+  rpc GetSubscribeCategoryList (GetSubscribeCategoryListRequest) returns (GetSubscribeCategoryListReply) {
+    option (google.api.http) = {
+      get: "/v1/admin/subscribe/category/list"
+    };
+  }
+
   // CreateSubscribeGroup 创建订阅组
   rpc CreateSubscribeGroup (CreateSubscribeGroupRequest) returns (CreateSubscribeGroupReply) {
     option (google.api.http) = {
@@ -142,6 +181,8 @@ message SubscribeInfo {
   int32 speed_limit = 11;                   // 速度限制
   int32 device_limit = 12;                  // 设备数限制
   int32 quota = 13;                         // 配额
+  int64 category_id = 29;                   // 商品分类ID
+  string category_name = 30;                // 商品分类名称
   repeated int64 nodes = 14;                 // 节点IDs
   repeated string node_tags = 15;           // 节点标签
   repeated int64 node_group_ids = 16;       // 节点组IDs
@@ -174,6 +215,8 @@ message SubscribeItem {
   int32 speed_limit = 11;
   int32 device_limit = 12;
   int32 quota = 13;
+  int64 category_id = 30;
+  string category_name = 31;
   repeated int64 nodes = 14;
   repeated string node_tags = 15;
   repeated int64 node_group_ids = 16;
@@ -206,6 +249,7 @@ message CreateSubscribeRequest {
   int32 speed_limit = 10;                   // 速度限制
   int32 device_limit = 11;                  // 设备数限制
   int32 quota = 12;                         // 配额
+  int64 category_id = 27;                   // 商品分类ID
   repeated int64 nodes = 13;                 // 节点IDs
   repeated string node_tags = 14;           // 节点标签
   repeated int64 node_group_ids = 15;       // 节点组IDs
@@ -249,6 +293,7 @@ message UpdateSubscribeRequest {
   int32 speed_limit = 11;                   // 速度限制
   int32 device_limit = 12;                  // 设备数限制
   int32 quota = 13;                         // 配额
+  int64 category_id = 27;                   // 商品分类ID
   repeated int64 nodes = 14;                 // 节点IDs
   repeated string node_tags = 15;           // 节点标签
   repeated int64 node_group_ids = 16;       // 节点组IDs
@@ -334,6 +379,7 @@ message GetSubscribeListRequest {
   string language = 3;     // 语言筛选
   string search = 4;       // 搜索关键词
   int64 node_group_id = 5; // 节点组ID筛选
+  int64 category_id = 6;   // 商品分类ID筛选
 }
 
 // GetSubscribeListData 获取订阅套餐列表数据
@@ -370,6 +416,107 @@ message SubscribeSortReply {
   int32 code = 1;                // 状态码
   string message = 2;            // 消息内容
   SubscribeSortData data = 3;    // 响应数据
+}
+
+// ==================== SubscribeCategory Messages ====================
+
+// SubscribeCategoryInfo 商品分类信息
+message SubscribeCategoryInfo {
+  int64 id = 1;             // 商品分类ID
+  int64 parent_id = 2;      // 父分类ID
+  string name = 3;          // 分类名称
+  string description = 4;   // 分类描述
+  string language = 5;      // 语言
+  bool show = 6;            // 是否显示
+  int32 sort = 7;           // 排序
+  int64 created_at = 8;     // 创建时间
+  int64 updated_at = 9;     // 更新时间
+}
+
+// CreateSubscribeCategoryRequest 创建商品分类请求
+message CreateSubscribeCategoryRequest {
+  int64 parent_id = 1;      // 父分类ID
+  string name = 2;          // 分类名称
+  string description = 3;   // 分类描述
+  string language = 4;      // 语言
+  optional bool show = 5;   // 是否显示
+  int32 sort = 6;           // 排序
+}
+
+message CreateSubscribeCategoryData {
+  bool success = 1;
+}
+
+message CreateSubscribeCategoryReply {
+  int32 code = 1;
+  string message = 2;
+  CreateSubscribeCategoryData data = 3;
+}
+
+// UpdateSubscribeCategoryRequest 更新商品分类请求
+message UpdateSubscribeCategoryRequest {
+  int64 id = 1;             // 商品分类ID
+  int64 parent_id = 2;      // 父分类ID
+  string name = 3;          // 分类名称
+  string description = 4;   // 分类描述
+  string language = 5;      // 语言
+  optional bool show = 6;   // 是否显示
+  int32 sort = 7;           // 排序
+}
+
+message UpdateSubscribeCategoryData {
+  bool success = 1;
+}
+
+message UpdateSubscribeCategoryReply {
+  int32 code = 1;
+  string message = 2;
+  UpdateSubscribeCategoryData data = 3;
+}
+
+message DeleteSubscribeCategoryRequest {
+  int64 id = 1;  // 商品分类ID
+}
+
+message DeleteSubscribeCategoryData {
+  bool success = 1;
+}
+
+message DeleteSubscribeCategoryReply {
+  int32 code = 1;
+  string message = 2;
+  DeleteSubscribeCategoryData data = 3;
+}
+
+message BatchDeleteSubscribeCategoryRequest {
+  repeated int64 ids = 1;  // 商品分类ID列表
+}
+
+message BatchDeleteSubscribeCategoryData {
+  bool success = 1;
+}
+
+message BatchDeleteSubscribeCategoryReply {
+  int32 code = 1;
+  string message = 2;
+  BatchDeleteSubscribeCategoryData data = 3;
+}
+
+message GetSubscribeCategoryListRequest {
+  string language = 1;       // 语言筛选
+  optional int64 parent_id = 2; // 父分类筛选，传0可筛选根分类
+  optional bool show = 3;    // 显示状态筛选
+}
+
+message GetSubscribeCategoryListData {
+  repeated SubscribeCategoryInfo list = 1;  // 商品分类列表
+  int32 total = 2;                          // 总数
+}
+
+message GetSubscribeCategoryListReply {
+  int32 code = 1;
+  string message = 2;
+  GetSubscribeCategoryListData data = 3;
 }
 
 // ==================== SubscribeGroup Messages ====================
@@ -496,5 +643,3 @@ message ResetAllSubscribeTokenReply {
   string message = 2;                          // 消息内容
   ResetAllSubscribeTokenData data = 3;         // 响应数据
 }
-
-

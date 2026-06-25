@@ -114,6 +114,11 @@ func Quota(v int32) predicate.ProxySubscribe {
 	return predicate.ProxySubscribe(sql.FieldEQ(FieldQuota, v))
 }
 
+// CategoryID applies equality check predicate on the "category_id" field. It's identical to CategoryIDEQ.
+func CategoryID(v int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldEQ(FieldCategoryID, v))
+}
+
 // Nodes applies equality check predicate on the "nodes" field. It's identical to NodesEQ.
 func Nodes(v string) predicate.ProxySubscribe {
 	return predicate.ProxySubscribe(sql.FieldEQ(FieldNodes, v))
@@ -807,6 +812,46 @@ func QuotaLT(v int32) predicate.ProxySubscribe {
 // QuotaLTE applies the LTE predicate on the "quota" field.
 func QuotaLTE(v int32) predicate.ProxySubscribe {
 	return predicate.ProxySubscribe(sql.FieldLTE(FieldQuota, v))
+}
+
+// CategoryIDEQ applies the EQ predicate on the "category_id" field.
+func CategoryIDEQ(v int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldEQ(FieldCategoryID, v))
+}
+
+// CategoryIDNEQ applies the NEQ predicate on the "category_id" field.
+func CategoryIDNEQ(v int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldNEQ(FieldCategoryID, v))
+}
+
+// CategoryIDIn applies the In predicate on the "category_id" field.
+func CategoryIDIn(vs ...int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldIn(FieldCategoryID, vs...))
+}
+
+// CategoryIDNotIn applies the NotIn predicate on the "category_id" field.
+func CategoryIDNotIn(vs ...int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldNotIn(FieldCategoryID, vs...))
+}
+
+// CategoryIDGT applies the GT predicate on the "category_id" field.
+func CategoryIDGT(v int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldGT(FieldCategoryID, v))
+}
+
+// CategoryIDGTE applies the GTE predicate on the "category_id" field.
+func CategoryIDGTE(v int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldGTE(FieldCategoryID, v))
+}
+
+// CategoryIDLT applies the LT predicate on the "category_id" field.
+func CategoryIDLT(v int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldLT(FieldCategoryID, v))
+}
+
+// CategoryIDLTE applies the LTE predicate on the "category_id" field.
+func CategoryIDLTE(v int64) predicate.ProxySubscribe {
+	return predicate.ProxySubscribe(sql.FieldLTE(FieldCategoryID, v))
 }
 
 // NodesEQ applies the EQ predicate on the "nodes" field.

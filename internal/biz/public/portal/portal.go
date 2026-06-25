@@ -18,7 +18,8 @@ type PortalRepo interface {
 
 	// GetSubscribeList 获取订阅列表
 	// language: 语言过滤（可选），如果为空且defaultLanguage=true则返回默认语言（language=''）
-	GetSubscribeList(ctx context.Context, language string) ([]*SubscribeInfo, error)
+	GetSubscribeList(ctx context.Context, language string, categoryID int64) ([]*SubscribeInfo, error)
+	GetSubscribeCatalog(ctx context.Context, language string) (*SubscribeCatalog, error)
 
 	// CalculateOrderPrice 计算订单价格（含折扣、优惠券、手续费）
 	// paymentID: 可选，用于计算手续费
@@ -60,6 +61,8 @@ type SubscribeInfo struct {
 	SpeedLimit        int64
 	DeviceLimit       int64
 	Quota             int64
+	CategoryID        int64
+	CategoryName      string
 	Nodes             []int
 	NodeTags          []string
 	NodeGroupIds      []string
@@ -75,6 +78,24 @@ type SubscribeInfo struct {
 	ShowOriginalPrice bool
 	CreatedAt         int64
 	UpdatedAt         int64
+}
+
+type SubscribeCategory struct {
+	ID          int64
+	ParentID    int64
+	Name        string
+	Description string
+	Language    string
+	Show        bool
+	Sort        int64
+	List        []*SubscribeInfo
+	Children    []*SubscribeCategory
+}
+
+type SubscribeCatalog struct {
+	Categories    []*SubscribeCategory
+	Uncategorized []*SubscribeInfo
+	Total         int32
 }
 
 // SubscribeDiscount 订阅折扣配置
@@ -191,8 +212,12 @@ func NewPortalUseCase(repo PortalRepo) *PortalUseCase {
 }
 
 // GetSubscribeList 获取订阅列表
-func (uc *PortalUseCase) GetSubscribeList(ctx context.Context, language string) ([]*SubscribeInfo, error) {
-	return uc.repo.GetSubscribeList(ctx, language)
+func (uc *PortalUseCase) GetSubscribeList(ctx context.Context, language string, categoryID int64) ([]*SubscribeInfo, error) {
+	return uc.repo.GetSubscribeList(ctx, language, categoryID)
+}
+
+func (uc *PortalUseCase) GetSubscribeCatalog(ctx context.Context, language string) (*SubscribeCatalog, error) {
+	return uc.repo.GetSubscribeCatalog(ctx, language)
 }
 
 // PrePurchaseOrder 预购买订单（计算价格）

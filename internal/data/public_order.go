@@ -7,11 +7,15 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/log"
+	"github.com/hibiken/asynq"
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/ent/proxycoupon"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyorder"
 	"github.com/npanel-dev/NPanel-backend/ent/proxypayment"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
+	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribecategory"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyuser"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyusersubscribe"
 	publicBiz "github.com/npanel-dev/NPanel-backend/internal/biz/public"
@@ -24,9 +28,6 @@ import (
 	"github.com/npanel-dev/NPanel-backend/pkg/payment/epay"
 	"github.com/npanel-dev/NPanel-backend/pkg/payment/stripe"
 	"github.com/npanel-dev/NPanel-backend/pkg/tool"
-	"github.com/go-kratos/kratos/v2/errors"
-	"github.com/go-kratos/kratos/v2/log"
-	"github.com/hibiken/asynq"
 )
 
 const (
@@ -232,7 +233,7 @@ func (r *publicOrderRepo) QueryOrderDetail(ctx context.Context, userID int, orde
 			Where(proxysubscribe.IDEQ(order.SubscribeID)).
 			Only(ctx)
 		if err == nil {
-			subscribe = r.convertToSubscribe(subscribeEnt)
+			subscribe = r.convertToSubscribe(ctx, subscribeEnt)
 		}
 	}
 
@@ -306,7 +307,7 @@ func (r *publicOrderRepo) QueryOrderList(ctx context.Context, userID int, page, 
 		if err == nil {
 			for _, sub := range subscribes {
 				subscribeNameMap[int64(sub.ID)] = sub.Name
-				subscribeMap[int64(sub.ID)] = r.convertToSubscribe(sub)
+				subscribeMap[int64(sub.ID)] = r.convertToSubscribe(ctx, sub)
 			}
 		}
 	}
@@ -1421,7 +1422,7 @@ func (r *publicOrderRepo) convertToPaymentMethod(payment *ent.ProxyPayment) *pub
 }
 
 // convertToSubscribe 将ent订阅转换为biz订阅
-func (r *publicOrderRepo) convertToSubscribe(subscribe *ent.ProxySubscribe) *publicBiz.Subscribe {
+func (r *publicOrderRepo) convertToSubscribe(ctx context.Context, subscribe *ent.ProxySubscribe) *publicBiz.Subscribe {
 	// 解析折扣信息
 	var discounts []publicBiz.SubscribeDiscount
 	if subscribe.Discount != nil && *subscribe.Discount != "" {
@@ -1477,6 +1478,15 @@ func (r *publicOrderRepo) convertToSubscribe(subscribe *ent.ProxySubscribe) *pub
 		resetCycle = int64(*subscribe.ResetCycle)
 	}
 
+	categoryName := ""
+	if subscribe.CategoryID > 0 {
+		if category, err := r.data.db.ProxySubscribeCategory.Query().
+			Where(proxysubscribecategory.IDEQ(subscribe.CategoryID)).
+			Only(ctx); err == nil {
+			categoryName = category.Name
+		}
+	}
+
 	return &publicBiz.Subscribe{
 		ID:                int64(subscribe.ID),
 		Name:              subscribe.Name,
@@ -1491,6 +1501,8 @@ func (r *publicOrderRepo) convertToSubscribe(subscribe *ent.ProxySubscribe) *pub
 		SpeedLimit:        int64(subscribe.SpeedLimit),
 		DeviceLimit:       int64(subscribe.DeviceLimit),
 		Quota:             int64(subscribe.Quota),
+		CategoryID:        subscribe.CategoryID,
+		CategoryName:      categoryName,
 		Nodes:             nodes,
 		NodeTags:          nodeTags,
 		Show:              subscribe.Show,

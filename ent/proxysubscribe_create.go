@@ -188,6 +188,20 @@ func (_c *ProxySubscribeCreate) SetNillableQuota(v *int32) *ProxySubscribeCreate
 	return _c
 }
 
+// SetCategoryID sets the "category_id" field.
+func (_c *ProxySubscribeCreate) SetCategoryID(v int64) *ProxySubscribeCreate {
+	_c.mutation.SetCategoryID(v)
+	return _c
+}
+
+// SetNillableCategoryID sets the "category_id" field if the given value is not nil.
+func (_c *ProxySubscribeCreate) SetNillableCategoryID(v *int64) *ProxySubscribeCreate {
+	if v != nil {
+		_c.SetCategoryID(*v)
+	}
+	return _c
+}
+
 // SetNodes sets the "nodes" field.
 func (_c *ProxySubscribeCreate) SetNodes(v string) *ProxySubscribeCreate {
 	_c.mutation.SetNodes(v)
@@ -471,6 +485,10 @@ func (_c *ProxySubscribeCreate) defaults() {
 		v := proxysubscribe.DefaultQuota
 		_c.mutation.SetQuota(v)
 	}
+	if _, ok := _c.mutation.CategoryID(); !ok {
+		v := proxysubscribe.DefaultCategoryID
+		_c.mutation.SetCategoryID(v)
+	}
 	if _, ok := _c.mutation.Nodes(); !ok {
 		v := proxysubscribe.DefaultNodes
 		_c.mutation.SetNodes(v)
@@ -571,6 +589,9 @@ func (_c *ProxySubscribeCreate) check() error {
 	}
 	if _, ok := _c.mutation.Quota(); !ok {
 		return &ValidationError{Name: "quota", err: errors.New(`ent: missing required field "ProxySubscribe.quota"`)}
+	}
+	if _, ok := _c.mutation.CategoryID(); !ok {
+		return &ValidationError{Name: "category_id", err: errors.New(`ent: missing required field "ProxySubscribe.category_id"`)}
 	}
 	if _, ok := _c.mutation.Nodes(); !ok {
 		return &ValidationError{Name: "nodes", err: errors.New(`ent: missing required field "ProxySubscribe.nodes"`)}
@@ -696,6 +717,10 @@ func (_c *ProxySubscribeCreate) createSpec() (*ProxySubscribe, *sqlgraph.CreateS
 	if value, ok := _c.mutation.Quota(); ok {
 		_spec.SetField(proxysubscribe.FieldQuota, field.TypeInt32, value)
 		_node.Quota = value
+	}
+	if value, ok := _c.mutation.CategoryID(); ok {
+		_spec.SetField(proxysubscribe.FieldCategoryID, field.TypeInt64, value)
+		_node.CategoryID = value
 	}
 	if value, ok := _c.mutation.Nodes(); ok {
 		_spec.SetField(proxysubscribe.FieldNodes, field.TypeString, value)

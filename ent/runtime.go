@@ -21,6 +21,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyservergroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribeapplication"
+	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribecategory"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribegroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysystem"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysystemlog"
@@ -913,60 +914,64 @@ func init() {
 	proxysubscribeDescQuota := proxysubscribeFields[12].Descriptor()
 	// proxysubscribe.DefaultQuota holds the default value on creation for the quota field.
 	proxysubscribe.DefaultQuota = proxysubscribeDescQuota.Default.(int32)
+	// proxysubscribeDescCategoryID is the schema descriptor for category_id field.
+	proxysubscribeDescCategoryID := proxysubscribeFields[13].Descriptor()
+	// proxysubscribe.DefaultCategoryID holds the default value on creation for the category_id field.
+	proxysubscribe.DefaultCategoryID = proxysubscribeDescCategoryID.Default.(int64)
 	// proxysubscribeDescNodes is the schema descriptor for nodes field.
-	proxysubscribeDescNodes := proxysubscribeFields[13].Descriptor()
+	proxysubscribeDescNodes := proxysubscribeFields[14].Descriptor()
 	// proxysubscribe.DefaultNodes holds the default value on creation for the nodes field.
 	proxysubscribe.DefaultNodes = proxysubscribeDescNodes.Default.(string)
 	// proxysubscribe.NodesValidator is a validator for the "nodes" field. It is called by the builders before save.
 	proxysubscribe.NodesValidator = proxysubscribeDescNodes.Validators[0].(func(string) error)
 	// proxysubscribeDescNodeTags is the schema descriptor for node_tags field.
-	proxysubscribeDescNodeTags := proxysubscribeFields[14].Descriptor()
+	proxysubscribeDescNodeTags := proxysubscribeFields[15].Descriptor()
 	// proxysubscribe.DefaultNodeTags holds the default value on creation for the node_tags field.
 	proxysubscribe.DefaultNodeTags = proxysubscribeDescNodeTags.Default.(string)
 	// proxysubscribe.NodeTagsValidator is a validator for the "node_tags" field. It is called by the builders before save.
 	proxysubscribe.NodeTagsValidator = proxysubscribeDescNodeTags.Validators[0].(func(string) error)
 	// proxysubscribeDescNodeGroupID is the schema descriptor for node_group_id field.
-	proxysubscribeDescNodeGroupID := proxysubscribeFields[16].Descriptor()
+	proxysubscribeDescNodeGroupID := proxysubscribeFields[17].Descriptor()
 	// proxysubscribe.DefaultNodeGroupID holds the default value on creation for the node_group_id field.
 	proxysubscribe.DefaultNodeGroupID = proxysubscribeDescNodeGroupID.Default.(int64)
 	// proxysubscribeDescShow is the schema descriptor for show field.
-	proxysubscribeDescShow := proxysubscribeFields[18].Descriptor()
+	proxysubscribeDescShow := proxysubscribeFields[19].Descriptor()
 	// proxysubscribe.DefaultShow holds the default value on creation for the show field.
 	proxysubscribe.DefaultShow = proxysubscribeDescShow.Default.(bool)
 	// proxysubscribeDescSell is the schema descriptor for sell field.
-	proxysubscribeDescSell := proxysubscribeFields[19].Descriptor()
+	proxysubscribeDescSell := proxysubscribeFields[20].Descriptor()
 	// proxysubscribe.DefaultSell holds the default value on creation for the sell field.
 	proxysubscribe.DefaultSell = proxysubscribeDescSell.Default.(bool)
 	// proxysubscribeDescSort is the schema descriptor for sort field.
-	proxysubscribeDescSort := proxysubscribeFields[20].Descriptor()
+	proxysubscribeDescSort := proxysubscribeFields[21].Descriptor()
 	// proxysubscribe.DefaultSort holds the default value on creation for the sort field.
 	proxysubscribe.DefaultSort = proxysubscribeDescSort.Default.(int32)
 	// proxysubscribeDescDeductionRatio is the schema descriptor for deduction_ratio field.
-	proxysubscribeDescDeductionRatio := proxysubscribeFields[21].Descriptor()
+	proxysubscribeDescDeductionRatio := proxysubscribeFields[22].Descriptor()
 	// proxysubscribe.DefaultDeductionRatio holds the default value on creation for the deduction_ratio field.
 	proxysubscribe.DefaultDeductionRatio = proxysubscribeDescDeductionRatio.Default.(int32)
 	// proxysubscribeDescAllowDeduction is the schema descriptor for allow_deduction field.
-	proxysubscribeDescAllowDeduction := proxysubscribeFields[22].Descriptor()
+	proxysubscribeDescAllowDeduction := proxysubscribeFields[23].Descriptor()
 	// proxysubscribe.DefaultAllowDeduction holds the default value on creation for the allow_deduction field.
 	proxysubscribe.DefaultAllowDeduction = proxysubscribeDescAllowDeduction.Default.(bool)
 	// proxysubscribeDescResetCycle is the schema descriptor for reset_cycle field.
-	proxysubscribeDescResetCycle := proxysubscribeFields[23].Descriptor()
+	proxysubscribeDescResetCycle := proxysubscribeFields[24].Descriptor()
 	// proxysubscribe.DefaultResetCycle holds the default value on creation for the reset_cycle field.
 	proxysubscribe.DefaultResetCycle = proxysubscribeDescResetCycle.Default.(int32)
 	// proxysubscribeDescRenewalReset is the schema descriptor for renewal_reset field.
-	proxysubscribeDescRenewalReset := proxysubscribeFields[24].Descriptor()
+	proxysubscribeDescRenewalReset := proxysubscribeFields[25].Descriptor()
 	// proxysubscribe.DefaultRenewalReset holds the default value on creation for the renewal_reset field.
 	proxysubscribe.DefaultRenewalReset = proxysubscribeDescRenewalReset.Default.(bool)
 	// proxysubscribeDescShowOriginalPrice is the schema descriptor for show_original_price field.
-	proxysubscribeDescShowOriginalPrice := proxysubscribeFields[25].Descriptor()
+	proxysubscribeDescShowOriginalPrice := proxysubscribeFields[26].Descriptor()
 	// proxysubscribe.DefaultShowOriginalPrice holds the default value on creation for the show_original_price field.
 	proxysubscribe.DefaultShowOriginalPrice = proxysubscribeDescShowOriginalPrice.Default.(bool)
 	// proxysubscribeDescCreatedAt is the schema descriptor for created_at field.
-	proxysubscribeDescCreatedAt := proxysubscribeFields[26].Descriptor()
+	proxysubscribeDescCreatedAt := proxysubscribeFields[27].Descriptor()
 	// proxysubscribe.DefaultCreatedAt holds the default value on creation for the created_at field.
 	proxysubscribe.DefaultCreatedAt = proxysubscribeDescCreatedAt.Default.(func() time.Time)
 	// proxysubscribeDescUpdatedAt is the schema descriptor for updated_at field.
-	proxysubscribeDescUpdatedAt := proxysubscribeFields[27].Descriptor()
+	proxysubscribeDescUpdatedAt := proxysubscribeFields[28].Descriptor()
 	// proxysubscribe.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	proxysubscribe.DefaultUpdatedAt = proxysubscribeDescUpdatedAt.Default.(func() time.Time)
 	// proxysubscribe.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -1051,6 +1056,46 @@ func init() {
 	proxysubscribeapplicationDescID := proxysubscribeapplicationFields[0].Descriptor()
 	// proxysubscribeapplication.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	proxysubscribeapplication.IDValidator = proxysubscribeapplicationDescID.Validators[0].(func(int64) error)
+	proxysubscribecategoryFields := schema.ProxySubscribeCategory{}.Fields()
+	_ = proxysubscribecategoryFields
+	// proxysubscribecategoryDescParentID is the schema descriptor for parent_id field.
+	proxysubscribecategoryDescParentID := proxysubscribecategoryFields[1].Descriptor()
+	// proxysubscribecategory.DefaultParentID holds the default value on creation for the parent_id field.
+	proxysubscribecategory.DefaultParentID = proxysubscribecategoryDescParentID.Default.(int64)
+	// proxysubscribecategoryDescName is the schema descriptor for name field.
+	proxysubscribecategoryDescName := proxysubscribecategoryFields[2].Descriptor()
+	// proxysubscribecategory.DefaultName holds the default value on creation for the name field.
+	proxysubscribecategory.DefaultName = proxysubscribecategoryDescName.Default.(string)
+	// proxysubscribecategory.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	proxysubscribecategory.NameValidator = proxysubscribecategoryDescName.Validators[0].(func(string) error)
+	// proxysubscribecategoryDescLanguage is the schema descriptor for language field.
+	proxysubscribecategoryDescLanguage := proxysubscribecategoryFields[4].Descriptor()
+	// proxysubscribecategory.DefaultLanguage holds the default value on creation for the language field.
+	proxysubscribecategory.DefaultLanguage = proxysubscribecategoryDescLanguage.Default.(string)
+	// proxysubscribecategory.LanguageValidator is a validator for the "language" field. It is called by the builders before save.
+	proxysubscribecategory.LanguageValidator = proxysubscribecategoryDescLanguage.Validators[0].(func(string) error)
+	// proxysubscribecategoryDescShow is the schema descriptor for show field.
+	proxysubscribecategoryDescShow := proxysubscribecategoryFields[5].Descriptor()
+	// proxysubscribecategory.DefaultShow holds the default value on creation for the show field.
+	proxysubscribecategory.DefaultShow = proxysubscribecategoryDescShow.Default.(bool)
+	// proxysubscribecategoryDescSort is the schema descriptor for sort field.
+	proxysubscribecategoryDescSort := proxysubscribecategoryFields[6].Descriptor()
+	// proxysubscribecategory.DefaultSort holds the default value on creation for the sort field.
+	proxysubscribecategory.DefaultSort = proxysubscribecategoryDescSort.Default.(int32)
+	// proxysubscribecategoryDescCreatedAt is the schema descriptor for created_at field.
+	proxysubscribecategoryDescCreatedAt := proxysubscribecategoryFields[7].Descriptor()
+	// proxysubscribecategory.DefaultCreatedAt holds the default value on creation for the created_at field.
+	proxysubscribecategory.DefaultCreatedAt = proxysubscribecategoryDescCreatedAt.Default.(func() time.Time)
+	// proxysubscribecategoryDescUpdatedAt is the schema descriptor for updated_at field.
+	proxysubscribecategoryDescUpdatedAt := proxysubscribecategoryFields[8].Descriptor()
+	// proxysubscribecategory.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	proxysubscribecategory.DefaultUpdatedAt = proxysubscribecategoryDescUpdatedAt.Default.(func() time.Time)
+	// proxysubscribecategory.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	proxysubscribecategory.UpdateDefaultUpdatedAt = proxysubscribecategoryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// proxysubscribecategoryDescID is the schema descriptor for id field.
+	proxysubscribecategoryDescID := proxysubscribecategoryFields[0].Descriptor()
+	// proxysubscribecategory.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	proxysubscribecategory.IDValidator = proxysubscribecategoryDescID.Validators[0].(func(int64) error)
 	proxysubscribegroupFields := schema.ProxySubscribeGroup{}.Fields()
 	_ = proxysubscribegroupFields
 	// proxysubscribegroupDescName is the schema descriptor for name field.

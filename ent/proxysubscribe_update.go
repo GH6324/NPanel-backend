@@ -258,6 +258,27 @@ func (_u *ProxySubscribeUpdate) AddQuota(v int32) *ProxySubscribeUpdate {
 	return _u
 }
 
+// SetCategoryID sets the "category_id" field.
+func (_u *ProxySubscribeUpdate) SetCategoryID(v int64) *ProxySubscribeUpdate {
+	_u.mutation.ResetCategoryID()
+	_u.mutation.SetCategoryID(v)
+	return _u
+}
+
+// SetNillableCategoryID sets the "category_id" field if the given value is not nil.
+func (_u *ProxySubscribeUpdate) SetNillableCategoryID(v *int64) *ProxySubscribeUpdate {
+	if v != nil {
+		_u.SetCategoryID(*v)
+	}
+	return _u
+}
+
+// AddCategoryID adds value to the "category_id" field.
+func (_u *ProxySubscribeUpdate) AddCategoryID(v int64) *ProxySubscribeUpdate {
+	_u.mutation.AddCategoryID(v)
+	return _u
+}
+
 // SetNodes sets the "nodes" field.
 func (_u *ProxySubscribeUpdate) SetNodes(v string) *ProxySubscribeUpdate {
 	_u.mutation.SetNodes(v)
@@ -648,6 +669,12 @@ func (_u *ProxySubscribeUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if value, ok := _u.mutation.AddedQuota(); ok {
 		_spec.AddField(proxysubscribe.FieldQuota, field.TypeInt32, value)
 	}
+	if value, ok := _u.mutation.CategoryID(); ok {
+		_spec.SetField(proxysubscribe.FieldCategoryID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedCategoryID(); ok {
+		_spec.AddField(proxysubscribe.FieldCategoryID, field.TypeInt64, value)
+	}
 	if value, ok := _u.mutation.Nodes(); ok {
 		_spec.SetField(proxysubscribe.FieldNodes, field.TypeString, value)
 	}
@@ -968,6 +995,27 @@ func (_u *ProxySubscribeUpdateOne) SetNillableQuota(v *int32) *ProxySubscribeUpd
 // AddQuota adds value to the "quota" field.
 func (_u *ProxySubscribeUpdateOne) AddQuota(v int32) *ProxySubscribeUpdateOne {
 	_u.mutation.AddQuota(v)
+	return _u
+}
+
+// SetCategoryID sets the "category_id" field.
+func (_u *ProxySubscribeUpdateOne) SetCategoryID(v int64) *ProxySubscribeUpdateOne {
+	_u.mutation.ResetCategoryID()
+	_u.mutation.SetCategoryID(v)
+	return _u
+}
+
+// SetNillableCategoryID sets the "category_id" field if the given value is not nil.
+func (_u *ProxySubscribeUpdateOne) SetNillableCategoryID(v *int64) *ProxySubscribeUpdateOne {
+	if v != nil {
+		_u.SetCategoryID(*v)
+	}
+	return _u
+}
+
+// AddCategoryID adds value to the "category_id" field.
+func (_u *ProxySubscribeUpdateOne) AddCategoryID(v int64) *ProxySubscribeUpdateOne {
+	_u.mutation.AddCategoryID(v)
 	return _u
 }
 
@@ -1390,6 +1438,12 @@ func (_u *ProxySubscribeUpdateOne) sqlSave(ctx context.Context) (_node *ProxySub
 	}
 	if value, ok := _u.mutation.AddedQuota(); ok {
 		_spec.AddField(proxysubscribe.FieldQuota, field.TypeInt32, value)
+	}
+	if value, ok := _u.mutation.CategoryID(); ok {
+		_spec.SetField(proxysubscribe.FieldCategoryID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedCategoryID(); ok {
+		_spec.AddField(proxysubscribe.FieldCategoryID, field.TypeInt64, value)
 	}
 	if value, ok := _u.mutation.Nodes(); ok {
 		_spec.SetField(proxysubscribe.FieldNodes, field.TypeString, value)

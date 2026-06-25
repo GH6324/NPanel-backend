@@ -18,7 +18,7 @@ func TestNormalizeLegacyStatementUsesInsertIgnoreForSubscribeApplication(t *test
 }
 
 func TestLegacySQLMigrationsIncludeSyncedLatestVersions(t *testing.T) {
-	want := []int64{2133, 2134, 2135, 2136, 2137, 2138, 2139, 2140}
+	want := []int64{2133, 2134, 2135, 2136, 2137, 2138, 2139, 2140, 2141}
 	got := make([]int64, 0, len(want))
 	for _, migration := range legacySQLMigrations {
 		if migration.version >= 2133 {

@@ -38,6 +38,7 @@ var legacySQLMigrations = []legacySQLMigration{
 	{version: 2138, path: "legacy_sql/02138_add_simnet_subscribe_application.up.sql"},
 	{version: 2139, path: "legacy_sql/02139_device_admission_control.up.sql"},
 	{version: 2140, path: "legacy_sql/02140_update_simnet_subscribe_application_format.up.sql"},
+	{version: 2141, path: "legacy_sql/02141_subscribe_category.up.sql"},
 }
 
 func (m *Migrator) initLegacyDefaultData(ctx context.Context) error {
@@ -69,6 +70,10 @@ func (m *Migrator) initLegacyDefaultData(ctx context.Context) error {
 }
 
 func (m *Migrator) executeLegacySQLMigration(ctx context.Context, db *sql.DB, migration legacySQLMigration) (err error) {
+	return m.executeLegacySQLMigrationWithVersion(ctx, db, migration, true)
+}
+
+func (m *Migrator) executeLegacySQLMigrationWithVersion(ctx context.Context, db *sql.DB, migration legacySQLMigration, recordVersion bool) (err error) {
 	content, err := legacySQLFS.ReadFile(migration.path)
 	if err != nil {
 		return fmt.Errorf("read legacy sql %s: %w", migration.path, err)
@@ -99,14 +104,45 @@ func (m *Migrator) executeLegacySQLMigration(ctx context.Context, db *sql.DB, mi
 		}
 	}
 
-	if err = setLegacyMigrationVersion(ctx, tx, migration.version); err != nil {
-		return err
+	if recordVersion {
+		if err = setLegacyMigrationVersion(ctx, tx, migration.version); err != nil {
+			return err
+		}
 	}
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("commit legacy sql %s failed: %w", migration.path, err)
 	}
 
-	m.logger.Infof("legacy sql migration applied: version=%d path=%s", migration.version, migration.path)
+	if recordVersion {
+		m.logger.Infof("legacy sql migration applied: version=%d path=%s", migration.version, migration.path)
+	} else {
+		m.logger.Infof("legacy compatibility schema ensured: version=%d path=%s", migration.version, migration.path)
+	}
+	return nil
+}
+
+// EnsureLegacyCompatibilitySchema applies idempotent schema patches needed by
+// new code paths when an imported legacy database has no schema_migrations table.
+func (m *Migrator) EnsureLegacyCompatibilitySchema(ctx context.Context) error {
+	if m.dbDriver == "" || m.dbSource == "" {
+		return fmt.Errorf("database connection info is empty")
+	}
+
+	db, err := sql.Open(m.dbDriver, m.dbSource)
+	if err != nil {
+		return fmt.Errorf("open sql db: %w", err)
+	}
+	defer db.Close()
+
+	for _, migration := range legacySQLMigrations {
+		if migration.version != 2141 {
+			continue
+		}
+		if err := m.executeLegacySQLMigrationWithVersion(ctx, db, migration, false); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

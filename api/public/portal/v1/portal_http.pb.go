@@ -22,6 +22,7 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationPortalGetAvailablePaymentMethods = "/api.public.portal.v1.Portal/GetAvailablePaymentMethods"
 const OperationPortalGetSubscription = "/api.public.portal.v1.Portal/GetSubscription"
+const OperationPortalGetSubscriptionCatalog = "/api.public.portal.v1.Portal/GetSubscriptionCatalog"
 const OperationPortalPrePurchaseOrder = "/api.public.portal.v1.Portal/PrePurchaseOrder"
 const OperationPortalPurchase = "/api.public.portal.v1.Portal/Purchase"
 const OperationPortalPurchaseCheckout = "/api.public.portal.v1.Portal/PurchaseCheckout"
@@ -30,6 +31,7 @@ const OperationPortalQueryPurchaseOrder = "/api.public.portal.v1.Portal/QueryPur
 type PortalHTTPServer interface {
 	GetAvailablePaymentMethods(context.Context, *emptypb.Empty) (*GetAvailablePaymentMethodsReply, error)
 	GetSubscription(context.Context, *GetSubscriptionRequest) (*GetSubscriptionReply, error)
+	GetSubscriptionCatalog(context.Context, *GetSubscriptionCatalogRequest) (*GetSubscriptionCatalogReply, error)
 	PrePurchaseOrder(context.Context, *PrePurchaseOrderRequest) (*PrePurchaseOrderReply, error)
 	Purchase(context.Context, *PurchaseRequest) (*PurchaseReply, error)
 	PurchaseCheckout(context.Context, *PurchaseCheckoutRequest) (*PurchaseCheckoutReply, error)
@@ -39,6 +41,7 @@ type PortalHTTPServer interface {
 func RegisterPortalHTTPServer(s *http.Server, srv PortalHTTPServer) {
 	r := s.Route("/")
 	r.GET("/v1/public/portal/subscribe", _Portal_GetSubscription0_HTTP_Handler(srv))
+	r.GET("/v1/public/portal/subscribe/catalog", _Portal_GetSubscriptionCatalog0_HTTP_Handler(srv))
 	r.POST("/v1/public/portal/pre", _Portal_PrePurchaseOrder0_HTTP_Handler(srv))
 	r.POST("/v1/public/portal/purchase", _Portal_Purchase1_HTTP_Handler(srv))
 	r.GET("/v1/public/portal/payment-method", _Portal_GetAvailablePaymentMethods0_HTTP_Handler(srv))
@@ -61,6 +64,25 @@ func _Portal_GetSubscription0_HTTP_Handler(srv PortalHTTPServer) func(ctx http.C
 			return err
 		}
 		reply := out.(*GetSubscriptionReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Portal_GetSubscriptionCatalog0_HTTP_Handler(srv PortalHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetSubscriptionCatalogRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationPortalGetSubscriptionCatalog)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetSubscriptionCatalog(ctx, req.(*GetSubscriptionCatalogRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetSubscriptionCatalogReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -172,6 +194,7 @@ func _Portal_QueryPurchaseOrder0_HTTP_Handler(srv PortalHTTPServer) func(ctx htt
 type PortalHTTPClient interface {
 	GetAvailablePaymentMethods(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *GetAvailablePaymentMethodsReply, err error)
 	GetSubscription(ctx context.Context, req *GetSubscriptionRequest, opts ...http.CallOption) (rsp *GetSubscriptionReply, err error)
+	GetSubscriptionCatalog(ctx context.Context, req *GetSubscriptionCatalogRequest, opts ...http.CallOption) (rsp *GetSubscriptionCatalogReply, err error)
 	PrePurchaseOrder(ctx context.Context, req *PrePurchaseOrderRequest, opts ...http.CallOption) (rsp *PrePurchaseOrderReply, err error)
 	Purchase(ctx context.Context, req *PurchaseRequest, opts ...http.CallOption) (rsp *PurchaseReply, err error)
 	PurchaseCheckout(ctx context.Context, req *PurchaseCheckoutRequest, opts ...http.CallOption) (rsp *PurchaseCheckoutReply, err error)
@@ -204,6 +227,19 @@ func (c *PortalHTTPClientImpl) GetSubscription(ctx context.Context, in *GetSubsc
 	pattern := "/v1/public/portal/subscribe"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationPortalGetSubscription))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *PortalHTTPClientImpl) GetSubscriptionCatalog(ctx context.Context, in *GetSubscriptionCatalogRequest, opts ...http.CallOption) (*GetSubscriptionCatalogReply, error) {
+	var out GetSubscriptionCatalogReply
+	pattern := "/v1/public/portal/subscribe/catalog"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationPortalGetSubscriptionCatalog))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
