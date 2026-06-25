@@ -64,35 +64,45 @@ func TestUnmarshalProtocolsMundoAliases(t *testing.T) {
 	}
 }
 
-func TestValidateProtocolsAllowsDistinctMxTransports(t *testing.T) {
+func TestValidateProtocolsAllowsSameTypeDifferentPorts(t *testing.T) {
 	err := ValidateProtocols([]*Protocol{
-		{Type: "mx", Transport: "mc1"},
-		{Type: "mx", Transport: "mundordp"},
-		{Type: "mx", Transport: "mundosql"},
-		{Type: "vless", Transport: "mc1"},
+		{Type: "mx", Port: 443, Transport: "mc1", Enable: true},
+		{Type: "mx", Port: 8443, Transport: "mundordp", Enable: true},
+		{Type: "mx", Port: 9443, Transport: "mundosql", Enable: true},
+		{Type: "vless", Port: 10443, Transport: "mc1", Enable: true},
 	})
 	if err != nil {
 		t.Fatalf("ValidateProtocols returned error: %v", err)
 	}
 }
 
-func TestValidateProtocolsRejectsDuplicateMxTransport(t *testing.T) {
+func TestValidateProtocolsRejectsDuplicateTypeAndPort(t *testing.T) {
 	err := ValidateProtocols([]*Protocol{
-		{Type: "mx", Transport: "mc1"},
-		{Type: "mx", Transport: " MC1 "},
+		{Type: "mx", Port: 443, Transport: "mc1"},
+		{Type: "mx", Port: 443, Transport: "mundordp"},
 	})
 	if !errors.Is(err, ErrDuplicateProtocolType) {
 		t.Fatalf("ValidateProtocols error = %v, want ErrDuplicateProtocolType", err)
 	}
 }
 
-func TestValidateProtocolsStillRejectsDuplicateRegularType(t *testing.T) {
+func TestValidateProtocolsRejectsEnabledPortCollision(t *testing.T) {
 	err := ValidateProtocols([]*Protocol{
-		{Type: "vless", Transport: "mc1"},
-		{Type: "VLESS", Transport: "tcp"},
+		{Type: "vless", Port: 443, Transport: "mc1", Enable: true},
+		{Type: "shadowsocks", Port: 443, Transport: "tcp", Enable: true},
 	})
-	if !errors.Is(err, ErrDuplicateProtocolType) {
-		t.Fatalf("ValidateProtocols error = %v, want ErrDuplicateProtocolType", err)
+	if !errors.Is(err, ErrDuplicateProtocolPort) {
+		t.Fatalf("ValidateProtocols error = %v, want ErrDuplicateProtocolPort", err)
+	}
+}
+
+func TestValidateProtocolsAllowsDisabledPortCollision(t *testing.T) {
+	err := ValidateProtocols([]*Protocol{
+		{Type: "vless", Port: 443, Transport: "mc1", Enable: true},
+		{Type: "shadowsocks", Port: 443, Transport: "tcp", Enable: false},
+	})
+	if err != nil {
+		t.Fatalf("ValidateProtocols returned error: %v", err)
 	}
 }
 

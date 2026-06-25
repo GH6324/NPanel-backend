@@ -11,6 +11,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/hibiken/asynq"
 	"github.com/npanel-dev/NPanel-backend/ent"
+	"github.com/npanel-dev/NPanel-backend/ent/predicate"
 	"github.com/npanel-dev/NPanel-backend/ent/proxynode"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyservergroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
@@ -69,7 +70,7 @@ func (r *serverNodeRepo) GetNodeSecret(ctx context.Context) (string, error) {
 }
 
 // GetServerConfig 获取服务器配置
-func (r *serverNodeRepo) GetServerConfig(ctx context.Context, serverID int64, protocol string) (*serverBiz.ServerConfig, error) {
+func (r *serverNodeRepo) GetServerConfig(ctx context.Context, serverID int64, protocol string, port uint16) (*serverBiz.ServerConfig, error) {
 	// 查找服务器
 	server, err := r.data.db.ProxyServer.Get(ctx, serverID)
 	if err != nil {
@@ -85,13 +86,8 @@ func (r *serverNodeRepo) GetServerConfig(ctx context.Context, serverID int64, pr
 			r.log.Errorf("Failed to unmarshal protocols: %v", err)
 			return nil, err
 		}
-		// 查找指定协议的配置
-		for _, p := range protocols {
-			if p["type"] == protocol {
-				protocolConfig = p
-				break
-			}
-		}
+		// 查找指定协议实例；port=0 是旧节点端请求，保留按协议类型匹配。
+		protocolConfig = selectServerProtocolConfig(protocols, protocol, port)
 	}
 
 	// 获取协议配置的JSON字符串
@@ -125,18 +121,42 @@ func (r *serverNodeRepo) GetServerConfig(ctx context.Context, serverID int64, pr
 	}, nil
 }
 
+func selectServerProtocolConfig(protocols []map[string]interface{}, protocol string, port uint16) map[string]interface{} {
+	targetType := strings.ToLower(strings.TrimSpace(protocol))
+	if targetType == "" {
+		return nil
+	}
+	for _, item := range protocols {
+		if strings.ToLower(strings.TrimSpace(serverNodeMapString(item["type"]))) != targetType {
+			continue
+		}
+		if port > 0 {
+			configPort := serverNodeMapInt64(item["port"])
+			if configPort <= 0 || configPort > 65535 || uint16(configPort) != port {
+				continue
+			}
+		}
+		return item
+	}
+	return nil
+}
+
 // GetServerUserList 获取服务器用户列表
-func (r *serverNodeRepo) GetServerUserList(ctx context.Context, serverID int64, protocol string) ([]*serverBiz.ServerUser, error) {
+func (r *serverNodeRepo) GetServerUserList(ctx context.Context, serverID int64, protocol string, port uint16) ([]*serverBiz.ServerUser, error) {
 	if _, err := r.data.db.ProxyServer.Get(ctx, serverID); err != nil {
 		r.log.Errorf("GetServerUserList get server failed: %v", err)
 		return nil, err
 	}
 
+	predicates := []predicate.ProxyNode{
+		proxynode.ServerIDEQ(serverID),
+		proxynode.ProtocolEQ(protocol),
+	}
+	if port > 0 {
+		predicates = append(predicates, proxynode.PortEQ(port))
+	}
 	nodes, err := r.data.db.ProxyNode.Query().
-		Where(
-			proxynode.ServerIDEQ(serverID),
-			proxynode.ProtocolEQ(protocol),
-		).
+		Where(predicates...).
 		Order(ent.Asc(proxynode.FieldSort)).
 		All(ctx)
 	if err != nil {
@@ -249,6 +269,7 @@ func (r *serverNodeRepo) PushUserTraffic(ctx context.Context, req *serverBiz.Pus
 	payload := types.TrafficStatistics{
 		ServerID: req.ServerID,
 		Protocol: req.Protocol,
+		Port:     req.Port,
 		Logs:     userTrafficLogs,
 	}
 
@@ -269,8 +290,8 @@ func (r *serverNodeRepo) PushUserTraffic(ctx context.Context, req *serverBiz.Pus
 		return fmt.Errorf("failed to enqueue traffic task: %w", err)
 	}
 
-	r.log.Infof("PushUserTraffic: serverID=%d, protocol=%s, traffic count=%d, task enqueued",
-		req.ServerID, req.Protocol, len(req.Traffic))
+	r.log.Infof("PushUserTraffic: serverID=%d, protocol=%s, port=%d, traffic count=%d, task enqueued",
+		req.ServerID, req.Protocol, req.Port, len(req.Traffic))
 
 	return nil
 }
@@ -349,9 +370,8 @@ func (r *serverNodeRepo) PushOnlineUsers(ctx context.Context, req *serverBiz.Pus
 		onlineUsers[user.SID] = append(onlineUsers[user.SID], user.IP)
 	}
 
-	// 存储到Redis缓存
-	// 格式：node:online:subscribe:{serverID}:{protocol}
-	key := fmt.Sprintf("node:online:subscribe:%d:%s", req.ServerID, req.Protocol)
+	// 存储到Redis缓存。port=0 是旧节点端请求，保留旧 key。
+	key := onlineUserSubscribeCacheKey(req.ServerID, req.Protocol, req.Port)
 
 	if len(onlineUsers) == 0 {
 		if err := r.data.rdb.Del(ctx, key).Err(); err != nil && err != redis.Nil {
@@ -379,8 +399,8 @@ func (r *serverNodeRepo) PushOnlineUsers(ctx context.Context, req *serverBiz.Pus
 		return err
 	}
 
-	r.log.Infof("PushOnlineUsers: serverID=%d, protocol=%s, online users=%d",
-		req.ServerID, req.Protocol, len(onlineUsers))
+	r.log.Infof("PushOnlineUsers: serverID=%d, protocol=%s, port=%d, online users=%d",
+		req.ServerID, req.Protocol, req.Port, len(onlineUsers))
 
 	return nil
 }

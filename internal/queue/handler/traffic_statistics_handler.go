@@ -7,14 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/log"
+	"github.com/hibiken/asynq"
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyserver"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysystem"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyusersubscribe"
 	servermodel "github.com/npanel-dev/NPanel-backend/internal/model/server"
 	"github.com/npanel-dev/NPanel-backend/internal/queue/types"
-	"github.com/go-kratos/kratos/v2/log"
-	"github.com/hibiken/asynq"
 )
 
 type TrafficStatisticsHandler struct {
@@ -54,7 +54,7 @@ func (h *TrafficStatisticsHandler) ProcessTask(ctx context.Context, t *asynq.Tas
 		return nil
 	}
 
-	ratio, ok := h.getProtocolRatio(serverInfo, payload.Protocol)
+	ratio, ok := h.getProtocolRatio(serverInfo, payload.Protocol, payload.Port)
 	if !ok {
 		h.logger.WithContext(ctx).Errorf("[TrafficStatisticsHandler] Protocol not found: %s", payload.Protocol)
 		return nil
@@ -113,7 +113,7 @@ func (h *TrafficStatisticsHandler) ProcessTask(ctx context.Context, t *asynq.Tas
 	return nil
 }
 
-func (h *TrafficStatisticsHandler) getProtocolRatio(server *ent.ProxyServer, protocol string) (float64, bool) {
+func (h *TrafficStatisticsHandler) getProtocolRatio(server *ent.ProxyServer, protocol string, port uint16) (float64, bool) {
 	protocols, err := servermodel.UnmarshalProtocols(server.Protocol)
 	if err != nil {
 		h.logger.Errorf("[TrafficStatisticsHandler] Failed to unmarshal protocols: %v", err)
@@ -122,6 +122,9 @@ func (h *TrafficStatisticsHandler) getProtocolRatio(server *ent.ProxyServer, pro
 
 	for _, item := range protocols {
 		if item == nil || strings.ToLower(item.Type) != strings.ToLower(protocol) {
+			continue
+		}
+		if port > 0 && item.Port != int32(port) {
 			continue
 		}
 		if item.Ratio > 0 {

@@ -14,6 +14,8 @@ const (
 	StatusCacheKey = "node:status:%d"
 	// OnlineUserCacheKeyWithSubscribe 在线用户订阅缓存键格式
 	OnlineUserCacheKeyWithSubscribe = "node:online:subscribe:%d:%s"
+	// OnlineUserCacheKeyWithSubscribePort 端口隔离的在线用户订阅缓存键格式
+	OnlineUserCacheKeyWithSubscribePort = "node:online:subscribe:%d:%s:%d"
 	// OnlineUserSubscribeCacheKeyWithGlobal 全局在线订阅缓存键
 	OnlineUserSubscribeCacheKeyWithGlobal = "node:online:subscribe:global"
 	// CacheExpiry 缓存过期时间（秒）
@@ -47,6 +49,13 @@ const (
 	DeviceCountModeKey        = "system:device_count_mode"
 	DeviceAdmissionEnabledKey = "system:device_admission_enabled"
 )
+
+func onlineUserSubscribeCacheKey(serverID int64, protocol string, port uint16) string {
+	if port > 0 {
+		return fmt.Sprintf(OnlineUserCacheKeyWithSubscribePort, serverID, protocol, port)
+	}
+	return fmt.Sprintf(OnlineUserCacheKeyWithSubscribe, serverID, protocol)
+}
 
 // Status 服务器状态
 type Status struct {

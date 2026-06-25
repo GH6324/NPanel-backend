@@ -5538,6 +5538,11 @@ paths:
                   in: query
                   schema:
                     type: string
+                - name: port
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
             responses:
                 "200":
                     description: OK
@@ -5659,6 +5664,11 @@ paths:
                   in: query
                   schema:
                     type: string
+                - name: port
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
             responses:
                 "200":
                     description: OK
@@ -14837,6 +14847,9 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.server.v1.OnlineUser'
+                port:
+                    type: integer
+                    format: int32
             description: PushOnlineUsersRequest 推送在线用户请求
         api.server.v1.PushServerStatusReply:
             type: object
@@ -14867,6 +14880,9 @@ components:
                     format: double
                 updatedAt:
                     type: string
+                port:
+                    type: integer
+                    format: int32
             description: PushServerStatusRequest 推送服务器状态请求
         api.server.v1.PushUserTrafficReply:
             type: object
@@ -14890,6 +14906,9 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.server.v1.UserTraffic'
+                port:
+                    type: integer
+                    format: int32
             description: PushUserTrafficRequest 推送用户流量请求
         api.server.v1.QueryServerProtocolConfigReply:
             type: object

@@ -159,6 +159,13 @@ func isMundoTransport(transport string) bool {
 	}
 }
 
+func requestPort(port int32) uint16 {
+	if port <= 0 || port > 65535 {
+		return 0
+	}
+	return uint16(port)
+}
+
 // ServerService 节点服务器服务
 type ServerService struct {
 	v1.UnimplementedServerServer
@@ -177,7 +184,7 @@ func NewServerService(uc *serverBiz.ServerNodeUsecase, logger log.Logger) *Serve
 
 // GetServerConfig 获取服务器配置
 func (s *ServerService) GetServerConfig(ctx context.Context, req *v1.GetServerConfigRequest) (*v1.GetServerConfigReply, error) {
-	config, err := s.uc.GetServerConfig(ctx, req.ServerId, req.Protocol, req.SecretKey)
+	config, err := s.uc.GetServerConfig(ctx, req.ServerId, req.Protocol, requestPort(req.Port), req.SecretKey)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +216,7 @@ func (s *ServerService) GetServerConfig(ctx context.Context, req *v1.GetServerCo
 
 // GetServerUserList 获取服务器用户列表
 func (s *ServerService) GetServerUserList(ctx context.Context, req *v1.GetServerUserListRequest) (*v1.GetServerUserListReply, error) {
-	users, err := s.uc.GetServerUserList(ctx, req.ServerId, req.Protocol, req.SecretKey)
+	users, err := s.uc.GetServerUserList(ctx, req.ServerId, req.Protocol, requestPort(req.Port), req.SecretKey)
 	if err != nil {
 		return nil, err
 	}
@@ -246,6 +253,7 @@ func (s *ServerService) PushUserTraffic(ctx context.Context, req *v1.PushUserTra
 	bizReq := &serverBiz.PushUserTrafficRequest{
 		ServerID:  req.ServerId,
 		Protocol:  req.Protocol,
+		Port:      requestPort(req.Port),
 		SecretKey: req.SecretKey,
 		Traffic:   traffic,
 	}
@@ -266,6 +274,7 @@ func (s *ServerService) PushServerStatus(ctx context.Context, req *v1.PushServer
 	bizReq := &serverBiz.PushServerStatusRequest{
 		ServerID:  req.ServerId,
 		Protocol:  req.Protocol,
+		Port:      requestPort(req.Port),
 		SecretKey: req.SecretKey,
 		CPU:       req.Cpu,
 		Mem:       req.Mem,
@@ -298,6 +307,7 @@ func (s *ServerService) PushOnlineUsers(ctx context.Context, req *v1.PushOnlineU
 	bizReq := &serverBiz.PushOnlineUsersRequest{
 		ServerID:  req.ServerId,
 		Protocol:  req.Protocol,
+		Port:      requestPort(req.Port),
 		SecretKey: req.SecretKey,
 		Users:     users,
 	}

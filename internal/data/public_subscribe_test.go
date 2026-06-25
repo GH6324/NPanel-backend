@@ -126,3 +126,36 @@ func TestCleanLegacyNodeProtocolsDefaultsEnabledAfSubFeatures(t *testing.T) {
 		t.Fatal("expected enabled AF to default fake header injection on")
 	}
 }
+
+func TestCleanLegacyNodeProtocolInstanceKeepsOnlyMatchedPort(t *testing.T) {
+	raw, err := json.Marshal([]*servermodel.Protocol{
+		{
+			Type:   "shadowsocks",
+			Port:   443,
+			Enable: true,
+			Cipher: "chacha20-ietf-poly1305",
+		},
+		{
+			Type:   "shadowsocks",
+			Port:   8443,
+			Enable: true,
+			Cipher: "aes-256-gcm",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cleaned := cleanLegacyNodeProtocolInstance(string(raw), "shadowsocks", 8443)
+
+	var protocols []*servermodel.Protocol
+	if err := json.Unmarshal([]byte(cleaned), &protocols); err != nil {
+		t.Fatalf("cleaned protocol instance should be valid json: %v\n%s", err, cleaned)
+	}
+	if len(protocols) != 1 {
+		t.Fatalf("expected one matched protocol instance, got %d", len(protocols))
+	}
+	if protocols[0].Port != 8443 || protocols[0].Cipher != "aes-256-gcm" {
+		t.Fatalf("matched protocol = %+v, want shadowsocks:8443/aes-256-gcm", protocols[0])
+	}
+}
