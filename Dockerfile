@@ -9,7 +9,7 @@ COPY . .
 
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-ARG VERSION=v1.0.8
+ARG VERSION=v1.0.9
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
 	go build -trimpath -ldflags "-s -w -X main.Version=${VERSION}" \
