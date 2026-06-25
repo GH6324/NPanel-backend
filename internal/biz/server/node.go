@@ -13,8 +13,8 @@ import (
 // ServerNodeRepo 节点服务器仓储接口
 type ServerNodeRepo interface {
 	GetNodeSecret(ctx context.Context) (string, error)
-	GetServerConfig(ctx context.Context, serverID int64, protocol string) (*ServerConfig, error)
-	GetServerUserList(ctx context.Context, serverID int64, protocol string) ([]*ServerUser, error)
+	GetServerConfig(ctx context.Context, serverID int64, protocol string, port uint16) (*ServerConfig, error)
+	GetServerUserList(ctx context.Context, serverID int64, protocol string, port uint16) ([]*ServerUser, error)
 	PushUserTraffic(ctx context.Context, req *PushUserTrafficRequest) error
 	PushServerStatus(ctx context.Context, req *PushServerStatusRequest) error
 	PushOnlineUsers(ctx context.Context, req *PushOnlineUsersRequest) error
@@ -53,6 +53,7 @@ type UserTraffic struct {
 type PushUserTrafficRequest struct {
 	ServerID  int64
 	Protocol  string
+	Port      uint16
 	SecretKey string
 	Traffic   []*UserTraffic
 }
@@ -61,6 +62,7 @@ type PushUserTrafficRequest struct {
 type PushServerStatusRequest struct {
 	ServerID  int64
 	Protocol  string
+	Port      uint16
 	SecretKey string
 	CPU       float64
 	Mem       float64
@@ -78,6 +80,7 @@ type OnlineUser struct {
 type PushOnlineUsersRequest struct {
 	ServerID  int64
 	Protocol  string
+	Port      uint16
 	SecretKey string
 	Users     []*OnlineUser
 }
@@ -288,7 +291,7 @@ func (uc *ServerNodeUsecase) validateSecretKey(ctx context.Context, secretKey st
 }
 
 // GetServerConfig 获取服务器配置
-func (uc *ServerNodeUsecase) GetServerConfig(ctx context.Context, serverID int64, protocol, secretKey string) (*ServerConfig, error) {
+func (uc *ServerNodeUsecase) GetServerConfig(ctx context.Context, serverID int64, protocol string, port uint16, secretKey string) (*ServerConfig, error) {
 	valid, err := uc.validateSecretKey(ctx, secretKey)
 	if err != nil {
 		uc.logger.Errorf("Load node secret failed: %v", err)
@@ -299,7 +302,7 @@ func (uc *ServerNodeUsecase) GetServerConfig(ctx context.Context, serverID int64
 		return nil, responsecode.ErrUnauthorized()
 	}
 
-	config, err := uc.repo.GetServerConfig(ctx, serverID, protocol)
+	config, err := uc.repo.GetServerConfig(ctx, serverID, protocol, port)
 	if err != nil {
 		uc.logger.Errorf("GetServerConfig failed: %v", err)
 		return nil, responsecode.NewKratosError(responsecode.ErrDatabaseQuery)
@@ -319,7 +322,7 @@ func (uc *ServerNodeUsecase) GetDeviceCountMode(ctx context.Context) (string, er
 }
 
 // GetServerUserList 获取服务器用户列表
-func (uc *ServerNodeUsecase) GetServerUserList(ctx context.Context, serverID int64, protocol, secretKey string) ([]*ServerUser, error) {
+func (uc *ServerNodeUsecase) GetServerUserList(ctx context.Context, serverID int64, protocol string, port uint16, secretKey string) ([]*ServerUser, error) {
 	valid, err := uc.validateSecretKey(ctx, secretKey)
 	if err != nil {
 		uc.logger.Errorf("Load node secret failed: %v", err)
@@ -330,7 +333,7 @@ func (uc *ServerNodeUsecase) GetServerUserList(ctx context.Context, serverID int
 		return nil, responsecode.ErrUnauthorized()
 	}
 
-	users, err := uc.repo.GetServerUserList(ctx, serverID, protocol)
+	users, err := uc.repo.GetServerUserList(ctx, serverID, protocol, port)
 	if err != nil {
 		uc.logger.Errorf("GetServerUserList failed: %v", err)
 		return nil, responsecode.NewKratosError(responsecode.ErrDatabaseQuery)

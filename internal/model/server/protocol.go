@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -510,9 +511,10 @@ func UnmarshalProtocols(protocolsJSON string) ([]*Protocol, error) {
 
 // ValidateProtocols validates protocol list
 func ValidateProtocols(protocols []*Protocol) error {
-	// 验证protocol类型唯一性；Mundo X 使用同一个 type=mx 承载不同传输层，
-	// 因此 mx 需要按 type+transport 去重，避免 mc1/mundordp/mundosql 互相挡住。
+	// A protocol entry represents one listener instance, so uniqueness is
+	// scoped to type+port instead of type only.
 	seen := make(map[string]bool)
+	enabledPorts := make(map[int32]string)
 	for _, p := range protocols {
 		if p == nil || strings.TrimSpace(p.Type) == "" {
 			return ErrProtocolTypeRequired
@@ -522,18 +524,17 @@ func ValidateProtocols(protocols []*Protocol) error {
 			return ErrDuplicateProtocolType
 		}
 		seen[key] = true
+		if p.Enable && p.Port > 0 {
+			if previous, ok := enabledPorts[p.Port]; ok && previous != "" {
+				return ErrDuplicateProtocolPort
+			}
+			enabledPorts[p.Port] = strings.ToLower(strings.TrimSpace(p.Type))
+		}
 	}
 	return nil
 }
 
 func protocolUniqueKey(p *Protocol) string {
 	protocolType := strings.ToLower(strings.TrimSpace(p.Type))
-	if protocolType != "mx" {
-		return protocolType
-	}
-	transport := strings.ToLower(strings.TrimSpace(p.Transport))
-	if transport == "" {
-		transport = "tcp"
-	}
-	return protocolType + ":" + transport
+	return fmt.Sprintf("%s:%d", protocolType, p.Port)
 }

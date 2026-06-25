@@ -90,6 +90,7 @@ type UserTraffic struct {
 type TrafficStatistics struct {
 	ServerID int64         `json:"server_id"`
 	Protocol string        `json:"protocol"`
+	Port     uint16        `json:"port,omitempty"`
 	Logs     []UserTraffic `json:"logs"`
 }
 

@@ -172,19 +172,10 @@ func (r *publicSubscriptionRepo) GetAvailableNodes(ctx context.Context, userSubs
 			continue
 		}
 
-		matched, firstEnabled, firstAvailable := matchNodeProtocolConfig(protocols, node.Protocol, node.Port)
+		matched, _, _ := matchNodeProtocolConfig(protocols, node.Protocol, node.Port)
 		if matched == nil {
-			matched = firstEnabled
-		}
-		if matched == nil {
-			matched = firstAvailable
-		}
-		if matched == nil {
-			r.log.Warnf("No protocol config found for node %d with protocol %s", node.ID, node.Protocol)
+			r.log.Warnf("No protocol config found for node %d with protocol %s port %d", node.ID, node.Protocol, node.Port)
 			continue
-		}
-		if !strings.EqualFold(strings.TrimSpace(matched.Type), strings.TrimSpace(node.Protocol)) {
-			r.log.Warnf("Node %d protocol %s not found in server %d, fallback to protocol %s", node.ID, node.Protocol, server.ID, matched.Type)
 		}
 
 		nodeInfo := &subscriptionbiz.NodeInfo{

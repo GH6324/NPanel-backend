@@ -622,7 +622,7 @@ func buildLegacyNodeInfos(ctx context.Context, d *Data, userSub *ent.ProxyUserSu
 		if server == nil {
 			continue
 		}
-		protocols := cleanLegacyNodeProtocols(server.Protocol)
+		protocols := cleanLegacyNodeProtocolInstance(server.Protocol, node.Protocol, node.Port)
 		nodeInfo := &subscribeBiz.UserSubscribeNodeInfo{
 			ID:              node.ID,
 			Name:            node.Name,
@@ -640,7 +640,7 @@ func buildLegacyNodeInfos(ctx context.Context, d *Data, userSub *ent.ProxyUserSu
 			LongitudeCenter: server.LongitudeCenter,
 			CreatedAt:       node.CreatedAt.Unix(),
 		}
-		if matched := legacyMatchedServerProtocol(server.Protocol, node.Protocol); matched != nil {
+		if matched := legacyMatchedServerProtocol(server.Protocol, node.Protocol, node.Port); matched != nil {
 			applyLegacyOmniflowProtocol(nodeInfo, matched)
 		}
 		result = append(result, nodeInfo)
@@ -648,41 +648,17 @@ func buildLegacyNodeInfos(ctx context.Context, d *Data, userSub *ent.ProxyUserSu
 	return result, nil
 }
 
-func legacyMatchedServerProtocol(protocolsJSON string, nodeProtocol string) *servermodel.Protocol {
+func legacyMatchedServerProtocol(protocolsJSON string, nodeProtocol string, nodePort uint16) *servermodel.Protocol {
 	protocols, err := servermodel.UnmarshalProtocols(protocolsJSON)
 	if err != nil {
 		return nil
 	}
-	var matched *servermodel.Protocol
-	var firstEnabled *servermodel.Protocol
-	var firstAvailable *servermodel.Protocol
-	for _, protocol := range protocols {
-		if protocol == nil {
-			continue
-		}
-		if firstAvailable == nil {
-			firstAvailable = protocol
-		}
-		if protocol.Enable && firstEnabled == nil {
-			firstEnabled = protocol
-		}
-		if strings.EqualFold(strings.TrimSpace(protocol.Type), strings.TrimSpace(nodeProtocol)) {
-			matched = protocol
-			break
-		}
-	}
+	matched, _, _ := matchNodeProtocolConfig(protocols, nodeProtocol, nodePort)
 	if matched != nil {
 		matched.NormalizeOmniflow()
 		return matched
 	}
-	if firstEnabled != nil {
-		firstEnabled.NormalizeOmniflow()
-		return firstEnabled
-	}
-	if firstAvailable != nil {
-		firstAvailable.NormalizeOmniflow()
-	}
-	return firstAvailable
+	return nil
 }
 
 func applyLegacyOmniflowProtocol(nodeInfo *subscribeBiz.UserSubscribeNodeInfo, protocol *servermodel.Protocol) {
@@ -721,6 +697,26 @@ func cleanLegacyNodeProtocols(raw string) string {
 		cleanSimnetProtocolForClient(protocol)
 	}
 	cleaned, err := json.Marshal(protocols)
+	if err != nil {
+		return raw
+	}
+	return string(cleaned)
+}
+
+func cleanLegacyNodeProtocolInstance(raw string, nodeProtocol string, nodePort uint16) string {
+	if strings.TrimSpace(raw) == "" {
+		return raw
+	}
+	protocols, err := servermodel.UnmarshalProtocols(raw)
+	if err != nil {
+		return raw
+	}
+	matched, _, _ := matchNodeProtocolConfig(protocols, nodeProtocol, nodePort)
+	if matched == nil {
+		return "[]"
+	}
+	cleanSimnetProtocolForClient(matched)
+	cleaned, err := json.Marshal([]*servermodel.Protocol{matched})
 	if err != nil {
 		return raw
 	}

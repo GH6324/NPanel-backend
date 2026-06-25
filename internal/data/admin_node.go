@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/ent/proxynode"
+	"github.com/npanel-dev/NPanel-backend/ent/proxyserver"
 	serverbiz "github.com/npanel-dev/NPanel-backend/internal/biz/admin/server"
+	servermodel "github.com/npanel-dev/NPanel-backend/internal/model/server"
 	"github.com/npanel-dev/NPanel-backend/pkg/tool"
-	"github.com/go-kratos/kratos/v2/log"
 )
 
 type adminNodeRepo struct {
@@ -155,6 +157,14 @@ func (r *adminNodeRepo) QueryNodeTags(ctx context.Context) ([]string, error) {
 	return uniqueTags, nil
 }
 
+func (r *adminNodeRepo) GetServerProtocols(ctx context.Context, id int) ([]*servermodel.Protocol, error) {
+	server, err := r.data.db.ProxyServer.Query().Where(proxyserver.ID(int64(id))).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return servermodel.UnmarshalProtocols(server.Protocol)
+}
+
 func (r *adminNodeRepo) ResetNodeSort(ctx context.Context, sortItems []*serverbiz.SortItem) error {
 	if len(sortItems) == 0 {
 		return nil
@@ -198,9 +208,13 @@ func (r *adminNodeRepo) ClearNodeCache(ctx context.Context, serverIDs []int) err
 			r.log.Warnf("Failed to delete status cache for server %d: %v", node.ServerID, err)
 		}
 		if node.Protocol != "" {
-			onlineKey := fmt.Sprintf(OnlineUserCacheKeyWithSubscribe, int64(node.ServerID), node.Protocol)
+			onlineKey := onlineUserSubscribeCacheKey(int64(node.ServerID), node.Protocol, 0)
 			if err := r.data.rdb.Del(ctx, onlineKey).Err(); err != nil {
 				r.log.Warnf("Failed to delete online user cache for server %d protocol %s: %v", node.ServerID, node.Protocol, err)
+			}
+			onlinePortKey := onlineUserSubscribeCacheKey(int64(node.ServerID), node.Protocol, node.Port)
+			if err := r.data.rdb.Del(ctx, onlinePortKey).Err(); err != nil {
+				r.log.Warnf("Failed to delete online user cache for server %d protocol %s port %d: %v", node.ServerID, node.Protocol, node.Port, err)
 			}
 		}
 	}

@@ -82,6 +82,7 @@ message GetServerConfigRequest {
 	int64 server_id = 1;      // 服务器ID
 	string protocol = 2;      // 协议类型
 	string secret_key = 3;    // 密钥
+	int32 port = 4;           // 协议实例端口；0 表示兼容旧节点按协议匹配
 }
 
 // ServerBasic 服务器基础配置
@@ -110,6 +111,7 @@ message GetServerUserListRequest {
 	int64 server_id = 1;      // 服务器ID
 	string protocol = 2;      // 协议类型
 	string secret_key = 3;    // 密钥
+	int32 port = 4;           // 协议实例端口；0 表示兼容旧节点按协议匹配
 }
 
 // ServerUser 服务器用户信息
@@ -144,6 +146,7 @@ message PushUserTrafficRequest {
 	string protocol = 2;      // 协议类型
 	string secret_key = 3;    // 密钥
 	repeated UserTraffic traffic = 4;  // 流量数据
+	int32 port = 5;           // 协议实例端口；0 表示兼容旧节点按协议匹配
 }
 
 // PushUserTrafficReply 推送用户流量响应
@@ -165,6 +168,7 @@ message PushServerStatusRequest {
 	double mem = 5;           // 内存使用率
 	double disk = 6;          // 磁盘使用率
 	int64 updated_at = 7;     // 更新时间戳
+	int32 port = 8;           // 协议实例端口；0 表示兼容旧节点按协议匹配
 }
 
 // PushServerStatusReply 推送服务器状态响应
@@ -190,6 +194,7 @@ message PushOnlineUsersRequest {
 	string protocol = 2;      // 协议类型
 	string secret_key = 3;    // 密钥
 	repeated OnlineUser users = 4;  // 在线用户列表
+	int32 port = 5;           // 协议实例端口；0 表示兼容旧节点按协议匹配
 }
 
 // PushOnlineUsersReply 推送在线用户响应

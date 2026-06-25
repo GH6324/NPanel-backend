@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -90,7 +91,7 @@ type ServerRepo interface {
 	GetServerProtocols(ctx context.Context, id int) ([]*server.Protocol, error)
 	ResetServerSort(ctx context.Context, sortItems []*SortItem) error
 	GetServerStatus(ctx context.Context, serverID int) (*ServerResourceStatus, error)
-	GetOnlineUsers(ctx context.Context, serverID int64, protocol string) (map[int64][]string, error)
+	GetOnlineUsers(ctx context.Context, serverID int64, protocol string, port uint16) (map[int64][]string, error)
 	GetOnlineUsersByServer(ctx context.Context, serverID int64) (map[string]map[int64][]string, error)
 	GetUserSubscribeInfo(ctx context.Context, subscribeID int) (*UserSubscribeInfo, error)
 }
@@ -110,6 +111,7 @@ type NodeRepo interface {
 	QueryNodeTags(ctx context.Context) ([]string, error)
 	ResetNodeSort(ctx context.Context, sortItems []*SortItem) error
 	ClearNodeCache(ctx context.Context, serverIDs []int) error
+	GetServerProtocols(ctx context.Context, id int) ([]*server.Protocol, error)
 }
 
 type MigrationRepo interface {
@@ -387,15 +389,37 @@ func (uc *ServerUsecase) getServerStatusString(lastReportedAt int) string {
 
 func (uc *ServerUsecase) getOnlineUsers(ctx context.Context, serverID int64, protocols []*server.Protocol) []*ServerOnlineUser {
 	result := make([]*ServerOnlineUser, 0)
+	legacyFallbackRead := make(map[string]struct{})
 	for _, protocol := range protocols {
-		onlineData, err := uc.repo.GetOnlineUsers(ctx, serverID, protocol.Type)
+		if protocol == nil {
+			continue
+		}
+		port := uint16(0)
+		if protocol.Port > 0 && protocol.Port <= 65535 {
+			port = uint16(protocol.Port)
+		}
+		onlineData, err := uc.repo.GetOnlineUsers(ctx, serverID, protocol.Type, port)
 		if err != nil {
 			continue
+		}
+		if len(onlineData) == 0 {
+			legacyKey := strings.ToLower(strings.TrimSpace(protocol.Type))
+			if _, read := legacyFallbackRead[legacyKey]; !read {
+				legacyFallbackRead[legacyKey] = struct{}{}
+				onlineData, err = uc.repo.GetOnlineUsers(ctx, serverID, protocol.Type, 0)
+				if err != nil {
+					continue
+				}
+			}
+		}
+		protocolLabel := protocol.Type
+		if port > 0 {
+			protocolLabel = fmt.Sprintf("%s:%d", protocol.Type, port)
 		}
 		for subscribeID, ips := range onlineData {
 			ipList := make([]*ServerOnlineIP, 0, len(ips))
 			for _, ip := range ips {
-				ipList = append(ipList, &ServerOnlineIP{IP: ip, Protocol: protocol.Type})
+				ipList = append(ipList, &ServerOnlineIP{IP: ip, Protocol: protocolLabel})
 			}
 			result = append(result, &ServerOnlineUser{IP: ipList, SubscribeID: subscribeID})
 		}

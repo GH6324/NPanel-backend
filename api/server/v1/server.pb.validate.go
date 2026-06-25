@@ -63,6 +63,8 @@ func (m *GetServerConfigRequest) validate(all bool) error {
 
 	// no validation rules for SecretKey
 
+	// no validation rules for Port
+
 	if len(errors) > 0 {
 		return GetServerConfigRequestMultiError(errors)
 	}
@@ -416,6 +418,8 @@ func (m *GetServerUserListRequest) validate(all bool) error {
 	// no validation rules for Protocol
 
 	// no validation rules for SecretKey
+
+	// no validation rules for Port
 
 	if len(errors) > 0 {
 		return GetServerUserListRequestMultiError(errors)
@@ -911,6 +915,8 @@ func (m *PushUserTrafficRequest) validate(all bool) error {
 
 	}
 
+	// no validation rules for Port
+
 	if len(errors) > 0 {
 		return PushUserTrafficRequestMultiError(errors)
 	}
@@ -1132,6 +1138,8 @@ func (m *PushServerStatusRequest) validate(all bool) error {
 	// no validation rules for Disk
 
 	// no validation rules for UpdatedAt
+
+	// no validation rules for Port
 
 	if len(errors) > 0 {
 		return PushServerStatusRequestMultiError(errors)
@@ -1485,6 +1493,8 @@ func (m *PushOnlineUsersRequest) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for Port
 
 	if len(errors) > 0 {
 		return PushOnlineUsersRequestMultiError(errors)

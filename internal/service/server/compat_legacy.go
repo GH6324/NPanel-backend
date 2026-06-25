@@ -11,6 +11,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/npanel-dev/NPanel-backend/ent"
+	"github.com/npanel-dev/NPanel-backend/ent/predicate"
 	"github.com/npanel-dev/NPanel-backend/ent/proxynode"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyservergroup"
 	"github.com/npanel-dev/NPanel-backend/ent/proxysubscribe"
@@ -46,6 +47,7 @@ type CompatLegacyNodeConfig struct {
 type CompatLegacyServerCommon struct {
 	Protocol  string
 	ServerID  int64
+	Port      uint16
 	SecretKey string
 }
 
@@ -254,12 +256,25 @@ type compatLegacyTrafficLimitRule struct {
 	SpeedLimit   int64  `json:"speed_limit"`
 }
 
-func compatLegacyServerUserListCacheKey(serverID int64) string {
+func compatLegacyServerUserListCacheKey(serverID int64, protocol string, port uint16) string {
+	if port > 0 {
+		return fmt.Sprintf("server:user:%d:%s:%d", serverID, protocol, port)
+	}
 	return fmt.Sprintf("server:user:%d", serverID)
 }
 
-func compatLegacyServerConfigCacheKey(serverID int64, protocol string) string {
+func compatLegacyServerConfigCacheKey(serverID int64, protocol string, port uint16) string {
+	if port > 0 {
+		return fmt.Sprintf("server:config:%d:%s:%d", serverID, protocol, port)
+	}
 	return fmt.Sprintf("server:config:%d:%s", serverID, protocol)
+}
+
+func compatOnlineUserSubscribeCacheKey(serverID int64, protocol string, port uint16) string {
+	if port > 0 {
+		return fmt.Sprintf("node:online:subscribe:%d:%s:%d", serverID, protocol, port)
+	}
+	return fmt.Sprintf("node:online:subscribe:%d:%s", serverID, protocol)
 }
 
 func (s *ServerService) CompatV1ServerSecretAllowed(ctx context.Context, provider CompatLegacyProvider, provided string) bool {
@@ -314,7 +329,7 @@ func (s *ServerService) CompatGetServerConfig(ctx context.Context, provider Comp
 		return nil, "", false, errors.New("invalid provider")
 	}
 	if redisClient := provider.Redis(); redisClient != nil {
-		cacheKey := compatLegacyServerConfigCacheKey(req.ServerID, req.Protocol)
+		cacheKey := compatLegacyServerConfigCacheKey(req.ServerID, req.Protocol, req.Port)
 		if cached, err := redisClient.Get(ctx, cacheKey).Result(); err == nil && cached != "" {
 			etag := tool.GenerateETag([]byte(cached))
 			if ifNoneMatch == etag {
@@ -342,10 +357,14 @@ func (s *ServerService) CompatGetServerConfig(ctx context.Context, provider Comp
 	}
 	var config map[string]interface{}
 	for _, protocol := range protocols {
-		if protocol != nil && protocol.Type == requestProtocol {
-			config = compatLegacyProtocolConfigMap(protocol)
-			break
+		if protocol == nil || protocol.Type != requestProtocol {
+			continue
 		}
+		if req.Port > 0 && protocol.Port != int32(req.Port) {
+			continue
+		}
+		config = compatLegacyProtocolConfigMap(protocol)
+		break
 	}
 	pullInterval := int64(0)
 	pushInterval := int64(0)
@@ -381,7 +400,7 @@ func (s *ServerService) CompatGetServerConfig(ctx context.Context, provider Comp
 	}
 	etag := tool.GenerateETag(encoded)
 	if redisClient := provider.Redis(); redisClient != nil {
-		_ = redisClient.Set(ctx, compatLegacyServerConfigCacheKey(req.ServerID, req.Protocol), encoded, -1).Err()
+		_ = redisClient.Set(ctx, compatLegacyServerConfigCacheKey(req.ServerID, req.Protocol, req.Port), encoded, -1).Err()
 	}
 	if ifNoneMatch == etag {
 		return nil, etag, true, nil
@@ -394,7 +413,7 @@ func (s *ServerService) CompatGetServerUserList(ctx context.Context, provider Co
 		return nil, "", false, errors.New("invalid provider")
 	}
 	if redisClient := provider.Redis(); redisClient != nil {
-		cacheKey := compatLegacyServerUserListCacheKey(req.ServerID)
+		cacheKey := compatLegacyServerUserListCacheKey(req.ServerID, req.Protocol, req.Port)
 		if cached, err := redisClient.Get(ctx, cacheKey).Result(); err == nil && cached != "" {
 			etag := tool.GenerateETag([]byte(cached))
 			if ifNoneMatch == etag {
@@ -411,8 +430,15 @@ func (s *ServerService) CompatGetServerUserList(ctx context.Context, provider Co
 	if _, err := provider.DB().ProxyServer.Get(ctx, req.ServerID); err != nil {
 		return nil, "", false, err
 	}
+	predicates := []predicate.ProxyNode{
+		proxynode.ServerIDEQ(req.ServerID),
+		proxynode.ProtocolEQ(req.Protocol),
+	}
+	if req.Port > 0 {
+		predicates = append(predicates, proxynode.PortEQ(req.Port))
+	}
 	nodes, err := provider.DB().ProxyNode.Query().
-		Where(proxynode.ServerIDEQ(req.ServerID), proxynode.ProtocolEQ(req.Protocol)).
+		Where(predicates...).
 		Order(ent.Asc(proxynode.FieldSort)).
 		Limit(1000).
 		All(ctx)
@@ -492,7 +518,7 @@ func (s *ServerService) CompatGetServerUserList(ctx context.Context, provider Co
 	}
 	etag := tool.GenerateETag(encoded)
 	if redisClient := provider.Redis(); redisClient != nil {
-		_ = redisClient.Set(ctx, compatLegacyServerUserListCacheKey(req.ServerID), encoded, -1).Err()
+		_ = redisClient.Set(ctx, compatLegacyServerUserListCacheKey(req.ServerID, req.Protocol, req.Port), encoded, -1).Err()
 	}
 	if ifNoneMatch == etag {
 		return nil, etag, true, nil
@@ -512,6 +538,7 @@ func (s *ServerService) CompatPushUserTraffic(ctx context.Context, provider Comp
 	payload := queueTypes.TrafficStatistics{
 		ServerID: server.ID,
 		Protocol: req.Protocol,
+		Port:     req.Port,
 		Logs:     make([]queueTypes.UserTraffic, 0, len(req.Traffic)),
 	}
 	for _, item := range req.Traffic {
@@ -579,7 +606,7 @@ func (s *ServerService) CompatPushOnlineUsers(ctx context.Context, provider Comp
 		onlineUsers[user.SID] = append(onlineUsers[user.SID], user.IP)
 	}
 
-	key := fmt.Sprintf("node:online:subscribe:%d:%s", req.ServerID, req.Protocol)
+	key := compatOnlineUserSubscribeCacheKey(req.ServerID, req.Protocol, req.Port)
 	if len(onlineUsers) == 0 {
 		if err := provider.Redis().Del(ctx, key).Err(); err != nil && err != redis.Nil {
 			return err

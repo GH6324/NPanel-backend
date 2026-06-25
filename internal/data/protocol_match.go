@@ -38,5 +38,8 @@ func matchNodeProtocolConfig(protocols []*servermodel.Protocol, nodeProtocol str
 	if loosePortMatch != nil {
 		return loosePortMatch, firstEnabled, firstAvailable
 	}
+	if nodePort > 0 {
+		return nil, firstEnabled, firstAvailable
+	}
 	return typeFallback, firstEnabled, firstAvailable
 }

@@ -10,21 +10,22 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/transport"
+	khttp "github.com/go-kratos/kratos/v2/transport/http"
+	"github.com/hibiken/asynq"
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/internal/conf"
 	"github.com/npanel-dev/NPanel-backend/internal/data"
 	serverservice "github.com/npanel-dev/NPanel-backend/internal/service/server"
 	"github.com/npanel-dev/NPanel-backend/pkg/httpform"
-	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/transport"
-	khttp "github.com/go-kratos/kratos/v2/transport/http"
-	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 )
 
 type compatLegacyServerCommon struct {
 	Protocol  string `form:"protocol" json:"protocol"`
 	ServerID  int64  `form:"server_id" json:"server_id"`
+	Port      uint16 `form:"port" json:"port"`
 	SecretKey string `form:"secret_key" json:"secret_key"`
 }
 
@@ -35,6 +36,9 @@ func (c *compatLegacyServerCommon) UnmarshalJSON(data []byte) error {
 	}
 	c.Protocol = compatLegacyStringField(raw, "protocol")
 	c.ServerID = compatLegacyInt64Field(raw, "server_id", "serverId")
+	if port := compatLegacyInt64Field(raw, "port"); port > 0 && port <= 65535 {
+		c.Port = uint16(port)
+	}
 	c.SecretKey = compatLegacyStringField(raw, "secret_key", "secretKey")
 	return nil
 }
@@ -295,6 +299,7 @@ func registerLegacyServerCompatRoutes(r *khttp.Router, dataLayer *data.Data, ser
 			CompatLegacyServerCommon: serverservice.CompatLegacyServerCommon{
 				Protocol:  req.Protocol,
 				ServerID:  req.ServerID,
+				Port:      req.Port,
 				SecretKey: req.SecretKey,
 			},
 		}, compatLegacyIfNoneMatch(ctx))
@@ -322,6 +327,7 @@ func registerLegacyServerCompatRoutes(r *khttp.Router, dataLayer *data.Data, ser
 			CompatLegacyServerCommon: serverservice.CompatLegacyServerCommon{
 				Protocol:  req.Protocol,
 				ServerID:  req.ServerID,
+				Port:      req.Port,
 				SecretKey: req.SecretKey,
 			},
 		}, compatLegacyIfNoneMatch(ctx))
@@ -357,6 +363,7 @@ func registerLegacyServerCompatRoutes(r *khttp.Router, dataLayer *data.Data, ser
 				CompatLegacyServerCommon: serverservice.CompatLegacyServerCommon{
 					Protocol:  req.Protocol,
 					ServerID:  req.ServerID,
+					Port:      req.Port,
 					SecretKey: req.SecretKey,
 				},
 				Traffic: traffic,
@@ -380,6 +387,7 @@ func registerLegacyServerCompatRoutes(r *khttp.Router, dataLayer *data.Data, ser
 				CompatLegacyServerCommon: serverservice.CompatLegacyServerCommon{
 					Protocol:  req.Protocol,
 					ServerID:  req.ServerID,
+					Port:      req.Port,
 					SecretKey: req.SecretKey,
 				},
 				CPU:       req.CPU,
@@ -422,6 +430,7 @@ func registerLegacyServerCompatRoutes(r *khttp.Router, dataLayer *data.Data, ser
 				CompatLegacyServerCommon: serverservice.CompatLegacyServerCommon{
 					Protocol:  req.Protocol,
 					ServerID:  req.ServerID,
+					Port:      req.Port,
 					SecretKey: req.SecretKey,
 				},
 				Users: users,
@@ -577,6 +586,11 @@ func compatLegacyMergeV1ServerCommon(req *compatLegacyServerCommon, values url.V
 	if req.ServerID <= 0 {
 		if serverID, ok := compatLegacyInt64FromValues(values, "server_id", "serverId"); ok {
 			req.ServerID = serverID
+		}
+	}
+	if req.Port == 0 {
+		if port, ok := compatLegacyInt64FromValues(values, "port"); ok && port > 0 && port <= 65535 {
+			req.Port = uint16(port)
 		}
 	}
 	if strings.TrimSpace(req.SecretKey) == "" {

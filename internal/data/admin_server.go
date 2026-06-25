@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyserver"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyusersubscribe"
 	serverbiz "github.com/npanel-dev/NPanel-backend/internal/biz/admin/server"
 	servermodel "github.com/npanel-dev/NPanel-backend/internal/model/server"
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -162,8 +162,8 @@ func (r *adminServerRepo) GetServerStatus(ctx context.Context, serverID int) (*s
 	return &status, nil
 }
 
-func (r *adminServerRepo) GetOnlineUsers(ctx context.Context, serverID int64, protocol string) (map[int64][]string, error) {
-	key := fmt.Sprintf(OnlineUserCacheKeyWithSubscribe, int(serverID), protocol)
+func (r *adminServerRepo) GetOnlineUsers(ctx context.Context, serverID int64, protocol string, port uint16) (map[int64][]string, error) {
+	key := onlineUserSubscribeCacheKey(serverID, protocol, port)
 	result, err := r.data.rdb.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {

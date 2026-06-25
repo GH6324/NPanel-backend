@@ -5,5 +5,6 @@ import "errors"
 var (
 	ErrProtocolTypeRequired  = errors.New("protocol type is required")
 	ErrDuplicateProtocolType = errors.New("duplicate protocol type")
+	ErrDuplicateProtocolPort = errors.New("duplicate protocol port")
 	ErrInvalidProtocolConfig = errors.New("invalid protocol configuration")
 )

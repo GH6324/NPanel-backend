@@ -2,8 +2,10 @@ package server
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-kratos/kratos/v2/log"
+	servermodel "github.com/npanel-dev/NPanel-backend/internal/model/server"
 )
 
 type NodeUsecase struct {
@@ -16,6 +18,9 @@ func NewNodeUsecase(repo NodeRepo, logger log.Logger) *NodeUsecase {
 }
 
 func (uc *NodeUsecase) CreateNode(ctx context.Context, name string, tags []string, port uint16, address string, serverID int64, protocol string, enabled *bool, nodeType string, isHidden *bool, nodeGroupIDs []int64) (*Node, error) {
+	if err := uc.validateNodeProtocolInstance(ctx, serverID, protocol, port, nodeType); err != nil {
+		return nil, err
+	}
 	return uc.repo.CreateNode(ctx, &Node{
 		Name:         name,
 		Tags:         tags,
@@ -31,6 +36,9 @@ func (uc *NodeUsecase) CreateNode(ctx context.Context, name string, tags []strin
 }
 
 func (uc *NodeUsecase) UpdateNode(ctx context.Context, id int, name string, tags []string, port uint16, address string, serverID int64, protocol string, enabled *bool, nodeType string, isHidden *bool, nodeGroupIDs []int64) (*Node, error) {
+	if err := uc.validateNodeProtocolInstance(ctx, serverID, protocol, port, nodeType); err != nil {
+		return nil, err
+	}
 	node := &Node{
 		ID:           int64(id),
 		Name:         name,
@@ -52,6 +60,28 @@ func (uc *NodeUsecase) UpdateNode(ctx context.Context, id int, name string, tags
 		uc.log.Warnf("Failed to clear node cache for server %d: %v", serverID, err)
 	}
 	return updatedNode, nil
+}
+
+func (uc *NodeUsecase) validateNodeProtocolInstance(ctx context.Context, serverID int64, protocol string, port uint16, nodeType string) error {
+	if strings.EqualFold(strings.TrimSpace(nodeType), "front") {
+		return nil
+	}
+	if serverID <= 0 || strings.TrimSpace(protocol) == "" || port == 0 {
+		return servermodel.ErrInvalidProtocolConfig
+	}
+	protocols, err := uc.repo.GetServerProtocols(ctx, int(serverID))
+	if err != nil {
+		return err
+	}
+	for _, item := range protocols {
+		if item == nil || !item.Enable {
+			continue
+		}
+		if strings.EqualFold(strings.TrimSpace(item.Type), strings.TrimSpace(protocol)) && item.Port == int32(port) {
+			return nil
+		}
+	}
+	return servermodel.ErrInvalidProtocolConfig
 }
 
 func (uc *NodeUsecase) DeleteNode(ctx context.Context, id int) error {

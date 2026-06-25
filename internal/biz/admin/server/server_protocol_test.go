@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -102,7 +103,7 @@ func (r *adminServerRepoStub) GetServerStatus(ctx context.Context, serverID int)
 	return nil, nil
 }
 
-func (r *adminServerRepoStub) GetOnlineUsers(ctx context.Context, serverID int64, protocol string) (map[int64][]string, error) {
+func (r *adminServerRepoStub) GetOnlineUsers(ctx context.Context, serverID int64, protocol string, port uint16) (map[int64][]string, error) {
 	return nil, nil
 }
 
@@ -114,7 +115,38 @@ func (r *adminServerRepoStub) GetUserSubscribeInfo(ctx context.Context, subscrib
 	return nil, nil
 }
 
-type adminNodeRepoStub struct{}
+func TestAdminCreateNodeRequiresEnabledProtocolPortInstance(t *testing.T) {
+	repo := &adminNodeRepoStub{
+		protocols: []*servermodel.Protocol{
+			{Type: "vless", Port: 443, Enable: true},
+			{Type: "vless", Port: 8443, Enable: true},
+			{Type: "shadowsocks", Port: 9443, Enable: false},
+		},
+	}
+	uc := NewNodeUsecase(repo, log.DefaultLogger)
+
+	node, err := uc.CreateNode(context.Background(), "VLESS 8443", nil, 8443, "node.example.com", 1, "vless", nil, "backend", nil, nil)
+	if err != nil {
+		t.Fatalf("CreateNode returned error: %v", err)
+	}
+	if node.Port != 8443 || node.Protocol != "vless" {
+		t.Fatalf("created node = %+v, want vless:8443", node)
+	}
+
+	_, err = uc.CreateNode(context.Background(), "VLESS missing", nil, 9443, "node.example.com", 1, "vless", nil, "backend", nil, nil)
+	if !errors.Is(err, servermodel.ErrInvalidProtocolConfig) {
+		t.Fatalf("CreateNode error = %v, want ErrInvalidProtocolConfig", err)
+	}
+
+	_, err = uc.CreateNode(context.Background(), "SS disabled", nil, 9443, "node.example.com", 1, "shadowsocks", nil, "backend", nil, nil)
+	if !errors.Is(err, servermodel.ErrInvalidProtocolConfig) {
+		t.Fatalf("CreateNode error = %v, want ErrInvalidProtocolConfig", err)
+	}
+}
+
+type adminNodeRepoStub struct {
+	protocols []*servermodel.Protocol
+}
 
 func (r *adminNodeRepoStub) CreateNode(ctx context.Context, node *Node) (*Node, error) {
 	return node, nil
@@ -146,4 +178,8 @@ func (r *adminNodeRepoStub) ResetNodeSort(ctx context.Context, sortItems []*Sort
 
 func (r *adminNodeRepoStub) ClearNodeCache(ctx context.Context, serverIDs []int) error {
 	return nil
+}
+
+func (r *adminNodeRepoStub) GetServerProtocols(ctx context.Context, id int) ([]*servermodel.Protocol, error) {
+	return r.protocols, nil
 }
