@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -129,6 +130,14 @@ type RoutingOverview struct {
 	AuditEvents      []RoutingAuditEvent
 }
 
+type ScopeContext struct {
+	UserID          int64
+	SubscribeID     int64
+	UserSubscribeID int64
+	SubscribeToken  string
+	NodeID          int64
+}
+
 type RoutingRepo interface {
 	SaveProfile(context.Context, *RouteProfile) (*RouteProfile, error)
 	UpdateProfile(context.Context, *RouteProfile) (*RouteProfile, error)
@@ -159,6 +168,8 @@ type RoutingRepo interface {
 	FindUnlockServiceByID(context.Context, int64) (*UnlockService, error)
 	ListUnlockServices(context.Context, int, int, string, *bool) ([]*UnlockService, int32, error)
 	DeleteUnlockService(context.Context, int64) error
+
+	ResolveScopeBySubscribeToken(context.Context, string) (ScopeContext, error)
 }
 
 type RoutingUsecase struct {
@@ -356,7 +367,7 @@ func (uc *RoutingUsecase) DeleteUnlockService(ctx context.Context, id int64) err
 }
 
 func (uc *RoutingUsecase) Preview(ctx context.Context, req PreviewRequest) (PreviewResult, error) {
-	envelope, err := uc.BuildConfig(ctx, time.Now())
+	envelope, err := uc.BuildConfig(ctx, time.Now(), previewConfigOptions(req))
 	if err != nil {
 		return PreviewResult{}, err
 	}
@@ -400,7 +411,18 @@ func (uc *RoutingUsecase) Overview(ctx context.Context) (*RoutingOverview, error
 }
 
 func (uc *RoutingUsecase) BuildConfig(ctx context.Context, now time.Time, opts ...publicrouting.ConfigOptions) (publicrouting.Envelope, error) {
-	fixture := publicrouting.BuildPreviewConfig(now, firstConfigOptions(opts))
+	options := firstConfigOptions(opts)
+	scope, err := uc.resolveScopeContext(ctx, options)
+	if err != nil {
+		return publicrouting.BuildPreviewConfig(now, options), err
+	}
+	options.UserID = scope.UserID
+	options.SubscribeID = scope.SubscribeID
+	options.UserSubscribeID = scope.UserSubscribeID
+	options.SubscribeToken = scope.SubscribeToken
+	options.NodeID = scope.NodeID
+
+	fixture := publicrouting.BuildPreviewConfig(now, options)
 	profiles, _, err := uc.repo.ListProfiles(ctx, 1, 1000, "", boolPtr(true))
 	if err != nil {
 		return fixture, err
@@ -409,7 +431,10 @@ func (uc *RoutingUsecase) BuildConfig(ctx context.Context, now time.Time, opts .
 		return fixture, nil
 	}
 
-	profile := profiles[0]
+	profile := selectProfileForScope(profiles, scope)
+	if profile == nil {
+		return fixture, nil
+	}
 	envelope := fixture
 	envelope.GeneratedAt = now.UTC().Format(time.RFC3339)
 	envelope.ExpiresAt = now.UTC().Add(10 * time.Minute).Format(time.RFC3339)
@@ -449,6 +474,102 @@ func (uc *RoutingUsecase) BuildConfig(ctx context.Context, now time.Time, opts .
 	}
 	envelope.RoutingHash = publicrouting.StableHash(envelope)
 	return envelope, nil
+}
+
+func (uc *RoutingUsecase) ResolveCurrentProfile(ctx context.Context, opts publicrouting.ConfigOptions) (publicrouting.Envelope, error) {
+	return uc.BuildConfig(ctx, time.Now(), opts)
+}
+
+func (uc *RoutingUsecase) resolveScopeContext(ctx context.Context, opts publicrouting.ConfigOptions) (ScopeContext, error) {
+	scope := ScopeContext{
+		UserID:          opts.UserID,
+		SubscribeID:     opts.SubscribeID,
+		UserSubscribeID: opts.UserSubscribeID,
+		SubscribeToken:  strings.TrimSpace(opts.SubscribeToken),
+		NodeID:          opts.NodeID,
+	}
+	if scope.SubscribeToken == "" {
+		return scope, nil
+	}
+
+	tokenScope, err := uc.repo.ResolveScopeBySubscribeToken(ctx, scope.SubscribeToken)
+	if err != nil {
+		return scope, err
+	}
+	if tokenScope.UserID > 0 {
+		scope.UserID = tokenScope.UserID
+	}
+	if tokenScope.SubscribeID > 0 {
+		scope.SubscribeID = tokenScope.SubscribeID
+	}
+	if tokenScope.UserSubscribeID > 0 {
+		scope.UserSubscribeID = tokenScope.UserSubscribeID
+	}
+	return scope, nil
+}
+
+func previewConfigOptions(req PreviewRequest) publicrouting.ConfigOptions {
+	return publicrouting.ConfigOptions{
+		UserID:            parseInt64(req.UserID),
+		SubscribeID:       parseInt64(req.SubscribeID),
+		UserSubscribeID:   parseInt64(req.UserSubscribeID),
+		SubscribeToken:    req.SubscribeToken,
+		NodeID:            parseInt64(req.NodeID),
+		SupportedFeatures: req.SupportedFeatures,
+	}
+}
+
+func parseInt64(value string) int64 {
+	parsed, _ := strconv.ParseInt(strings.TrimSpace(value), 10, 64)
+	return parsed
+}
+
+func selectProfileForScope(profiles []*RouteProfile, scope ScopeContext) *RouteProfile {
+	var selected *RouteProfile
+	selectedRank := 0
+	for _, profile := range profiles {
+		if profile == nil {
+			continue
+		}
+		rank := profileScopeRank(profile, scope)
+		if rank == 0 {
+			continue
+		}
+		if selected == nil || rank < selectedRank {
+			selected = profile
+			selectedRank = rank
+		}
+	}
+	return selected
+}
+
+func profileScopeRank(profile *RouteProfile, scope ScopeContext) int {
+	scopeType := strings.ToLower(strings.TrimSpace(profile.ScopeType))
+	scopeID := strings.TrimSpace(profile.ScopeID)
+	switch scopeType {
+	case "user_subscribe", "subscription":
+		if scope.UserSubscribeID > 0 && scopeID == strconv.FormatInt(scope.UserSubscribeID, 10) {
+			return 1
+		}
+	case "user":
+		if scope.UserID > 0 && scopeID == strconv.FormatInt(scope.UserID, 10) {
+			return 2
+		}
+	case "subscribe", "plan":
+		if scope.SubscribeID > 0 && scopeID == strconv.FormatInt(scope.SubscribeID, 10) {
+			return 3
+		}
+	case "node":
+		if scope.NodeID > 0 && scopeID == strconv.FormatInt(scope.NodeID, 10) {
+			return 4
+		}
+	case "global", "":
+		if scopeID == "" || strings.EqualFold(scopeID, "default") {
+			return 100
+		}
+	default:
+	}
+	return 0
 }
 
 func normalizePage(page, size int) (int, int) {

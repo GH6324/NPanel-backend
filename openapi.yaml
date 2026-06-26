@@ -9127,6 +9127,12 @@ components:
                     type: array
                     items:
                         type: string
+                subscribeId:
+                    type: string
+                userSubscribeId:
+                    type: string
+                subscribeToken:
+                    type: string
         api.admin.routing.v1.PreviewRouteResult:
             type: object
             properties:
@@ -9158,6 +9164,10 @@ components:
                     type: string
                 executionEnabled:
                     type: boolean
+                scopeType:
+                    type: string
+                scopeId:
+                    type: string
         api.admin.routing.v1.RouteOutbound:
             type: object
             properties:

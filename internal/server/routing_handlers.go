@@ -2,7 +2,9 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	nethttp "net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -14,10 +16,13 @@ import (
 )
 
 type publicRoutingCache struct {
-	mu        sync.Mutex
+	mu    sync.Mutex
+	items map[string]publicRoutingCacheItem
+}
+
+type publicRoutingCacheItem struct {
 	envelope  publicrouting.Envelope
 	expiresAt time.Time
-	ok        bool
 }
 
 func registerRoutingPreviewRoutes(srv *http.Server, routing *adminroutingservice.RoutingService) {
@@ -33,7 +38,7 @@ func handleRoutingConfig(routing *adminroutingservice.RoutingService, cache *pub
 			return
 		}
 
-		cfg, fallback := loadPublicRoutingConfig(routing, cache, r)
+		cfg, fallback := loadPublicRoutingConfig(routing, cache, r, publicrouting.PreviewRequest{})
 		if fallback != "" {
 			w.Header().Set("X-Routing-Fallback", fallback)
 		}
@@ -68,7 +73,8 @@ func handleRoutingPreview(routing *adminroutingservice.RoutingService, cache *pu
 			return
 		}
 
-		cfg, fallback := loadPublicRoutingConfig(routing, cache, r)
+		fillPreviewScopeFromRequest(r, &req)
+		cfg, fallback := loadPublicRoutingConfig(routing, cache, r, req)
 		if fallback != "" {
 			w.Header().Set("X-Routing-Fallback", fallback)
 		}
@@ -77,44 +83,112 @@ func handleRoutingPreview(routing *adminroutingservice.RoutingService, cache *pu
 	}
 }
 
-func loadPublicRoutingConfig(routing *adminroutingservice.RoutingService, cache *publicRoutingCache, r *nethttp.Request) (publicrouting.Envelope, string) {
+func loadPublicRoutingConfig(routing *adminroutingservice.RoutingService, cache *publicRoutingCache, r *nethttp.Request, req publicrouting.PreviewRequest) (publicrouting.Envelope, string) {
 	now := time.Now()
-	if cfg, ok := cache.get(now); ok {
+	scopeOpts := routingConfigOptionsFromRequest(r, req)
+	cacheKey := publicRoutingCacheKey(scopeOpts)
+	if cfg, ok := cache.get(cacheKey, now); ok {
 		return cfg, ""
 	}
 
 	features := publicrouting.ParseFeatureList(r.Header.Get("X-Routing-Features"))
+	if len(scopeOpts.SupportedFeatures) == 0 {
+		scopeOpts.SupportedFeatures = features
+	}
 	cfg, err := routing.BuildPublicConfig(r.Context(), now, publicrouting.ConfigOptions{
-		UserID:            middleware.GetUserID(r.Context()),
+		UserID:            scopeOpts.UserID,
+		SubscribeID:       scopeOpts.SubscribeID,
+		UserSubscribeID:   scopeOpts.UserSubscribeID,
+		SubscribeToken:    scopeOpts.SubscribeToken,
+		NodeID:            scopeOpts.NodeID,
 		UserAgent:         r.UserAgent(),
-		SupportedFeatures: features,
+		SupportedFeatures: scopeOpts.SupportedFeatures,
 	})
 	if err != nil {
 		return publicrouting.BuildPreviewConfig(now, publicrouting.ConfigOptions{
-			UserID:            middleware.GetUserID(r.Context()),
+			UserID:            scopeOpts.UserID,
+			SubscribeID:       scopeOpts.SubscribeID,
+			UserSubscribeID:   scopeOpts.UserSubscribeID,
+			SubscribeToken:    scopeOpts.SubscribeToken,
+			NodeID:            scopeOpts.NodeID,
 			UserAgent:         r.UserAgent(),
-			SupportedFeatures: features,
+			SupportedFeatures: scopeOpts.SupportedFeatures,
 		}), "fixture"
 	}
-	cache.set(cfg, now.Add(15*time.Second))
+	cache.set(cacheKey, cfg, now.Add(15*time.Second))
 	return cfg, ""
 }
 
-func (c *publicRoutingCache) get(now time.Time) (publicrouting.Envelope, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.ok || now.After(c.expiresAt) {
-		return publicrouting.Envelope{}, false
+func routingConfigOptionsFromRequest(r *nethttp.Request, req publicrouting.PreviewRequest) publicrouting.ConfigOptions {
+	query := r.URL.Query()
+	token := firstNonEmptyString(req.SubscribeToken, r.Header.Get("token"), r.Header.Get("X-Subscribe-Token"), query.Get("subscribe_token"), query.Get("token"))
+	userID := firstNonZeroInt64(parseInt64String(req.UserID), parseInt64String(query.Get("user_id")), middleware.GetUserID(r.Context()))
+	return publicrouting.ConfigOptions{
+		UserID:            userID,
+		SubscribeID:       firstNonZeroInt64(parseInt64String(req.SubscribeID), parseInt64String(query.Get("subscribe_id"))),
+		UserSubscribeID:   firstNonZeroInt64(parseInt64String(req.UserSubscribeID), parseInt64String(query.Get("user_subscribe_id"))),
+		SubscribeToken:    token,
+		NodeID:            firstNonZeroInt64(parseInt64String(req.NodeID), parseInt64String(query.Get("node_id"))),
+		SupportedFeatures: req.SupportedFeatures,
 	}
-	return c.envelope, true
 }
 
-func (c *publicRoutingCache) set(envelope publicrouting.Envelope, expiresAt time.Time) {
+func fillPreviewScopeFromRequest(r *nethttp.Request, req *publicrouting.PreviewRequest) {
+	query := r.URL.Query()
+	req.SubscribeToken = firstNonEmptyString(req.SubscribeToken, r.Header.Get("token"), r.Header.Get("X-Subscribe-Token"), query.Get("subscribe_token"), query.Get("token"))
+	req.UserID = firstNonEmptyString(req.UserID, query.Get("user_id"))
+	req.SubscribeID = firstNonEmptyString(req.SubscribeID, query.Get("subscribe_id"))
+	req.UserSubscribeID = firstNonEmptyString(req.UserSubscribeID, query.Get("user_subscribe_id"))
+	req.NodeID = firstNonEmptyString(req.NodeID, query.Get("node_id"))
+}
+
+func publicRoutingCacheKey(opts publicrouting.ConfigOptions) string {
+	return fmt.Sprintf("u:%d|s:%d|us:%d|n:%d|t:%s|f:%s", opts.UserID, opts.SubscribeID, opts.UserSubscribeID, opts.NodeID, opts.SubscribeToken, strings.Join(opts.SupportedFeatures, ","))
+}
+
+func parseInt64String(value string) int64 {
+	parsed, _ := strconv.ParseInt(strings.TrimSpace(value), 10, 64)
+	return parsed
+}
+
+func firstNonZeroInt64(values ...int64) int64 {
+	for _, value := range values {
+		if value != 0 {
+			return value
+		}
+	}
+	return 0
+}
+
+func firstNonEmptyString(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
+}
+
+func (c *publicRoutingCache) get(key string, now time.Time) (publicrouting.Envelope, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.envelope = envelope
-	c.expiresAt = expiresAt
-	c.ok = true
+	if c.items == nil {
+		return publicrouting.Envelope{}, false
+	}
+	item, ok := c.items[key]
+	if !ok || now.After(item.expiresAt) {
+		return publicrouting.Envelope{}, false
+	}
+	return item.envelope, true
+}
+
+func (c *publicRoutingCache) set(key string, envelope publicrouting.Envelope, expiresAt time.Time) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.items == nil {
+		c.items = map[string]publicRoutingCacheItem{}
+	}
+	c.items[key] = publicRoutingCacheItem{envelope: envelope, expiresAt: expiresAt}
 }
 
 func writeRoutingOK(w nethttp.ResponseWriter, data any) {

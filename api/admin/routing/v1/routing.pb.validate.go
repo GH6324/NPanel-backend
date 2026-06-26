@@ -5958,6 +5958,12 @@ func (m *PreviewRouteConfigRequest) validate(all bool) error {
 
 	// no validation rules for NodeId
 
+	// no validation rules for SubscribeId
+
+	// no validation rules for UserSubscribeId
+
+	// no validation rules for SubscribeToken
+
 	if len(errors) > 0 {
 		return PreviewRouteConfigRequestMultiError(errors)
 	}
@@ -6083,6 +6089,10 @@ func (m *PreviewRouteResult) validate(all bool) error {
 	// no validation rules for EffectiveMode
 
 	// no validation rules for ExecutionEnabled
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
 
 	if len(errors) > 0 {
 		return PreviewRouteResultMultiError(errors)

@@ -186,6 +186,8 @@ func PreviewRouteConfig(envelope Envelope, req PreviewRequest) PreviewResult {
 	result := PreviewResult{
 		RoutingHash:      envelope.RoutingHash,
 		Profile:          envelope.Profile,
+		ScopeType:        envelope.Profile.Scope.Type,
+		ScopeID:          envelope.Profile.Scope.ID,
 		Action:           envelope.Profile.DefaultAction,
 		DNSResolverTag:   envelope.Profile.DefaultDNSResolverTag,
 		FallbackPolicy:   envelope.Profile.DefaultFallbackPolicy,

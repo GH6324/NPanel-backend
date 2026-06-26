@@ -12,6 +12,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingprofile"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingrule"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingunlockservice"
+	"github.com/npanel-dev/NPanel-backend/ent/proxyusersubscribe"
 	routingbiz "github.com/npanel-dev/NPanel-backend/internal/biz/admin/routing"
 )
 
@@ -77,7 +78,12 @@ func (r *adminRoutingRepo) FindProfileByID(ctx context.Context, id int64) (*rout
 func (r *adminRoutingRepo) ListProfiles(ctx context.Context, page, size int, search string, enabled *bool) ([]*routingbiz.RouteProfile, int32, error) {
 	query := r.data.db.ProxyRoutingProfile.Query()
 	if search != "" {
-		query = query.Where(proxyroutingprofile.Or(proxyroutingprofile.CodeContains(search), proxyroutingprofile.NameContains(search)))
+		query = query.Where(proxyroutingprofile.Or(
+			proxyroutingprofile.CodeContains(search),
+			proxyroutingprofile.NameContains(search),
+			proxyroutingprofile.ScopeTypeContains(search),
+			proxyroutingprofile.ScopeIDContains(search),
+		))
 	}
 	if enabled != nil {
 		query = query.Where(proxyroutingprofile.Enabled(*enabled))
@@ -392,6 +398,24 @@ func (r *adminRoutingRepo) ListUnlockServices(ctx context.Context, page, size in
 
 func (r *adminRoutingRepo) DeleteUnlockService(ctx context.Context, id int64) error {
 	return r.data.db.ProxyRoutingUnlockService.DeleteOneID(id).Exec(ctx)
+}
+
+func (r *adminRoutingRepo) ResolveScopeBySubscribeToken(ctx context.Context, token string) (routingbiz.ScopeContext, error) {
+	if token == "" {
+		return routingbiz.ScopeContext{}, nil
+	}
+	userSub, err := r.data.db.ProxyUserSubscribe.Query().
+		Where(proxyusersubscribe.TokenEQ(token)).
+		Only(ctx)
+	if err != nil {
+		return routingbiz.ScopeContext{}, err
+	}
+	return routingbiz.ScopeContext{
+		UserID:          userSub.UserID,
+		SubscribeID:     userSub.SubscribeID,
+		UserSubscribeID: userSub.ID,
+		SubscribeToken:  token,
+	}, nil
 }
 
 func profileToModel(po *ent.ProxyRoutingProfile) *routingbiz.RouteProfile {

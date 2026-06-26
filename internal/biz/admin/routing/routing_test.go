@@ -10,8 +10,9 @@ import (
 )
 
 type fakeRoutingRepo struct {
-	profiles []*RouteProfile
-	rules    []*RouteRule
+	profiles   []*RouteProfile
+	rules      []*RouteRule
+	tokenScope ScopeContext
 }
 
 func (r fakeRoutingRepo) SaveProfile(context.Context, *RouteProfile) (*RouteProfile, error) {
@@ -79,6 +80,9 @@ func (r fakeRoutingRepo) ListUnlockServices(context.Context, int, int, string, *
 	return nil, 0, nil
 }
 func (r fakeRoutingRepo) DeleteUnlockService(context.Context, int64) error { panic("not used") }
+func (r fakeRoutingRepo) ResolveScopeBySubscribeToken(context.Context, string) (ScopeContext, error) {
+	return r.tokenScope, nil
+}
 
 func TestBuildConfigFallsBackToFixtureWhenStoreIsEmpty(t *testing.T) {
 	now := time.Date(2026, 6, 27, 10, 0, 0, 0, time.UTC)
@@ -122,6 +126,105 @@ func TestBuildConfigKeepsPreviewDefaultsWhenProfileHasNoResources(t *testing.T) 
 	}
 	if len(cfg.Outbounds) == 0 {
 		t.Fatal("Outbounds is empty, want preview defaults")
+	}
+}
+
+func TestBuildConfigSelectsUserProfileBeforeGlobal(t *testing.T) {
+	now := time.Date(2026, 6, 27, 10, 0, 0, 0, time.UTC)
+	uc := NewRoutingUsecase(fakeRoutingRepo{
+		profiles: []*RouteProfile{
+			{
+				ID:          1,
+				Code:        "global_profile",
+				Name:        "Global Profile",
+				ScopeType:   "global",
+				ScopeID:     "default",
+				Mode:        publicrouting.ModeObserve,
+				Enabled:     true,
+				ProfileJSON: `{"default_action":{"type":"proxy"},"default_dns_resolver_tag":"dns:system","default_fallback_policy":"fallback_default"}`,
+			},
+			{
+				ID:          2,
+				Code:        "user_profile",
+				Name:        "User Profile",
+				ScopeType:   "user",
+				ScopeID:     "10001",
+				Mode:        publicrouting.ModeObserve,
+				Enabled:     true,
+				ProfileJSON: `{"default_action":{"type":"proxy"},"default_dns_resolver_tag":"dns:system","default_fallback_policy":"fallback_default"}`,
+			},
+		},
+	}, log.DefaultLogger)
+
+	cfg, err := uc.BuildConfig(context.Background(), now, publicrouting.ConfigOptions{UserID: 10001})
+	if err != nil {
+		t.Fatalf("BuildConfig() error = %v", err)
+	}
+	if cfg.Profile.Code != "user_profile" {
+		t.Fatalf("Profile.Code = %q, want user_profile", cfg.Profile.Code)
+	}
+}
+
+func TestBuildConfigResolveScopeFromSubscribeToken(t *testing.T) {
+	now := time.Date(2026, 6, 27, 10, 0, 0, 0, time.UTC)
+	uc := NewRoutingUsecase(fakeRoutingRepo{
+		tokenScope: ScopeContext{UserID: 10001, SubscribeID: 7, UserSubscribeID: 88},
+		profiles: []*RouteProfile{
+			{
+				ID:          1,
+				Code:        "global_profile",
+				Name:        "Global Profile",
+				ScopeType:   "global",
+				ScopeID:     "default",
+				Mode:        publicrouting.ModeObserve,
+				Enabled:     true,
+				ProfileJSON: `{"default_action":{"type":"proxy"},"default_dns_resolver_tag":"dns:system","default_fallback_policy":"fallback_default"}`,
+			},
+			{
+				ID:          2,
+				Code:        "subscription_instance_profile",
+				Name:        "Subscription Instance Profile",
+				ScopeType:   "user_subscribe",
+				ScopeID:     "88",
+				Mode:        publicrouting.ModeObserve,
+				Enabled:     true,
+				ProfileJSON: `{"default_action":{"type":"proxy"},"default_dns_resolver_tag":"dns:system","default_fallback_policy":"fallback_default"}`,
+			},
+		},
+	}, log.DefaultLogger)
+
+	cfg, err := uc.BuildConfig(context.Background(), now, publicrouting.ConfigOptions{SubscribeToken: "sub-token"})
+	if err != nil {
+		t.Fatalf("BuildConfig() error = %v", err)
+	}
+	if cfg.Profile.Code != "subscription_instance_profile" {
+		t.Fatalf("Profile.Code = %q, want subscription_instance_profile", cfg.Profile.Code)
+	}
+}
+
+func TestBuildConfigDoesNotLeakUserProfileWithoutScope(t *testing.T) {
+	now := time.Date(2026, 6, 27, 10, 0, 0, 0, time.UTC)
+	uc := NewRoutingUsecase(fakeRoutingRepo{
+		profiles: []*RouteProfile{
+			{
+				ID:          1,
+				Code:        "user_profile",
+				Name:        "User Profile",
+				ScopeType:   "user",
+				ScopeID:     "10001",
+				Mode:        publicrouting.ModeObserve,
+				Enabled:     true,
+				ProfileJSON: `{"default_action":{"type":"proxy"},"default_dns_resolver_tag":"dns:system","default_fallback_policy":"fallback_default"}`,
+			},
+		},
+	}, log.DefaultLogger)
+
+	cfg, err := uc.BuildConfig(context.Background(), now)
+	if err != nil {
+		t.Fatalf("BuildConfig() error = %v", err)
+	}
+	if cfg.Profile.Code != "p0_default_smart" {
+		t.Fatalf("Profile.Code = %q, want p0_default_smart", cfg.Profile.Code)
 	}
 }
 

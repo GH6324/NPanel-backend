@@ -233,6 +233,9 @@ message PreviewRouteConfigRequest {
   int64 user_id = 4;
   int64 node_id = 5;
   repeated string supported_features = 6;
+  int64 subscribe_id = 7;
+  int64 user_subscribe_id = 8;
+  string subscribe_token = 9;
 }
 
 message PreviewRouteResult {
@@ -249,6 +252,8 @@ message PreviewRouteResult {
   repeated string unsupported_features = 11;
   string effective_mode = 12;
   bool execution_enabled = 13;
+  string scope_type = 14;
+  string scope_id = 15;
 }
 
 message PreviewRouteConfigReply {

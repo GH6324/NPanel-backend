@@ -160,6 +160,9 @@ type PreviewRequest struct {
 	IP                string   `json:"ip,omitempty"`
 	Port              int      `json:"port,omitempty"`
 	UserID            string   `json:"user_id,omitempty"`
+	SubscribeID       string   `json:"subscribe_id,omitempty"`
+	UserSubscribeID   string   `json:"user_subscribe_id,omitempty"`
+	SubscribeToken    string   `json:"subscribe_token,omitempty"`
 	NodeID            string   `json:"node_id,omitempty"`
 	SupportedFeatures []string `json:"supported_features,omitempty"`
 }
@@ -167,6 +170,8 @@ type PreviewRequest struct {
 type PreviewResult struct {
 	RoutingHash      string      `json:"routing_hash"`
 	Profile          Profile     `json:"profile"`
+	ScopeType        string      `json:"scope_type,omitempty"`
+	ScopeID          string      `json:"scope_id,omitempty"`
 	Matched          bool        `json:"matched"`
 	Rule             *Rule       `json:"rule,omitempty"`
 	Action           RouteAction `json:"action"`
@@ -180,6 +185,10 @@ type PreviewResult struct {
 
 type ConfigOptions struct {
 	UserID            int64
+	SubscribeID       int64
+	UserSubscribeID   int64
+	SubscribeToken    string
+	NodeID            int64
 	SupportedFeatures []string
 	UserAgent         string
 }

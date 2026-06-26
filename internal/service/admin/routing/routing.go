@@ -210,6 +210,9 @@ func (s *RoutingService) PreviewRouteConfig(ctx context.Context, req *v1.Preview
 		IP:                req.Ip,
 		Port:              int(req.Port),
 		UserID:            int64ToString(req.UserId),
+		SubscribeID:       int64ToString(req.SubscribeId),
+		UserSubscribeID:   int64ToString(req.UserSubscribeId),
+		SubscribeToken:    req.SubscribeToken,
 		NodeID:            int64ToString(req.NodeId),
 		SupportedFeatures: req.SupportedFeatures,
 	})
@@ -228,6 +231,8 @@ func (s *RoutingService) PreviewRouteConfig(ctx context.Context, req *v1.Preview
 			RoutingHash:         result.RoutingHash,
 			ProfileCode:         result.Profile.Code,
 			ProfileName:         result.Profile.Name,
+			ScopeType:           result.ScopeType,
+			ScopeId:             result.ScopeID,
 			Matched:             result.Matched,
 			RuleId:              ruleID,
 			RuleName:            ruleName,
