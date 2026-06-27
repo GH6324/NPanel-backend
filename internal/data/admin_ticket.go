@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyticket"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyticketfollow"
 	ticketbiz "github.com/npanel-dev/NPanel-backend/internal/biz/admin/ticket"
 	"github.com/npanel-dev/NPanel-backend/internal/responsecode"
-	"github.com/go-kratos/kratos/v2/errors"
-	"github.com/go-kratos/kratos/v2/log"
 )
 
 type ticketRepo struct {
@@ -95,14 +95,9 @@ func (r *ticketRepo) GetTicketList(ctx context.Context, page, size int, userId i
 		query = query.Where(proxyticket.UserID(int64(userId)))
 	}
 
-	// 按状态筛选
-	// ⚠️ 重要：完整复刻原项目逻辑（model.go:68-69）
-	// 如果指定了status，按指定值过滤；否则默认排除已关闭的工单（status != 4）
+	// 按状态筛选；未指定状态时显示全部工单，包括已关闭工单。
 	if status != nil {
 		query = query.Where(proxyticket.Status(*status))
-	} else {
-		// 默认排除已关闭的工单（Closed = 4）
-		query = query.Where(proxyticket.StatusNEQ(4))
 	}
 
 	// 搜索（标题或描述）
