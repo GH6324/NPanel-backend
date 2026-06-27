@@ -1183,19 +1183,40 @@ func (uc *RoutingUsecase) CapabilityMatrix(context.Context) *RoutingCapabilityMa
 		GeneratedAt: time.Now(),
 		Items: []RoutingCapabilityMatrixItem{
 			{
-				Client:            "OwlClient",
-				Panel:             "ppanel",
-				MinVersion:        "routing_profile.v1 capable",
-				SupportedFeatures: []string{"routing_profile_v1", "route_dns_resolver", "route_outbound", "doh", "routing_overlay_dry_run", "routing_health_report", "routing_route_event", "native_dns_probe"},
-				ExecutionMode:     "observe/enforce candidate",
-				EnforceCandidate:  true,
-				Notes:             "only gray scoped profiles with healthy reports and supported features can execute",
+				Client:     "OwlClient",
+				Panel:      "ppanel",
+				MinVersion: "routing_profile.v1 capable",
+				SupportedFeatures: []string{
+					"routing_profile_v1",
+					"route_dns_resolver",
+					"route_outbound",
+					"route_events",
+					"route_fail_policy",
+					"route_fallback",
+					"doh",
+					"dot",
+					"dns_udp",
+					"dns_tcp",
+					"doh_system_resolver",
+					"dot_system_resolver",
+					"routing_overlay_dry_run",
+					"routing_health_report",
+					"routing_route_event",
+					"client_health_report",
+					"native_dns_probe",
+					"outbound_health_changed",
+					"dns_resolver_health_changed",
+				},
+				MissingFeatures:  []string{"external_wireguard", "external_socks", "external_http"},
+				ExecutionMode:    "observe/enforce candidate",
+				EnforceCandidate: true,
+				Notes:            "External Outbound is intentionally gated until OwlClient implements connector execution",
 			},
 			{
 				Client:            "OwlClient",
 				Panel:             "xboard/xiaov2board/v2board/sspanel",
 				SupportedFeatures: []string{},
-				MissingFeatures:   []string{"routing_profile_v1", "routing_health_report", "routing_route_event"},
+				MissingFeatures:   []string{"routing_profile_v1", "route_dns_resolver", "route_outbound", "routing_health_report", "routing_route_event"},
 				ExecutionMode:     "legacy subscription only",
 				EnforceCandidate:  false,
 				Notes:             "routing config, preview, health report and route event APIs are skipped",
@@ -1315,6 +1336,7 @@ func (uc *RoutingUsecase) BuildConfig(ctx context.Context, now time.Time, opts .
 		return fixture, err
 	}
 
+	envelope.CapabilityRequirements = capabilityRequirementsForEnvelope(envelope)
 	envelope.HealthSnapshot = uc.buildHealthSnapshot(ctx, envelope, now)
 	if err := validateCompiledEnvelope(envelope); err != nil {
 		return fixture, err
@@ -1331,6 +1353,207 @@ func (uc *RoutingUsecase) buildHealthSnapshot(ctx context.Context, envelope publ
 	}
 	mergeHealthReports(&snapshot, reports, now)
 	return snapshot
+}
+
+func capabilityRequirementsForEnvelope(envelope publicrouting.Envelope) publicrouting.CapabilityRequirements {
+	requirements := envelope.CapabilityRequirements
+	requirements.MinSchema = firstNonEmpty(requirements.MinSchema, publicrouting.SchemaV1)
+	requirements.MinOmnxtSDK = firstNonEmpty(requirements.MinOmnxtSDK, "0.1.0")
+	requirements.MinFlutterPlugin = firstNonEmpty(requirements.MinFlutterPlugin, "0.1.0")
+
+	required := map[string]struct{}{}
+	optional := map[string]struct{}{}
+	nodeRequired := map[string]struct{}{}
+
+	addFeature(required, "routing_profile_v1")
+	for _, feature := range requirements.OptionalFeatures {
+		addFeature(optional, feature)
+	}
+	addFeature(optional, "route_events")
+	addFeature(optional, "client_health_report")
+	addFeature(optional, "routing_health_report")
+	addFeature(optional, "routing_route_event")
+	addFeature(optional, "native_dns_probe")
+	addFeature(optional, "outbound_health_changed")
+	addFeature(optional, "dns_resolver_health_changed")
+
+	for _, resolver := range envelope.DNSResolvers {
+		if !resolver.Enabled {
+			continue
+		}
+		addFeature(required, "route_dns_resolver")
+		addDNSProtocolFeature(required, resolver)
+	}
+	if requiresDNSResolverFeature(envelope.Profile.DefaultDNSResolverTag) {
+		addFeature(required, "route_dns_resolver")
+	}
+	if usesFailPolicy(envelope.Profile.DefaultFallbackPolicy, envelope.Profile.DefaultAction.FailPolicy) {
+		addFeature(required, "route_fail_policy")
+		addFeature(required, "route_fallback")
+	}
+	addActionCapabilityFeatures(required, envelope.Profile.DefaultAction)
+
+	for _, outbound := range envelope.Outbounds {
+		if !outbound.Enabled {
+			continue
+		}
+		addFeature(required, "route_outbound")
+		if usesFailPolicy(outbound.FailPolicy) {
+			addFeature(required, "route_fail_policy")
+		}
+		if len(outbound.FallbackPoolTags) > 0 || strings.Contains(strings.ToLower(outbound.FailPolicy), "fallback") {
+			addFeature(required, "route_fallback")
+		}
+		addExternalOutboundFeature(required, outbound)
+	}
+
+	for _, service := range envelope.UnlockServices {
+		if !service.Enabled {
+			continue
+		}
+		if requiresOutboundFeature(service.DefaultOutboundTag) {
+			addFeature(required, "route_outbound")
+		}
+		if requiresDNSResolverFeature(service.DefaultDNSResolverTag) {
+			addFeature(required, "route_dns_resolver")
+		}
+		if usesFailPolicy(service.DefaultFailPolicy) {
+			addFeature(required, "route_fail_policy")
+			if strings.Contains(strings.ToLower(service.DefaultFailPolicy), "fallback") {
+				addFeature(required, "route_fallback")
+			}
+		}
+	}
+
+	for _, rule := range envelope.Rules {
+		if !rule.Enabled {
+			continue
+		}
+		addActionCapabilityFeatures(required, rule.Action)
+	}
+
+	for _, feature := range requirements.NodeRequiredFeatures {
+		addFeature(nodeRequired, feature)
+	}
+	addFeature(nodeRequired, "node_routing_profile_v1")
+	addFeature(nodeRequired, "node_health_report_v1")
+
+	requirements.RequiredFeatures = sortedFeatures(required)
+	requirements.OptionalFeatures = sortedFeaturesWithout(optional, required)
+	requirements.NodeRequiredFeatures = sortedFeatures(nodeRequired)
+	return requirements
+}
+
+func addActionCapabilityFeatures(features map[string]struct{}, action publicrouting.RouteAction) {
+	if requiresOutboundFeature(action.OutboundTag) || action.Type == "outbound" {
+		addFeature(features, "route_outbound")
+	}
+	if requiresDNSResolverFeature(action.DNSResolverTag) || action.Type == "dns_resolver" {
+		addFeature(features, "route_dns_resolver")
+	}
+	if usesFailPolicy(action.FailPolicy) {
+		addFeature(features, "route_fail_policy")
+		if strings.Contains(strings.ToLower(action.FailPolicy), "fallback") {
+			addFeature(features, "route_fallback")
+		}
+	}
+}
+
+func addDNSProtocolFeature(features map[string]struct{}, resolver publicrouting.DNSResolver) {
+	proto := strings.ToLower(strings.TrimSpace(resolver.Proto))
+	address := strings.ToLower(strings.TrimSpace(resolver.Address))
+	switch proto {
+	case "doh", "https":
+		addFeature(features, "doh")
+	case "dot", "tls":
+		addFeature(features, "dot")
+	case "udp":
+		addFeature(features, "dns_udp")
+	case "tcp":
+		addFeature(features, "dns_tcp")
+	}
+	if strings.HasPrefix(address, "https://") {
+		addFeature(features, "doh")
+	}
+	if strings.HasPrefix(address, "tls://") {
+		addFeature(features, "dot")
+	}
+}
+
+func addExternalOutboundFeature(features map[string]struct{}, outbound publicrouting.RouteOutbound) {
+	if strings.ToLower(strings.TrimSpace(outbound.Type)) != "external" && outbound.External == nil {
+		return
+	}
+	protocol := ""
+	if outbound.External != nil {
+		protocol = strings.ToLower(strings.TrimSpace(outbound.External.Protocol))
+	}
+	switch protocol {
+	case "wireguard", "wg":
+		addFeature(features, "external_wireguard")
+	case "socks", "socks4", "socks5":
+		addFeature(features, "external_socks")
+	case "http", "https":
+		addFeature(features, "external_http")
+	default:
+		addFeature(features, "external_wireguard")
+		addFeature(features, "external_socks")
+		addFeature(features, "external_http")
+	}
+}
+
+func addFeature(features map[string]struct{}, feature string) {
+	feature = strings.TrimSpace(feature)
+	if feature == "" {
+		return
+	}
+	features[feature] = struct{}{}
+}
+
+func requiresDNSResolverFeature(tag string) bool {
+	tag = strings.TrimSpace(tag)
+	return tag != "" && tag != "dns:system"
+}
+
+func requiresOutboundFeature(tag string) bool {
+	tag = strings.TrimSpace(tag)
+	return tag != "" && tag != "proxy:default"
+}
+
+func usesFailPolicy(values ...string) bool {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func sortedFeatures(features map[string]struct{}) []string {
+	if len(features) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(features))
+	for feature := range features {
+		result = append(result, feature)
+	}
+	sort.Strings(result)
+	return result
+}
+
+func sortedFeaturesWithout(features, excluded map[string]struct{}) []string {
+	if len(features) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(features))
+	for feature := range features {
+		if _, ok := excluded[feature]; ok {
+			continue
+		}
+		result = append(result, feature)
+	}
+	sort.Strings(result)
+	return result
 }
 
 func (uc *RoutingUsecase) ResolveCurrentProfile(ctx context.Context, opts publicrouting.ConfigOptions) (publicrouting.Envelope, error) {

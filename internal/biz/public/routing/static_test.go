@@ -49,6 +49,14 @@ func TestPreviewRouteConfigFallsBackToDefaultProxy(t *testing.T) {
 	}
 }
 
+func TestMissingRequiredFeaturesTreatsEmptySupportedAsMissingAll(t *testing.T) {
+	missing := MissingRequiredFeatures([]string{"routing_profile_v1", "dot"}, nil)
+
+	if len(missing) != 2 || missing[0] != "routing_profile_v1" || missing[1] != "dot" {
+		t.Fatalf("missing = %#v, want all required features", missing)
+	}
+}
+
 func TestStableHashIgnoresGeneratedAtAndHealth(t *testing.T) {
 	first := BuildPreviewConfig(time.Unix(1, 0), ConfigOptions{})
 	second := BuildPreviewConfig(time.Unix(100, 0), ConfigOptions{})

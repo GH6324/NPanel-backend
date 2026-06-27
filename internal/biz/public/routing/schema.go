@@ -77,18 +77,37 @@ type HealthCheckSpec struct {
 }
 
 type RouteOutbound struct {
-	Tag              string          `json:"tag"`
-	Name             string          `json:"name"`
-	Type             string          `json:"type"`
-	NodeID           string          `json:"node_id,omitempty"`
-	NodeGroupID      string          `json:"node_group_id,omitempty"`
-	Region           string          `json:"region,omitempty"`
-	ServiceTags      []string        `json:"service_tags"`
-	SelectionPolicy  string          `json:"selection_policy"`
-	FailPolicy       string          `json:"fail_policy"`
-	FallbackPoolTags []string        `json:"fallback_pool_tags"`
-	HealthCheck      HealthCheckSpec `json:"health_check"`
-	Enabled          bool            `json:"enabled"`
+	Tag              string            `json:"tag"`
+	Name             string            `json:"name"`
+	Type             string            `json:"type"`
+	NodeID           string            `json:"node_id,omitempty"`
+	NodeGroupID      string            `json:"node_group_id,omitempty"`
+	Region           string            `json:"region,omitempty"`
+	External         *ExternalOutbound `json:"external,omitempty"`
+	ServiceTags      []string          `json:"service_tags"`
+	SelectionPolicy  string            `json:"selection_policy"`
+	FailPolicy       string            `json:"fail_policy"`
+	FallbackPoolTags []string          `json:"fallback_pool_tags"`
+	HealthCheck      HealthCheckSpec   `json:"health_check"`
+	Enabled          bool              `json:"enabled"`
+}
+
+type ExternalOutbound struct {
+	Protocol     string         `json:"protocol,omitempty"`
+	Address      string         `json:"address,omitempty"`
+	Host         string         `json:"host,omitempty"`
+	Port         int            `json:"port,omitempty"`
+	Username     string         `json:"username,omitempty"`
+	Password     string         `json:"password,omitempty"`
+	Endpoint     string         `json:"endpoint,omitempty"`
+	PrivateKey   string         `json:"private_key,omitempty"`
+	PublicKey    string         `json:"public_key,omitempty"`
+	PreSharedKey string         `json:"pre_shared_key,omitempty"`
+	AllowedIPs   []string       `json:"allowed_ips,omitempty"`
+	DNS          []string       `json:"dns,omitempty"`
+	MTU          int            `json:"mtu,omitempty"`
+	Delivery     string         `json:"delivery,omitempty"`
+	Config       map[string]any `json:"config,omitempty"`
 }
 
 type UnlockService struct {

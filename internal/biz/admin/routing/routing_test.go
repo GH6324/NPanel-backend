@@ -13,6 +13,9 @@ import (
 type fakeRoutingRepo struct {
 	profiles      []*RouteProfile
 	rules         []*RouteRule
+	dnsResolvers  []*DNSResolver
+	outbounds     []*RouteOutbound
+	services      []*UnlockService
 	healthReports []*RoutingHealthReport
 	routeEvents   []*RoutingRouteEvent
 	grayReleases  []*RoutingGrayRelease
@@ -66,7 +69,7 @@ func (r fakeRoutingRepo) FindDNSResolverByID(context.Context, int64) (*DNSResolv
 	panic("not used")
 }
 func (r fakeRoutingRepo) ListDNSResolvers(context.Context, int, int, string, *bool) ([]*DNSResolver, int32, error) {
-	return nil, 0, nil
+	return r.dnsResolvers, int32(len(r.dnsResolvers)), nil
 }
 func (r fakeRoutingRepo) DeleteDNSResolver(context.Context, int64) error { panic("not used") }
 func (r fakeRoutingRepo) SaveOutbound(context.Context, *RouteOutbound) (*RouteOutbound, error) {
@@ -79,7 +82,7 @@ func (r fakeRoutingRepo) FindOutboundByID(context.Context, int64) (*RouteOutboun
 	panic("not used")
 }
 func (r fakeRoutingRepo) ListOutbounds(context.Context, int, int, string, *bool) ([]*RouteOutbound, int32, error) {
-	return nil, 0, nil
+	return r.outbounds, int32(len(r.outbounds)), nil
 }
 func (r fakeRoutingRepo) DeleteOutbound(context.Context, int64) error { panic("not used") }
 func (r fakeRoutingRepo) SaveUnlockService(context.Context, *UnlockService) (*UnlockService, error) {
@@ -92,7 +95,7 @@ func (r fakeRoutingRepo) FindUnlockServiceByID(context.Context, int64) (*UnlockS
 	panic("not used")
 }
 func (r fakeRoutingRepo) ListUnlockServices(context.Context, int, int, string, *bool) ([]*UnlockService, int32, error) {
-	return nil, 0, nil
+	return r.services, int32(len(r.services)), nil
 }
 func (r fakeRoutingRepo) DeleteUnlockService(context.Context, int64) error { panic("not used") }
 func (r fakeRoutingRepo) ResolveScopeBySubscribeToken(context.Context, string) (ScopeContext, error) {
@@ -602,7 +605,20 @@ func TestCapabilityMatrixKeepsNonPpanelOutOfEnforce(t *testing.T) {
 	uc := NewRoutingUsecase(fakeRoutingRepo{}, log.DefaultLogger)
 	matrix := uc.CapabilityMatrix(context.Background())
 	foundLegacyPanel := false
+	foundPpanel := false
 	for _, item := range matrix.Items {
+		if item.Client == "OwlClient" && item.Panel == "ppanel" {
+			foundPpanel = true
+			if !featureListContains(item.SupportedFeatures, "dot") {
+				t.Fatal("ppanel OwlClient matrix does not declare dot support")
+			}
+			if !featureListContains(item.SupportedFeatures, "route_events") || !featureListContains(item.SupportedFeatures, "client_health_report") {
+				t.Fatal("ppanel OwlClient matrix does not declare event and client health support")
+			}
+			if !featureListContains(item.MissingFeatures, "external_wireguard") || !featureListContains(item.MissingFeatures, "external_socks") || !featureListContains(item.MissingFeatures, "external_http") {
+				t.Fatal("ppanel OwlClient matrix should keep External Outbound gated")
+			}
+		}
 		if item.Panel == "xboard/xiaov2board/v2board/sspanel" {
 			foundLegacyPanel = true
 			if item.EnforceCandidate {
@@ -610,14 +626,115 @@ func TestCapabilityMatrixKeepsNonPpanelOutOfEnforce(t *testing.T) {
 			}
 		}
 	}
+	if !foundPpanel {
+		t.Fatal("ppanel OwlClient capability matrix item not found")
+	}
 	if !foundLegacyPanel {
 		t.Fatal("non-ppanel capability matrix item not found")
+	}
+}
+
+func TestBuildConfigGeneratesDotCapabilityFromResolver(t *testing.T) {
+	now := time.Date(2026, 6, 27, 10, 0, 0, 0, time.UTC)
+	uc := NewRoutingUsecase(fakeRoutingRepo{
+		profiles: []*RouteProfile{
+			{
+				ID:          1,
+				Code:        "dot_profile",
+				Name:        "DoT Profile",
+				ScopeType:   "global",
+				ScopeID:     "default",
+				Mode:        publicrouting.ModeObserve,
+				Enabled:     true,
+				ProfileJSON: `{"default_action":{"type":"proxy"},"default_dns_resolver_tag":"dns:cloudflare-dot","default_fallback_policy":"fallback_default"}`,
+			},
+		},
+		dnsResolvers: []*DNSResolver{
+			{
+				ID:           1,
+				Tag:          "dns:cloudflare-dot",
+				Name:         "Cloudflare DoT",
+				Proto:        "dot",
+				Address:      "1.1.1.1",
+				Port:         853,
+				Enabled:      true,
+				ResolverJSON: `{"server_name":"cloudflare-dns.com","detour":{"type":"proxy"},"health_check":{"enabled":true,"domain":"www.cloudflare.com","interval_seconds":60}}`,
+			},
+		},
+	}, log.DefaultLogger)
+
+	cfg, err := uc.BuildConfig(context.Background(), now)
+	if err != nil {
+		t.Fatalf("BuildConfig() error = %v", err)
+	}
+	if !featureListContains(cfg.CapabilityRequirements.RequiredFeatures, "dot") {
+		t.Fatalf("RequiredFeatures = %#v, want dot", cfg.CapabilityRequirements.RequiredFeatures)
+	}
+	if featureListContains(cfg.CapabilityRequirements.RequiredFeatures, "doh") {
+		t.Fatalf("RequiredFeatures = %#v, did not want doh for a DoT-only resolver", cfg.CapabilityRequirements.RequiredFeatures)
+	}
+}
+
+func TestBuildConfigGeneratesExternalCapabilityAndPreservesConfig(t *testing.T) {
+	now := time.Date(2026, 6, 27, 10, 0, 0, 0, time.UTC)
+	uc := NewRoutingUsecase(fakeRoutingRepo{
+		profiles: []*RouteProfile{
+			{
+				ID:          1,
+				Code:        "external_profile",
+				Name:        "External Profile",
+				ScopeType:   "global",
+				ScopeID:     "default",
+				Mode:        publicrouting.ModeObserve,
+				Enabled:     true,
+				ProfileJSON: `{"default_action":{"type":"outbound","outbound_tag":"external:socks:sg"},"default_dns_resolver_tag":"dns:system","default_fallback_policy":"fallback_default"}`,
+			},
+		},
+		outbounds: []*RouteOutbound{
+			{
+				ID:      1,
+				Tag:     "external:socks:sg",
+				Name:    "External SOCKS SG",
+				Type:    "external",
+				Region:  "SG",
+				Enabled: true,
+				OutboundJSON: `{
+					"selection_policy":"fixed",
+					"fail_policy":"fallback_default",
+					"fallback_pool_tags":["proxy:default"],
+					"external":{"protocol":"socks","host":"127.0.0.1","port":1080,"username":"u","password":"p"}
+				}`,
+			},
+		},
+	}, log.DefaultLogger)
+
+	cfg, err := uc.BuildConfig(context.Background(), now)
+	if err != nil {
+		t.Fatalf("BuildConfig() error = %v", err)
+	}
+	if !featureListContains(cfg.CapabilityRequirements.RequiredFeatures, "external_socks") {
+		t.Fatalf("RequiredFeatures = %#v, want external_socks", cfg.CapabilityRequirements.RequiredFeatures)
+	}
+	if len(cfg.Outbounds) != 1 || cfg.Outbounds[0].External == nil || cfg.Outbounds[0].External.Protocol != "socks" {
+		t.Fatalf("external outbound was not preserved: %#v", cfg.Outbounds)
+	}
+	if cfg.Outbounds[0].External.Password != "p" {
+		t.Fatal("external outbound credentials were not preserved in enhanced routing config")
 	}
 }
 
 func hasGateCheck(checks []RoutingReleaseGateCheck, key string, passed bool) bool {
 	for _, check := range checks {
 		if check.Key == key && check.Passed == passed {
+			return true
+		}
+	}
+	return false
+}
+
+func featureListContains(features []string, expected string) bool {
+	for _, feature := range features {
+		if feature == expected {
 			return true
 		}
 	}
@@ -789,7 +906,7 @@ func TestBuildConfigMergesFreshHealthReports(t *testing.T) {
 	}
 	result := publicrouting.PreviewRouteConfig(cfg, publicrouting.PreviewRequest{
 		Domain:            "example.com",
-		SupportedFeatures: []string{"route_outbound", "route_dns_resolver", "doh"},
+		SupportedFeatures: cfg.CapabilityRequirements.RequiredFeatures,
 	})
 	if !result.ExecutionEnabled {
 		t.Fatal("ExecutionEnabled = false, want true for enforce gray scope with healthy reports")

@@ -46,8 +46,11 @@ func BuildPreviewConfig(now time.Time, opts ConfigOptions) Envelope {
 			MinOmnxtSDK:      "0.1.0",
 			MinFlutterPlugin: "0.1.0",
 			RequiredFeatures: []string{
+				"routing_profile_v1",
 				"route_outbound",
 				"route_dns_resolver",
+				"route_fail_policy",
+				"route_fallback",
 				"doh",
 			},
 			OptionalFeatures: []string{
@@ -230,12 +233,18 @@ func healthSnapshotOK(snapshot HealthSnapshot) bool {
 }
 
 func MissingRequiredFeatures(required, supported []string) []string {
-	if len(required) == 0 || len(supported) == 0 {
+	if len(required) == 0 {
 		return nil
+	}
+	if len(supported) == 0 {
+		return append([]string{}, required...)
 	}
 	seen := make(map[string]struct{}, len(supported))
 	for _, feature := range supported {
-		seen[strings.TrimSpace(feature)] = struct{}{}
+		normalized := strings.TrimSpace(feature)
+		if normalized != "" {
+			seen[normalized] = struct{}{}
+		}
 	}
 	var missing []string
 	for _, feature := range required {
