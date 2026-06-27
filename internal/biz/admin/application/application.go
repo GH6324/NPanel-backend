@@ -13,6 +13,7 @@ import (
 // DownloadLink 下载链接
 type DownloadLink struct {
 	Windows string `json:"windows"`
+	Mac     string `json:"mac,omitempty"`
 	MacOS   string `json:"macos"`
 	Linux   string `json:"linux"`
 	Android string `json:"android"`
@@ -30,7 +31,13 @@ func (d *DownloadLink) Marshal() (string, error) {
 
 // Unmarshal 从JSON反序列化
 func (d *DownloadLink) Unmarshal(data string) error {
-	return json.Unmarshal([]byte(data), d)
+	if err := json.Unmarshal([]byte(data), d); err != nil {
+		return err
+	}
+	if d.MacOS == "" {
+		d.MacOS = d.Mac
+	}
+	return nil
 }
 
 // SubscribeApplication 订阅应用配置

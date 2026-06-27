@@ -103,12 +103,33 @@ func (r *commonRepo) GetClientList(ctx context.Context) ([]*v1.SubscribeClient, 
 
 	result := make([]*v1.SubscribeClient, 0, len(entClients))
 	for _, entClient := range entClients {
-		// Parse download_link JSON
+		// Parse download_link JSON. Admin APIs historically used macos while
+		// public user APIs expose mac, so keep both accepted here.
+		var rawDownloadLink struct {
+			IOS     string `json:"ios"`
+			Android string `json:"android"`
+			Windows string `json:"windows"`
+			Mac     string `json:"mac"`
+			MacOS   string `json:"macos"`
+			Linux   string `json:"linux"`
+			Harmony string `json:"harmony"`
+		}
 		var downloadLink v1.DownloadLink
 		if entClient.DownloadLink != "" {
-			if err := json.Unmarshal([]byte(entClient.DownloadLink), &downloadLink); err != nil {
+			if err := json.Unmarshal([]byte(entClient.DownloadLink), &rawDownloadLink); err != nil {
 				r.log.Warnw("Failed to unmarshal download_link", "error", err, "id", entClient.ID)
 			}
+		}
+		downloadLink = v1.DownloadLink{
+			IOS:     rawDownloadLink.IOS,
+			Android: rawDownloadLink.Android,
+			Windows: rawDownloadLink.Windows,
+			Mac:     rawDownloadLink.Mac,
+			Linux:   rawDownloadLink.Linux,
+			Harmony: rawDownloadLink.Harmony,
+		}
+		if downloadLink.Mac == "" {
+			downloadLink.Mac = rawDownloadLink.MacOS
 		}
 
 		client := &v1.SubscribeClient{
