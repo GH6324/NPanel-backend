@@ -2,12 +2,14 @@ package data
 
 import (
 	"context"
+	"encoding/json"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/go-kratos/kratos/v2/log"
 
 	"github.com/npanel-dev/NPanel-backend/ent"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingdnsresolver"
+	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinggrayrelease"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinghealthreport"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingoutbound"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingprofile"
@@ -537,6 +539,102 @@ func (r *adminRoutingRepo) ListRouteEvents(ctx context.Context, page, size int, 
 	return items, int32(total), nil
 }
 
+func (r *adminRoutingRepo) SaveGrayRelease(ctx context.Context, item *routingbiz.RoutingGrayRelease) (*routingbiz.RoutingGrayRelease, error) {
+	create := r.data.db.ProxyRoutingGrayRelease.Create().
+		SetProfileCode(item.ProfileCode).
+		SetName(item.Name).
+		SetStatus(item.Status).
+		SetBatchNo(item.BatchNo).
+		SetTargetType(item.TargetType).
+		SetTargetIdsJSON(item.TargetIDsJSON).
+		SetOperator(item.Operator).
+		SetRollbackReason(item.RollbackReason).
+		SetReleaseJSON(item.ReleaseJSON)
+	if !item.StartedAt.IsZero() {
+		create.SetStartedAt(item.StartedAt)
+	}
+	if !item.EndedAt.IsZero() {
+		create.SetEndedAt(item.EndedAt)
+	}
+	po, err := create.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return grayReleaseToModel(po), nil
+}
+
+func (r *adminRoutingRepo) UpdateGrayRelease(ctx context.Context, item *routingbiz.RoutingGrayRelease) (*routingbiz.RoutingGrayRelease, error) {
+	update := r.data.db.ProxyRoutingGrayRelease.UpdateOneID(item.ID).
+		SetProfileCode(item.ProfileCode).
+		SetName(item.Name).
+		SetStatus(item.Status).
+		SetBatchNo(item.BatchNo).
+		SetTargetType(item.TargetType).
+		SetTargetIdsJSON(item.TargetIDsJSON).
+		SetOperator(item.Operator).
+		SetRollbackReason(item.RollbackReason).
+		SetReleaseJSON(item.ReleaseJSON)
+	if item.StartedAt.IsZero() {
+		update.ClearStartedAt()
+	} else {
+		update.SetStartedAt(item.StartedAt)
+	}
+	if item.EndedAt.IsZero() {
+		update.ClearEndedAt()
+	} else {
+		update.SetEndedAt(item.EndedAt)
+	}
+	po, err := update.Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return grayReleaseToModel(po), nil
+}
+
+func (r *adminRoutingRepo) FindGrayReleaseByID(ctx context.Context, id int64) (*routingbiz.RoutingGrayRelease, error) {
+	po, err := r.data.db.ProxyRoutingGrayRelease.Get(ctx, id)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return grayReleaseToModel(po), nil
+}
+
+func (r *adminRoutingRepo) ListGrayReleases(ctx context.Context, page, size int, profileCode, status string) ([]*routingbiz.RoutingGrayRelease, int32, error) {
+	query := r.data.db.ProxyRoutingGrayRelease.Query()
+	if profileCode != "" {
+		query = query.Where(proxyroutinggrayrelease.ProfileCodeContains(profileCode))
+	}
+	if status != "" {
+		query = query.Where(proxyroutinggrayrelease.StatusEQ(status))
+	}
+	total, err := query.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	pos, err := query.Order(proxyroutinggrayrelease.ByUpdatedAt(sql.OrderDesc()), proxyroutinggrayrelease.ByID(sql.OrderDesc())).
+		Offset((page - 1) * size).
+		Limit(size).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	items := make([]*routingbiz.RoutingGrayRelease, 0, len(pos))
+	for _, po := range pos {
+		items = append(items, grayReleaseToModel(po))
+	}
+	return items, int32(total), nil
+}
+
+func (r *adminRoutingRepo) DeleteGrayRelease(ctx context.Context, id int64) error {
+	return r.data.db.ProxyRoutingGrayRelease.DeleteOneID(id).Exec(ctx)
+}
+
 func profileToModel(po *ent.ProxyRoutingProfile) *routingbiz.RouteProfile {
 	return &routingbiz.RouteProfile{
 		ID:          po.ID,
@@ -603,6 +701,26 @@ func routeEventToModel(po *ent.ProxyRoutingRouteEvent) *routingbiz.RoutingRouteE
 	}
 }
 
+func grayReleaseToModel(po *ent.ProxyRoutingGrayRelease) *routingbiz.RoutingGrayRelease {
+	return &routingbiz.RoutingGrayRelease{
+		ID:             po.ID,
+		ProfileCode:    po.ProfileCode,
+		Name:           po.Name,
+		Status:         po.Status,
+		BatchNo:        po.BatchNo,
+		TargetType:     po.TargetType,
+		TargetIDsJSON:  po.TargetIdsJSON,
+		Operator:       po.Operator,
+		RollbackReason: po.RollbackReason,
+		StartedAt:      po.StartedAt,
+		EndedAt:        po.EndedAt,
+		ReleaseJSON:    po.ReleaseJSON,
+		TargetCount:    countJSONList(po.TargetIdsJSON),
+		CreatedAt:      po.CreatedAt,
+		UpdatedAt:      po.UpdatedAt,
+	}
+}
+
 func ruleToModel(po *ent.ProxyRoutingRule) *routingbiz.RouteRule {
 	return &routingbiz.RouteRule{
 		ID:          po.ID,
@@ -658,4 +776,12 @@ func unlockServiceToModel(po *ent.ProxyRoutingUnlockService) *routingbiz.UnlockS
 		CreatedAt:   po.CreatedAt,
 		UpdatedAt:   po.UpdatedAt,
 	}
+}
+
+func countJSONList(raw string) int {
+	var items []any
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return 0
+	}
+	return len(items)
 }

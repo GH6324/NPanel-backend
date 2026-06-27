@@ -25,6 +25,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyredemptioncode"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyredemptionrecord"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingdnsresolver"
+	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinggrayrelease"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinghealthreport"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingoutbound"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingprofile"
@@ -124,6 +125,7 @@ func checkColumn(t, c string) error {
 			proxyredemptioncode.Table:         proxyredemptioncode.ValidColumn,
 			proxyredemptionrecord.Table:       proxyredemptionrecord.ValidColumn,
 			proxyroutingdnsresolver.Table:     proxyroutingdnsresolver.ValidColumn,
+			proxyroutinggrayrelease.Table:     proxyroutinggrayrelease.ValidColumn,
 			proxyroutinghealthreport.Table:    proxyroutinghealthreport.ValidColumn,
 			proxyroutingoutbound.Table:        proxyroutingoutbound.ValidColumn,
 			proxyroutingprofile.Table:         proxyroutingprofile.ValidColumn,

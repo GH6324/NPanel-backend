@@ -315,6 +315,29 @@ var (
 		Columns:    RoutingDNSResolverColumns,
 		PrimaryKey: []*schema.Column{RoutingDNSResolverColumns[0]},
 	}
+	// RoutingGrayReleaseColumns holds the columns for the "routing_gray_release" table.
+	RoutingGrayReleaseColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "Routing gray release ID"},
+		{Name: "profile_code", Type: field.TypeString, Size: 128, Comment: "Routing profile code"},
+		{Name: "name", Type: field.TypeString, Size: 255, Comment: "Gray release name"},
+		{Name: "status", Type: field.TypeString, Size: 32, Comment: "draft/running/paused/completed/rolled_back", Default: "draft"},
+		{Name: "batch_no", Type: field.TypeInt, Comment: "Current gray batch number", Default: 0},
+		{Name: "target_type", Type: field.TypeString, Size: 32, Comment: "user/user_subscribe/subscribe/node", Default: "user"},
+		{Name: "target_ids_json", Type: field.TypeString, Size: 2147483647, Comment: "Target IDs JSON array", Default: "[]"},
+		{Name: "operator", Type: field.TypeString, Size: 128, Comment: "Operator", Default: ""},
+		{Name: "rollback_reason", Type: field.TypeString, Nullable: true, Size: 2147483647, Comment: "Rollback reason"},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true, Comment: "Started at"},
+		{Name: "ended_at", Type: field.TypeTime, Nullable: true, Comment: "Ended at"},
+		{Name: "release_json", Type: field.TypeString, Size: 2147483647, Comment: "Release metadata JSON", Default: "{}"},
+		{Name: "created_at", Type: field.TypeTime, Comment: "Created at"},
+		{Name: "updated_at", Type: field.TypeTime, Comment: "Updated at"},
+	}
+	// RoutingGrayReleaseTable holds the schema information for the "routing_gray_release" table.
+	RoutingGrayReleaseTable = &schema.Table{
+		Name:       "routing_gray_release",
+		Columns:    RoutingGrayReleaseColumns,
+		PrimaryKey: []*schema.Column{RoutingGrayReleaseColumns[0]},
+	}
 	// RoutingHealthReportColumns holds the columns for the "routing_health_report" table.
 	RoutingHealthReportColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "Routing health report ID"},
@@ -885,6 +908,7 @@ var (
 		RedemptionCodeTable,
 		RedemptionRecordTable,
 		RoutingDNSResolverTable,
+		RoutingGrayReleaseTable,
 		RoutingHealthReportTable,
 		RoutingOutboundTable,
 		RoutingProfileTable,
@@ -955,6 +979,9 @@ func init() {
 	}
 	RoutingDNSResolverTable.Annotation = &entsql.Annotation{
 		Table: "routing_dns_resolver",
+	}
+	RoutingGrayReleaseTable.Annotation = &entsql.Annotation{
+		Table: "routing_gray_release",
 	}
 	RoutingHealthReportTable.Annotation = &entsql.Annotation{
 		Table: "routing_health_report",

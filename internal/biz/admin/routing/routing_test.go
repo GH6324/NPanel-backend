@@ -14,6 +14,7 @@ type fakeRoutingRepo struct {
 	rules         []*RouteRule
 	healthReports []*RoutingHealthReport
 	routeEvents   []*RoutingRouteEvent
+	grayReleases  []*RoutingGrayRelease
 	tokenScope    ScopeContext
 }
 
@@ -97,6 +98,25 @@ func (r fakeRoutingRepo) SaveRouteEvents(context.Context, []*RoutingRouteEvent) 
 func (r fakeRoutingRepo) ListRouteEvents(context.Context, int, int, string, string, string) ([]*RoutingRouteEvent, int32, error) {
 	return r.routeEvents, int32(len(r.routeEvents)), nil
 }
+func (r fakeRoutingRepo) SaveGrayRelease(_ context.Context, item *RoutingGrayRelease) (*RoutingGrayRelease, error) {
+	item.ID = 1
+	return item, nil
+}
+func (r fakeRoutingRepo) UpdateGrayRelease(_ context.Context, item *RoutingGrayRelease) (*RoutingGrayRelease, error) {
+	return item, nil
+}
+func (r fakeRoutingRepo) FindGrayReleaseByID(_ context.Context, id int64) (*RoutingGrayRelease, error) {
+	for _, item := range r.grayReleases {
+		if item.ID == id {
+			return item, nil
+		}
+	}
+	return nil, nil
+}
+func (r fakeRoutingRepo) ListGrayReleases(context.Context, int, int, string, string) ([]*RoutingGrayRelease, int32, error) {
+	return r.grayReleases, int32(len(r.grayReleases)), nil
+}
+func (r fakeRoutingRepo) DeleteGrayRelease(context.Context, int64) error { return nil }
 
 func TestRecordRouteEventAcceptsRouteDecision(t *testing.T) {
 	uc := NewRoutingUsecase(fakeRoutingRepo{}, log.DefaultLogger)
@@ -119,6 +139,90 @@ func TestRecordRouteEventAcceptsRouteDecision(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("RecordRouteEvent() error = %v", err)
+	}
+}
+
+func TestActGrayReleaseAdvanceIncrementsBatch(t *testing.T) {
+	uc := NewRoutingUsecase(fakeRoutingRepo{
+		grayReleases: []*RoutingGrayRelease{
+			{
+				ID:            1,
+				ProfileCode:   "p_user_1",
+				Name:          "user 1 gray",
+				Status:        "draft",
+				TargetType:    "user",
+				TargetIDsJSON: `[1]`,
+				ReleaseJSON:   `{}`,
+			},
+		},
+	}, log.DefaultLogger)
+
+	release, err := uc.ActGrayRelease(context.Background(), 1, "advance", "admin", "")
+	if err != nil {
+		t.Fatalf("ActGrayRelease() error = %v", err)
+	}
+	if release.Status != "running" {
+		t.Fatalf("Status = %q, want running", release.Status)
+	}
+	if release.BatchNo != 1 {
+		t.Fatalf("BatchNo = %d, want 1", release.BatchNo)
+	}
+	if release.StartedAt.IsZero() {
+		t.Fatal("StartedAt is zero, want action timestamp")
+	}
+}
+
+func TestRoutingAnalyticsAggregatesFallbackAndHealthFailures(t *testing.T) {
+	now := time.Now()
+	uc := NewRoutingUsecase(fakeRoutingRepo{
+		routeEvents: []*RoutingRouteEvent{
+			{
+				ReporterID:  "device-1",
+				ProfileCode: "p_user_1",
+				RoutingHash: "hash-1",
+				EventType:   "route_decision",
+				Status:      "matched",
+				EventAt:     now.Add(-time.Minute),
+			},
+			{
+				ReporterID:  "device-1",
+				ProfileCode: "p_user_1",
+				RoutingHash: "hash-1",
+				EventType:   "route_fallback",
+				Status:      "fallback",
+				Error:       "outbound failed",
+				EventAt:     now.Add(-30 * time.Second),
+			},
+		},
+		healthReports: []*RoutingHealthReport{
+			{
+				ReporterID:  "device-1",
+				ProfileCode: "p_user_1",
+				RoutingHash: "hash-1",
+				SubjectType: "dns_resolver",
+				SubjectKey:  "dns:cloudflare-doh",
+				Status:      "failed",
+				LastError:   "dns timeout",
+				CheckedAt:   now.Add(-20 * time.Second),
+			},
+		},
+	}, log.DefaultLogger)
+
+	analytics, err := uc.Analytics(context.Background(), "p_user_1", "hash-1", 60)
+	if err != nil {
+		t.Fatalf("Analytics() error = %v", err)
+	}
+	if analytics.TotalRouteEvents != 2 {
+		t.Fatalf("TotalRouteEvents = %d, want 2", analytics.TotalRouteEvents)
+	}
+	if analytics.FallbackRateBP != 10_000 {
+		t.Fatalf("FallbackRateBP = %d, want 10000", analytics.FallbackRateBP)
+	}
+	if analytics.DNSFailRateBP != 10_000 {
+		t.Fatalf("DNSFailRateBP = %d, want 10000", analytics.DNSFailRateBP)
+	}
+	if len(analytics.TopErrors) == 0 {
+		t.Fatal("TopErrors is empty, want aggregated errors")
 	}
 }
 

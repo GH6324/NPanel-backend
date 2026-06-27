@@ -38,6 +38,8 @@ type Tx struct {
 	ProxyRedemptionRecord *ProxyRedemptionRecordClient
 	// ProxyRoutingDNSResolver is the client for interacting with the ProxyRoutingDNSResolver builders.
 	ProxyRoutingDNSResolver *ProxyRoutingDNSResolverClient
+	// ProxyRoutingGrayRelease is the client for interacting with the ProxyRoutingGrayRelease builders.
+	ProxyRoutingGrayRelease *ProxyRoutingGrayReleaseClient
 	// ProxyRoutingHealthReport is the client for interacting with the ProxyRoutingHealthReport builders.
 	ProxyRoutingHealthReport *ProxyRoutingHealthReportClient
 	// ProxyRoutingOutbound is the client for interacting with the ProxyRoutingOutbound builders.
@@ -234,6 +236,7 @@ func (tx *Tx) init() {
 	tx.ProxyRedemptionCode = NewProxyRedemptionCodeClient(tx.config)
 	tx.ProxyRedemptionRecord = NewProxyRedemptionRecordClient(tx.config)
 	tx.ProxyRoutingDNSResolver = NewProxyRoutingDNSResolverClient(tx.config)
+	tx.ProxyRoutingGrayRelease = NewProxyRoutingGrayReleaseClient(tx.config)
 	tx.ProxyRoutingHealthReport = NewProxyRoutingHealthReportClient(tx.config)
 	tx.ProxyRoutingOutbound = NewProxyRoutingOutboundClient(tx.config)
 	tx.ProxyRoutingProfile = NewProxyRoutingProfileClient(tx.config)

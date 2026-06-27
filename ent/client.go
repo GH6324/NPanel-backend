@@ -28,6 +28,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyredemptioncode"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyredemptionrecord"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingdnsresolver"
+	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinggrayrelease"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinghealthreport"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingoutbound"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingprofile"
@@ -87,6 +88,8 @@ type Client struct {
 	ProxyRedemptionRecord *ProxyRedemptionRecordClient
 	// ProxyRoutingDNSResolver is the client for interacting with the ProxyRoutingDNSResolver builders.
 	ProxyRoutingDNSResolver *ProxyRoutingDNSResolverClient
+	// ProxyRoutingGrayRelease is the client for interacting with the ProxyRoutingGrayRelease builders.
+	ProxyRoutingGrayRelease *ProxyRoutingGrayReleaseClient
 	// ProxyRoutingHealthReport is the client for interacting with the ProxyRoutingHealthReport builders.
 	ProxyRoutingHealthReport *ProxyRoutingHealthReportClient
 	// ProxyRoutingOutbound is the client for interacting with the ProxyRoutingOutbound builders.
@@ -163,6 +166,7 @@ func (c *Client) init() {
 	c.ProxyRedemptionCode = NewProxyRedemptionCodeClient(c.config)
 	c.ProxyRedemptionRecord = NewProxyRedemptionRecordClient(c.config)
 	c.ProxyRoutingDNSResolver = NewProxyRoutingDNSResolverClient(c.config)
+	c.ProxyRoutingGrayRelease = NewProxyRoutingGrayReleaseClient(c.config)
 	c.ProxyRoutingHealthReport = NewProxyRoutingHealthReportClient(c.config)
 	c.ProxyRoutingOutbound = NewProxyRoutingOutboundClient(c.config)
 	c.ProxyRoutingProfile = NewProxyRoutingProfileClient(c.config)
@@ -294,6 +298,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ProxyRedemptionCode:         NewProxyRedemptionCodeClient(cfg),
 		ProxyRedemptionRecord:       NewProxyRedemptionRecordClient(cfg),
 		ProxyRoutingDNSResolver:     NewProxyRoutingDNSResolverClient(cfg),
+		ProxyRoutingGrayRelease:     NewProxyRoutingGrayReleaseClient(cfg),
 		ProxyRoutingHealthReport:    NewProxyRoutingHealthReportClient(cfg),
 		ProxyRoutingOutbound:        NewProxyRoutingOutboundClient(cfg),
 		ProxyRoutingProfile:         NewProxyRoutingProfileClient(cfg),
@@ -352,6 +357,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ProxyRedemptionCode:         NewProxyRedemptionCodeClient(cfg),
 		ProxyRedemptionRecord:       NewProxyRedemptionRecordClient(cfg),
 		ProxyRoutingDNSResolver:     NewProxyRoutingDNSResolverClient(cfg),
+		ProxyRoutingGrayRelease:     NewProxyRoutingGrayReleaseClient(cfg),
 		ProxyRoutingHealthReport:    NewProxyRoutingHealthReportClient(cfg),
 		ProxyRoutingOutbound:        NewProxyRoutingOutboundClient(cfg),
 		ProxyRoutingProfile:         NewProxyRoutingProfileClient(cfg),
@@ -410,15 +416,15 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ProxyAds, c.ProxyAnnouncement, c.ProxyAuthMethod, c.ProxyCoupon,
 		c.ProxyDocument, c.ProxyGroupHistory, c.ProxyGroupHistoryDetail, c.ProxyNode,
 		c.ProxyOrder, c.ProxyPayment, c.ProxyRedemptionCode, c.ProxyRedemptionRecord,
-		c.ProxyRoutingDNSResolver, c.ProxyRoutingHealthReport, c.ProxyRoutingOutbound,
-		c.ProxyRoutingProfile, c.ProxyRoutingRouteEvent, c.ProxyRoutingRule,
-		c.ProxyRoutingUnlockService, c.ProxySchemaMigrations, c.ProxyServer,
-		c.ProxyServerGroup, c.ProxySubscribe, c.ProxySubscribeApplication,
-		c.ProxySubscribeCategory, c.ProxySubscribeGroup, c.ProxySubscribePriceOption,
-		c.ProxySystem, c.ProxySystemLog, c.ProxyTask, c.ProxyTicket,
-		c.ProxyTicketFollow, c.ProxyTrafficLog, c.ProxyUser, c.ProxyUserAuthMethod,
-		c.ProxyUserDevice, c.ProxyUserDeviceOnlineRecord, c.ProxyUserSubscribe,
-		c.ProxyUserWithdrawal,
+		c.ProxyRoutingDNSResolver, c.ProxyRoutingGrayRelease,
+		c.ProxyRoutingHealthReport, c.ProxyRoutingOutbound, c.ProxyRoutingProfile,
+		c.ProxyRoutingRouteEvent, c.ProxyRoutingRule, c.ProxyRoutingUnlockService,
+		c.ProxySchemaMigrations, c.ProxyServer, c.ProxyServerGroup, c.ProxySubscribe,
+		c.ProxySubscribeApplication, c.ProxySubscribeCategory, c.ProxySubscribeGroup,
+		c.ProxySubscribePriceOption, c.ProxySystem, c.ProxySystemLog, c.ProxyTask,
+		c.ProxyTicket, c.ProxyTicketFollow, c.ProxyTrafficLog, c.ProxyUser,
+		c.ProxyUserAuthMethod, c.ProxyUserDevice, c.ProxyUserDeviceOnlineRecord,
+		c.ProxyUserSubscribe, c.ProxyUserWithdrawal,
 	} {
 		n.Use(hooks...)
 	}
@@ -431,15 +437,15 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ProxyAds, c.ProxyAnnouncement, c.ProxyAuthMethod, c.ProxyCoupon,
 		c.ProxyDocument, c.ProxyGroupHistory, c.ProxyGroupHistoryDetail, c.ProxyNode,
 		c.ProxyOrder, c.ProxyPayment, c.ProxyRedemptionCode, c.ProxyRedemptionRecord,
-		c.ProxyRoutingDNSResolver, c.ProxyRoutingHealthReport, c.ProxyRoutingOutbound,
-		c.ProxyRoutingProfile, c.ProxyRoutingRouteEvent, c.ProxyRoutingRule,
-		c.ProxyRoutingUnlockService, c.ProxySchemaMigrations, c.ProxyServer,
-		c.ProxyServerGroup, c.ProxySubscribe, c.ProxySubscribeApplication,
-		c.ProxySubscribeCategory, c.ProxySubscribeGroup, c.ProxySubscribePriceOption,
-		c.ProxySystem, c.ProxySystemLog, c.ProxyTask, c.ProxyTicket,
-		c.ProxyTicketFollow, c.ProxyTrafficLog, c.ProxyUser, c.ProxyUserAuthMethod,
-		c.ProxyUserDevice, c.ProxyUserDeviceOnlineRecord, c.ProxyUserSubscribe,
-		c.ProxyUserWithdrawal,
+		c.ProxyRoutingDNSResolver, c.ProxyRoutingGrayRelease,
+		c.ProxyRoutingHealthReport, c.ProxyRoutingOutbound, c.ProxyRoutingProfile,
+		c.ProxyRoutingRouteEvent, c.ProxyRoutingRule, c.ProxyRoutingUnlockService,
+		c.ProxySchemaMigrations, c.ProxyServer, c.ProxyServerGroup, c.ProxySubscribe,
+		c.ProxySubscribeApplication, c.ProxySubscribeCategory, c.ProxySubscribeGroup,
+		c.ProxySubscribePriceOption, c.ProxySystem, c.ProxySystemLog, c.ProxyTask,
+		c.ProxyTicket, c.ProxyTicketFollow, c.ProxyTrafficLog, c.ProxyUser,
+		c.ProxyUserAuthMethod, c.ProxyUserDevice, c.ProxyUserDeviceOnlineRecord,
+		c.ProxyUserSubscribe, c.ProxyUserWithdrawal,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -474,6 +480,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ProxyRedemptionRecord.mutate(ctx, m)
 	case *ProxyRoutingDNSResolverMutation:
 		return c.ProxyRoutingDNSResolver.mutate(ctx, m)
+	case *ProxyRoutingGrayReleaseMutation:
+		return c.ProxyRoutingGrayRelease.mutate(ctx, m)
 	case *ProxyRoutingHealthReportMutation:
 		return c.ProxyRoutingHealthReport.mutate(ctx, m)
 	case *ProxyRoutingOutboundMutation:
@@ -2305,6 +2313,139 @@ func (c *ProxyRoutingDNSResolverClient) mutate(ctx context.Context, m *ProxyRout
 		return (&ProxyRoutingDNSResolverDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ProxyRoutingDNSResolver mutation op: %q", m.Op())
+	}
+}
+
+// ProxyRoutingGrayReleaseClient is a client for the ProxyRoutingGrayRelease schema.
+type ProxyRoutingGrayReleaseClient struct {
+	config
+}
+
+// NewProxyRoutingGrayReleaseClient returns a client for the ProxyRoutingGrayRelease from the given config.
+func NewProxyRoutingGrayReleaseClient(c config) *ProxyRoutingGrayReleaseClient {
+	return &ProxyRoutingGrayReleaseClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `proxyroutinggrayrelease.Hooks(f(g(h())))`.
+func (c *ProxyRoutingGrayReleaseClient) Use(hooks ...Hook) {
+	c.hooks.ProxyRoutingGrayRelease = append(c.hooks.ProxyRoutingGrayRelease, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `proxyroutinggrayrelease.Intercept(f(g(h())))`.
+func (c *ProxyRoutingGrayReleaseClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProxyRoutingGrayRelease = append(c.inters.ProxyRoutingGrayRelease, interceptors...)
+}
+
+// Create returns a builder for creating a ProxyRoutingGrayRelease entity.
+func (c *ProxyRoutingGrayReleaseClient) Create() *ProxyRoutingGrayReleaseCreate {
+	mutation := newProxyRoutingGrayReleaseMutation(c.config, OpCreate)
+	return &ProxyRoutingGrayReleaseCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProxyRoutingGrayRelease entities.
+func (c *ProxyRoutingGrayReleaseClient) CreateBulk(builders ...*ProxyRoutingGrayReleaseCreate) *ProxyRoutingGrayReleaseCreateBulk {
+	return &ProxyRoutingGrayReleaseCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProxyRoutingGrayReleaseClient) MapCreateBulk(slice any, setFunc func(*ProxyRoutingGrayReleaseCreate, int)) *ProxyRoutingGrayReleaseCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProxyRoutingGrayReleaseCreateBulk{err: fmt.Errorf("calling to ProxyRoutingGrayReleaseClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProxyRoutingGrayReleaseCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProxyRoutingGrayReleaseCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProxyRoutingGrayRelease.
+func (c *ProxyRoutingGrayReleaseClient) Update() *ProxyRoutingGrayReleaseUpdate {
+	mutation := newProxyRoutingGrayReleaseMutation(c.config, OpUpdate)
+	return &ProxyRoutingGrayReleaseUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProxyRoutingGrayReleaseClient) UpdateOne(_m *ProxyRoutingGrayRelease) *ProxyRoutingGrayReleaseUpdateOne {
+	mutation := newProxyRoutingGrayReleaseMutation(c.config, OpUpdateOne, withProxyRoutingGrayRelease(_m))
+	return &ProxyRoutingGrayReleaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProxyRoutingGrayReleaseClient) UpdateOneID(id int64) *ProxyRoutingGrayReleaseUpdateOne {
+	mutation := newProxyRoutingGrayReleaseMutation(c.config, OpUpdateOne, withProxyRoutingGrayReleaseID(id))
+	return &ProxyRoutingGrayReleaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProxyRoutingGrayRelease.
+func (c *ProxyRoutingGrayReleaseClient) Delete() *ProxyRoutingGrayReleaseDelete {
+	mutation := newProxyRoutingGrayReleaseMutation(c.config, OpDelete)
+	return &ProxyRoutingGrayReleaseDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProxyRoutingGrayReleaseClient) DeleteOne(_m *ProxyRoutingGrayRelease) *ProxyRoutingGrayReleaseDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProxyRoutingGrayReleaseClient) DeleteOneID(id int64) *ProxyRoutingGrayReleaseDeleteOne {
+	builder := c.Delete().Where(proxyroutinggrayrelease.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProxyRoutingGrayReleaseDeleteOne{builder}
+}
+
+// Query returns a query builder for ProxyRoutingGrayRelease.
+func (c *ProxyRoutingGrayReleaseClient) Query() *ProxyRoutingGrayReleaseQuery {
+	return &ProxyRoutingGrayReleaseQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProxyRoutingGrayRelease},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProxyRoutingGrayRelease entity by its id.
+func (c *ProxyRoutingGrayReleaseClient) Get(ctx context.Context, id int64) (*ProxyRoutingGrayRelease, error) {
+	return c.Query().Where(proxyroutinggrayrelease.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProxyRoutingGrayReleaseClient) GetX(ctx context.Context, id int64) *ProxyRoutingGrayRelease {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProxyRoutingGrayReleaseClient) Hooks() []Hook {
+	return c.hooks.ProxyRoutingGrayRelease
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProxyRoutingGrayReleaseClient) Interceptors() []Interceptor {
+	return c.inters.ProxyRoutingGrayRelease
+}
+
+func (c *ProxyRoutingGrayReleaseClient) mutate(ctx context.Context, m *ProxyRoutingGrayReleaseMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProxyRoutingGrayReleaseCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProxyRoutingGrayReleaseUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProxyRoutingGrayReleaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProxyRoutingGrayReleaseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProxyRoutingGrayRelease mutation op: %q", m.Op())
 	}
 }
 
@@ -5820,10 +5961,10 @@ type (
 		ProxyAds, ProxyAnnouncement, ProxyAuthMethod, ProxyCoupon, ProxyDocument,
 		ProxyGroupHistory, ProxyGroupHistoryDetail, ProxyNode, ProxyOrder,
 		ProxyPayment, ProxyRedemptionCode, ProxyRedemptionRecord,
-		ProxyRoutingDNSResolver, ProxyRoutingHealthReport, ProxyRoutingOutbound,
-		ProxyRoutingProfile, ProxyRoutingRouteEvent, ProxyRoutingRule,
-		ProxyRoutingUnlockService, ProxySchemaMigrations, ProxyServer,
-		ProxyServerGroup, ProxySubscribe, ProxySubscribeApplication,
+		ProxyRoutingDNSResolver, ProxyRoutingGrayRelease, ProxyRoutingHealthReport,
+		ProxyRoutingOutbound, ProxyRoutingProfile, ProxyRoutingRouteEvent,
+		ProxyRoutingRule, ProxyRoutingUnlockService, ProxySchemaMigrations,
+		ProxyServer, ProxyServerGroup, ProxySubscribe, ProxySubscribeApplication,
 		ProxySubscribeCategory, ProxySubscribeGroup, ProxySubscribePriceOption,
 		ProxySystem, ProxySystemLog, ProxyTask, ProxyTicket, ProxyTicketFollow,
 		ProxyTrafficLog, ProxyUser, ProxyUserAuthMethod, ProxyUserDevice,
@@ -5833,10 +5974,10 @@ type (
 		ProxyAds, ProxyAnnouncement, ProxyAuthMethod, ProxyCoupon, ProxyDocument,
 		ProxyGroupHistory, ProxyGroupHistoryDetail, ProxyNode, ProxyOrder,
 		ProxyPayment, ProxyRedemptionCode, ProxyRedemptionRecord,
-		ProxyRoutingDNSResolver, ProxyRoutingHealthReport, ProxyRoutingOutbound,
-		ProxyRoutingProfile, ProxyRoutingRouteEvent, ProxyRoutingRule,
-		ProxyRoutingUnlockService, ProxySchemaMigrations, ProxyServer,
-		ProxyServerGroup, ProxySubscribe, ProxySubscribeApplication,
+		ProxyRoutingDNSResolver, ProxyRoutingGrayRelease, ProxyRoutingHealthReport,
+		ProxyRoutingOutbound, ProxyRoutingProfile, ProxyRoutingRouteEvent,
+		ProxyRoutingRule, ProxyRoutingUnlockService, ProxySchemaMigrations,
+		ProxyServer, ProxyServerGroup, ProxySubscribe, ProxySubscribeApplication,
 		ProxySubscribeCategory, ProxySubscribeGroup, ProxySubscribePriceOption,
 		ProxySystem, ProxySystemLog, ProxyTask, ProxyTicket, ProxyTicketFollow,
 		ProxyTrafficLog, ProxyUser, ProxyUserAuthMethod, ProxyUserDevice,

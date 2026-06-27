@@ -1977,6 +1977,31 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.admin.redemption.v1.GetRedemptionRecordListReply'
+    /v1/admin/routing/analytics:
+        get:
+            tags:
+                - RoutingService
+            operationId: RoutingService_GetRoutingAnalytics
+            parameters:
+                - name: profileCode
+                  in: query
+                  schema:
+                    type: string
+                - name: routingHash
+                  in: query
+                  schema:
+                    type: string
+                - name: windowMinutes
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.admin.routing.v1.GetRoutingAnalyticsReply'
     /v1/admin/routing/dns_resolver:
         put:
             tags:
@@ -2053,6 +2078,104 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.admin.routing.v1.ListDnsResolversReply'
+    /v1/admin/routing/gray_release:
+        put:
+            tags:
+                - RoutingService
+            operationId: RoutingService_UpdateRoutingGrayRelease
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.admin.routing.v1.UpdateRoutingGrayReleaseRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayReleaseReply'
+        post:
+            tags:
+                - RoutingService
+            operationId: RoutingService_CreateRoutingGrayRelease
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.admin.routing.v1.CreateRoutingGrayReleaseRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayReleaseReply'
+        delete:
+            tags:
+                - RoutingService
+            operationId: RoutingService_DeleteRoutingGrayRelease
+            parameters:
+                - name: id
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.admin.routing.v1.DeleteRouteItemReply'
+    /v1/admin/routing/gray_release/action:
+        post:
+            tags:
+                - RoutingService
+            operationId: RoutingService_ActRoutingGrayRelease
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.admin.routing.v1.ActRoutingGrayReleaseRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayReleaseReply'
+    /v1/admin/routing/gray_releases:
+        get:
+            tags:
+                - RoutingService
+            operationId: RoutingService_ListRoutingGrayReleases
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: string
+                - name: size
+                  in: query
+                  schema:
+                    type: string
+                - name: profileCode
+                  in: query
+                  schema:
+                    type: string
+                - name: status
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.admin.routing.v1.ListRoutingGrayReleasesReply'
     /v1/admin/routing/health_reports:
         get:
             tags:
@@ -9016,6 +9139,17 @@ components:
                 status:
                     type: integer
                     format: int32
+        api.admin.routing.v1.ActRoutingGrayReleaseRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                action:
+                    type: string
+                operator:
+                    type: string
+                reason:
+                    type: string
         api.admin.routing.v1.CreateDnsResolverRequest:
             type: object
             properties:
@@ -9036,6 +9170,11 @@ components:
             properties:
                 rule:
                     $ref: '#/components/schemas/api.admin.routing.v1.RouteRule'
+        api.admin.routing.v1.CreateRoutingGrayReleaseRequest:
+            type: object
+            properties:
+                release:
+                    $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayRelease'
         api.admin.routing.v1.CreateUnlockServiceRequest:
             type: object
             properties:
@@ -9105,6 +9244,16 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/api.admin.routing.v1.DnsResolverData'
+        api.admin.routing.v1.GetRoutingAnalyticsReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/api.admin.routing.v1.RoutingAnalyticsData'
         api.admin.routing.v1.GetRoutingOverviewReply:
             type: object
             properties:
@@ -9155,6 +9304,16 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/api.admin.routing.v1.RouteRuleListData'
+        api.admin.routing.v1.ListRoutingGrayReleasesReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayReleaseListData'
         api.admin.routing.v1.ListRoutingHealthReportsReply:
             type: object
             properties:
@@ -9402,6 +9561,87 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/api.admin.routing.v1.RouteRuleData'
+        api.admin.routing.v1.RoutingAnalyticsData:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.admin.routing.v1.RoutingAnalyticsItem'
+                topErrors:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.admin.routing.v1.RoutingAnalyticsError'
+                totalRouteEvents:
+                    type: integer
+                    format: int32
+                totalHealthReports:
+                    type: integer
+                    format: int32
+                affectedReporters:
+                    type: integer
+                    format: int32
+                fallbackRateBp:
+                    type: integer
+                    format: int32
+                dnsFailRateBp:
+                    type: integer
+                    format: int32
+                outboundFailRateBp:
+                    type: integer
+                    format: int32
+                windowStartedAt:
+                    type: string
+        api.admin.routing.v1.RoutingAnalyticsError:
+            type: object
+            properties:
+                key:
+                    type: string
+                kind:
+                    type: string
+                error:
+                    type: string
+                count:
+                    type: integer
+                    format: int32
+        api.admin.routing.v1.RoutingAnalyticsItem:
+            type: object
+            properties:
+                profileCode:
+                    type: string
+                routingHash:
+                    type: string
+                reporterId:
+                    type: string
+                routeEvents:
+                    type: integer
+                    format: int32
+                routeDecisions:
+                    type: integer
+                    format: int32
+                routeFallbacks:
+                    type: integer
+                    format: int32
+                fallbackRateBp:
+                    type: integer
+                    format: int32
+                dnsFailures:
+                    type: integer
+                    format: int32
+                outboundFailures:
+                    type: integer
+                    format: int32
+                affectedReporters:
+                    type: integer
+                    format: int32
+                lastEventType:
+                    type: string
+                lastStatus:
+                    type: string
+                lastError:
+                    type: string
+                lastSeenAt:
+                    type: string
         api.admin.routing.v1.RoutingAuditEvent:
             type: object
             properties:
@@ -9432,6 +9672,66 @@ components:
                     type: string
                 reason:
                     type: string
+        api.admin.routing.v1.RoutingGrayRelease:
+            type: object
+            properties:
+                id:
+                    type: string
+                profileCode:
+                    type: string
+                name:
+                    type: string
+                status:
+                    type: string
+                batchNo:
+                    type: integer
+                    format: int32
+                targetType:
+                    type: string
+                targetIdsJson:
+                    type: string
+                operator:
+                    type: string
+                rollbackReason:
+                    type: string
+                startedAt:
+                    type: string
+                endedAt:
+                    type: string
+                releaseJson:
+                    type: string
+                targetCount:
+                    type: integer
+                    format: int32
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+        api.admin.routing.v1.RoutingGrayReleaseData:
+            type: object
+            properties:
+                release:
+                    $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayRelease'
+        api.admin.routing.v1.RoutingGrayReleaseListData:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayRelease'
+                total:
+                    type: integer
+                    format: int32
+        api.admin.routing.v1.RoutingGrayReleaseReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayReleaseData'
         api.admin.routing.v1.RoutingHealthItem:
             type: object
             properties:
@@ -9665,6 +9965,11 @@ components:
             properties:
                 rule:
                     $ref: '#/components/schemas/api.admin.routing.v1.RouteRule'
+        api.admin.routing.v1.UpdateRoutingGrayReleaseRequest:
+            type: object
+            properties:
+                release:
+                    $ref: '#/components/schemas/api.admin.routing.v1.RoutingGrayRelease'
         api.admin.routing.v1.UpdateUnlockServiceRequest:
             type: object
             properties:

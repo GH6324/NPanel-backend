@@ -43,6 +43,12 @@ const (
 	RoutingService_GetRoutingOverview_FullMethodName       = "/api.admin.routing.v1.RoutingService/GetRoutingOverview"
 	RoutingService_ListRoutingHealthReports_FullMethodName = "/api.admin.routing.v1.RoutingService/ListRoutingHealthReports"
 	RoutingService_ListRoutingRouteEvents_FullMethodName   = "/api.admin.routing.v1.RoutingService/ListRoutingRouteEvents"
+	RoutingService_GetRoutingAnalytics_FullMethodName      = "/api.admin.routing.v1.RoutingService/GetRoutingAnalytics"
+	RoutingService_ListRoutingGrayReleases_FullMethodName  = "/api.admin.routing.v1.RoutingService/ListRoutingGrayReleases"
+	RoutingService_CreateRoutingGrayRelease_FullMethodName = "/api.admin.routing.v1.RoutingService/CreateRoutingGrayRelease"
+	RoutingService_UpdateRoutingGrayRelease_FullMethodName = "/api.admin.routing.v1.RoutingService/UpdateRoutingGrayRelease"
+	RoutingService_DeleteRoutingGrayRelease_FullMethodName = "/api.admin.routing.v1.RoutingService/DeleteRoutingGrayRelease"
+	RoutingService_ActRoutingGrayRelease_FullMethodName    = "/api.admin.routing.v1.RoutingService/ActRoutingGrayRelease"
 )
 
 // RoutingServiceClient is the client API for RoutingService service.
@@ -73,6 +79,12 @@ type RoutingServiceClient interface {
 	GetRoutingOverview(ctx context.Context, in *GetRoutingOverviewRequest, opts ...grpc.CallOption) (*GetRoutingOverviewReply, error)
 	ListRoutingHealthReports(ctx context.Context, in *ListRoutingHealthReportsRequest, opts ...grpc.CallOption) (*ListRoutingHealthReportsReply, error)
 	ListRoutingRouteEvents(ctx context.Context, in *ListRoutingRouteEventsRequest, opts ...grpc.CallOption) (*ListRoutingRouteEventsReply, error)
+	GetRoutingAnalytics(ctx context.Context, in *GetRoutingAnalyticsRequest, opts ...grpc.CallOption) (*GetRoutingAnalyticsReply, error)
+	ListRoutingGrayReleases(ctx context.Context, in *ListRoutingGrayReleasesRequest, opts ...grpc.CallOption) (*ListRoutingGrayReleasesReply, error)
+	CreateRoutingGrayRelease(ctx context.Context, in *CreateRoutingGrayReleaseRequest, opts ...grpc.CallOption) (*RoutingGrayReleaseReply, error)
+	UpdateRoutingGrayRelease(ctx context.Context, in *UpdateRoutingGrayReleaseRequest, opts ...grpc.CallOption) (*RoutingGrayReleaseReply, error)
+	DeleteRoutingGrayRelease(ctx context.Context, in *DeleteRoutingGrayReleaseRequest, opts ...grpc.CallOption) (*DeleteRouteItemReply, error)
+	ActRoutingGrayRelease(ctx context.Context, in *ActRoutingGrayReleaseRequest, opts ...grpc.CallOption) (*RoutingGrayReleaseReply, error)
 }
 
 type routingServiceClient struct {
@@ -323,6 +335,66 @@ func (c *routingServiceClient) ListRoutingRouteEvents(ctx context.Context, in *L
 	return out, nil
 }
 
+func (c *routingServiceClient) GetRoutingAnalytics(ctx context.Context, in *GetRoutingAnalyticsRequest, opts ...grpc.CallOption) (*GetRoutingAnalyticsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRoutingAnalyticsReply)
+	err := c.cc.Invoke(ctx, RoutingService_GetRoutingAnalytics_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *routingServiceClient) ListRoutingGrayReleases(ctx context.Context, in *ListRoutingGrayReleasesRequest, opts ...grpc.CallOption) (*ListRoutingGrayReleasesReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListRoutingGrayReleasesReply)
+	err := c.cc.Invoke(ctx, RoutingService_ListRoutingGrayReleases_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *routingServiceClient) CreateRoutingGrayRelease(ctx context.Context, in *CreateRoutingGrayReleaseRequest, opts ...grpc.CallOption) (*RoutingGrayReleaseReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RoutingGrayReleaseReply)
+	err := c.cc.Invoke(ctx, RoutingService_CreateRoutingGrayRelease_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *routingServiceClient) UpdateRoutingGrayRelease(ctx context.Context, in *UpdateRoutingGrayReleaseRequest, opts ...grpc.CallOption) (*RoutingGrayReleaseReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RoutingGrayReleaseReply)
+	err := c.cc.Invoke(ctx, RoutingService_UpdateRoutingGrayRelease_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *routingServiceClient) DeleteRoutingGrayRelease(ctx context.Context, in *DeleteRoutingGrayReleaseRequest, opts ...grpc.CallOption) (*DeleteRouteItemReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteRouteItemReply)
+	err := c.cc.Invoke(ctx, RoutingService_DeleteRoutingGrayRelease_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *routingServiceClient) ActRoutingGrayRelease(ctx context.Context, in *ActRoutingGrayReleaseRequest, opts ...grpc.CallOption) (*RoutingGrayReleaseReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RoutingGrayReleaseReply)
+	err := c.cc.Invoke(ctx, RoutingService_ActRoutingGrayRelease_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoutingServiceServer is the server API for RoutingService service.
 // All implementations must embed UnimplementedRoutingServiceServer
 // for forward compatibility.
@@ -351,6 +423,12 @@ type RoutingServiceServer interface {
 	GetRoutingOverview(context.Context, *GetRoutingOverviewRequest) (*GetRoutingOverviewReply, error)
 	ListRoutingHealthReports(context.Context, *ListRoutingHealthReportsRequest) (*ListRoutingHealthReportsReply, error)
 	ListRoutingRouteEvents(context.Context, *ListRoutingRouteEventsRequest) (*ListRoutingRouteEventsReply, error)
+	GetRoutingAnalytics(context.Context, *GetRoutingAnalyticsRequest) (*GetRoutingAnalyticsReply, error)
+	ListRoutingGrayReleases(context.Context, *ListRoutingGrayReleasesRequest) (*ListRoutingGrayReleasesReply, error)
+	CreateRoutingGrayRelease(context.Context, *CreateRoutingGrayReleaseRequest) (*RoutingGrayReleaseReply, error)
+	UpdateRoutingGrayRelease(context.Context, *UpdateRoutingGrayReleaseRequest) (*RoutingGrayReleaseReply, error)
+	DeleteRoutingGrayRelease(context.Context, *DeleteRoutingGrayReleaseRequest) (*DeleteRouteItemReply, error)
+	ActRoutingGrayRelease(context.Context, *ActRoutingGrayReleaseRequest) (*RoutingGrayReleaseReply, error)
 	mustEmbedUnimplementedRoutingServiceServer()
 }
 
@@ -432,6 +510,24 @@ func (UnimplementedRoutingServiceServer) ListRoutingHealthReports(context.Contex
 }
 func (UnimplementedRoutingServiceServer) ListRoutingRouteEvents(context.Context, *ListRoutingRouteEventsRequest) (*ListRoutingRouteEventsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRoutingRouteEvents not implemented")
+}
+func (UnimplementedRoutingServiceServer) GetRoutingAnalytics(context.Context, *GetRoutingAnalyticsRequest) (*GetRoutingAnalyticsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoutingAnalytics not implemented")
+}
+func (UnimplementedRoutingServiceServer) ListRoutingGrayReleases(context.Context, *ListRoutingGrayReleasesRequest) (*ListRoutingGrayReleasesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListRoutingGrayReleases not implemented")
+}
+func (UnimplementedRoutingServiceServer) CreateRoutingGrayRelease(context.Context, *CreateRoutingGrayReleaseRequest) (*RoutingGrayReleaseReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateRoutingGrayRelease not implemented")
+}
+func (UnimplementedRoutingServiceServer) UpdateRoutingGrayRelease(context.Context, *UpdateRoutingGrayReleaseRequest) (*RoutingGrayReleaseReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateRoutingGrayRelease not implemented")
+}
+func (UnimplementedRoutingServiceServer) DeleteRoutingGrayRelease(context.Context, *DeleteRoutingGrayReleaseRequest) (*DeleteRouteItemReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteRoutingGrayRelease not implemented")
+}
+func (UnimplementedRoutingServiceServer) ActRoutingGrayRelease(context.Context, *ActRoutingGrayReleaseRequest) (*RoutingGrayReleaseReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActRoutingGrayRelease not implemented")
 }
 func (UnimplementedRoutingServiceServer) mustEmbedUnimplementedRoutingServiceServer() {}
 func (UnimplementedRoutingServiceServer) testEmbeddedByValue()                        {}
@@ -886,6 +982,114 @@ func _RoutingService_ListRoutingRouteEvents_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoutingService_GetRoutingAnalytics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRoutingAnalyticsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).GetRoutingAnalytics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoutingService_GetRoutingAnalytics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).GetRoutingAnalytics(ctx, req.(*GetRoutingAnalyticsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoutingService_ListRoutingGrayReleases_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRoutingGrayReleasesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).ListRoutingGrayReleases(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoutingService_ListRoutingGrayReleases_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).ListRoutingGrayReleases(ctx, req.(*ListRoutingGrayReleasesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoutingService_CreateRoutingGrayRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRoutingGrayReleaseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).CreateRoutingGrayRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoutingService_CreateRoutingGrayRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).CreateRoutingGrayRelease(ctx, req.(*CreateRoutingGrayReleaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoutingService_UpdateRoutingGrayRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRoutingGrayReleaseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).UpdateRoutingGrayRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoutingService_UpdateRoutingGrayRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).UpdateRoutingGrayRelease(ctx, req.(*UpdateRoutingGrayReleaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoutingService_DeleteRoutingGrayRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRoutingGrayReleaseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).DeleteRoutingGrayRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoutingService_DeleteRoutingGrayRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).DeleteRoutingGrayRelease(ctx, req.(*DeleteRoutingGrayReleaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoutingService_ActRoutingGrayRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActRoutingGrayReleaseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).ActRoutingGrayRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoutingService_ActRoutingGrayRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).ActRoutingGrayRelease(ctx, req.(*ActRoutingGrayReleaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoutingService_ServiceDesc is the grpc.ServiceDesc for RoutingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -988,6 +1192,30 @@ var RoutingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListRoutingRouteEvents",
 			Handler:    _RoutingService_ListRoutingRouteEvents_Handler,
+		},
+		{
+			MethodName: "GetRoutingAnalytics",
+			Handler:    _RoutingService_GetRoutingAnalytics_Handler,
+		},
+		{
+			MethodName: "ListRoutingGrayReleases",
+			Handler:    _RoutingService_ListRoutingGrayReleases_Handler,
+		},
+		{
+			MethodName: "CreateRoutingGrayRelease",
+			Handler:    _RoutingService_CreateRoutingGrayRelease_Handler,
+		},
+		{
+			MethodName: "UpdateRoutingGrayRelease",
+			Handler:    _RoutingService_UpdateRoutingGrayRelease_Handler,
+		},
+		{
+			MethodName: "DeleteRoutingGrayRelease",
+			Handler:    _RoutingService_DeleteRoutingGrayRelease_Handler,
+		},
+		{
+			MethodName: "ActRoutingGrayRelease",
+			Handler:    _RoutingService_ActRoutingGrayRelease_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

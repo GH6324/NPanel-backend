@@ -120,6 +120,35 @@ service RoutingService {
   rpc ListRoutingRouteEvents(ListRoutingRouteEventsRequest) returns (ListRoutingRouteEventsReply) {
     option (google.api.http) = { get: "/v1/admin/routing/route_events" };
   }
+
+  rpc GetRoutingAnalytics(GetRoutingAnalyticsRequest) returns (GetRoutingAnalyticsReply) {
+    option (google.api.http) = { get: "/v1/admin/routing/analytics" };
+  }
+
+  rpc ListRoutingGrayReleases(ListRoutingGrayReleasesRequest) returns (ListRoutingGrayReleasesReply) {
+    option (google.api.http) = { get: "/v1/admin/routing/gray_releases" };
+  }
+  rpc CreateRoutingGrayRelease(CreateRoutingGrayReleaseRequest) returns (RoutingGrayReleaseReply) {
+    option (google.api.http) = {
+      post: "/v1/admin/routing/gray_release"
+      body: "*"
+    };
+  }
+  rpc UpdateRoutingGrayRelease(UpdateRoutingGrayReleaseRequest) returns (RoutingGrayReleaseReply) {
+    option (google.api.http) = {
+      put: "/v1/admin/routing/gray_release"
+      body: "*"
+    };
+  }
+  rpc DeleteRoutingGrayRelease(DeleteRoutingGrayReleaseRequest) returns (DeleteRouteItemReply) {
+    option (google.api.http) = { delete: "/v1/admin/routing/gray_release" };
+  }
+  rpc ActRoutingGrayRelease(ActRoutingGrayReleaseRequest) returns (RoutingGrayReleaseReply) {
+    option (google.api.http) = {
+      post: "/v1/admin/routing/gray_release/action"
+      body: "*"
+    };
+  }
 }
 
 message RouteProfile {
@@ -354,6 +383,95 @@ message ListRoutingRouteEventsReply {
   string message = 2;
   RoutingRouteEventListData data = 3;
 }
+
+message RoutingAnalyticsItem {
+  string profile_code = 1;
+  string routing_hash = 2;
+  string reporter_id = 3;
+  int32 route_events = 4;
+  int32 route_decisions = 5;
+  int32 route_fallbacks = 6;
+  int32 fallback_rate_bp = 7;
+  int32 dns_failures = 8;
+  int32 outbound_failures = 9;
+  int32 affected_reporters = 10;
+  string last_event_type = 11;
+  string last_status = 12;
+  string last_error = 13;
+  int64 last_seen_at = 14;
+}
+
+message RoutingAnalyticsError {
+  string key = 1;
+  string kind = 2;
+  string error = 3;
+  int32 count = 4;
+}
+
+message GetRoutingAnalyticsRequest {
+  string profile_code = 1;
+  string routing_hash = 2;
+  int64 window_minutes = 3;
+}
+
+message RoutingAnalyticsData {
+  repeated RoutingAnalyticsItem items = 1;
+  repeated RoutingAnalyticsError top_errors = 2;
+  int32 total_route_events = 3;
+  int32 total_health_reports = 4;
+  int32 affected_reporters = 5;
+  int32 fallback_rate_bp = 6;
+  int32 dns_fail_rate_bp = 7;
+  int32 outbound_fail_rate_bp = 8;
+  int64 window_started_at = 9;
+}
+
+message GetRoutingAnalyticsReply {
+  int32 code = 1;
+  string message = 2;
+  RoutingAnalyticsData data = 3;
+}
+
+message RoutingGrayRelease {
+  int64 id = 1;
+  string profile_code = 2;
+  string name = 3;
+  string status = 4;
+  int32 batch_no = 5;
+  string target_type = 6;
+  string target_ids_json = 7;
+  string operator = 8;
+  string rollback_reason = 9;
+  int64 started_at = 10;
+  int64 ended_at = 11;
+  string release_json = 12;
+  int32 target_count = 13;
+  int64 created_at = 14;
+  int64 updated_at = 15;
+}
+
+message ListRoutingGrayReleasesRequest {
+  int64 page = 1;
+  int64 size = 2;
+  string profile_code = 3;
+  string status = 4;
+}
+
+message CreateRoutingGrayReleaseRequest { RoutingGrayRelease release = 1; }
+message UpdateRoutingGrayReleaseRequest { RoutingGrayRelease release = 1; }
+message DeleteRoutingGrayReleaseRequest { int64 id = 1; }
+
+message ActRoutingGrayReleaseRequest {
+  int64 id = 1;
+  string action = 2;
+  string operator = 3;
+  string reason = 4;
+}
+
+message RoutingGrayReleaseData { RoutingGrayRelease release = 1; }
+message RoutingGrayReleaseListData { repeated RoutingGrayRelease list = 1; int32 total = 2; }
+message RoutingGrayReleaseReply { int32 code = 1; string message = 2; RoutingGrayReleaseData data = 3; }
+message ListRoutingGrayReleasesReply { int32 code = 1; string message = 2; RoutingGrayReleaseListData data = 3; }
 
 message RoutingHealthItem {
   string kind = 1;

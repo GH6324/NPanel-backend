@@ -299,6 +299,65 @@ func (s *RoutingService) ListRoutingRouteEvents(ctx context.Context, req *v1.Lis
 	}, nil
 }
 
+func (s *RoutingService) GetRoutingAnalytics(ctx context.Context, req *v1.GetRoutingAnalyticsRequest) (*v1.GetRoutingAnalyticsReply, error) {
+	analytics, err := s.uc.Analytics(ctx, req.ProfileCode, req.RoutingHash, int(req.WindowMinutes))
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GetRoutingAnalyticsReply{
+		Code:    successCode,
+		Message: "success",
+		Data:    routingAnalyticsToProto(analytics),
+	}, nil
+}
+
+func (s *RoutingService) ListRoutingGrayReleases(ctx context.Context, req *v1.ListRoutingGrayReleasesRequest) (*v1.ListRoutingGrayReleasesReply, error) {
+	items, total, err := s.uc.ListGrayReleases(ctx, int(req.Page), int(req.Size), req.ProfileCode, req.Status)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*v1.RoutingGrayRelease, 0, len(items))
+	for _, item := range items {
+		list = append(list, grayReleaseToProto(item))
+	}
+	return &v1.ListRoutingGrayReleasesReply{
+		Code:    successCode,
+		Message: "success",
+		Data:    &v1.RoutingGrayReleaseListData{List: list, Total: total},
+	}, nil
+}
+
+func (s *RoutingService) CreateRoutingGrayRelease(ctx context.Context, req *v1.CreateRoutingGrayReleaseRequest) (*v1.RoutingGrayReleaseReply, error) {
+	item, err := s.uc.CreateGrayRelease(ctx, grayReleaseFromProto(req.GetRelease()))
+	if err != nil {
+		return nil, err
+	}
+	return &v1.RoutingGrayReleaseReply{Code: successCode, Message: "success", Data: &v1.RoutingGrayReleaseData{Release: grayReleaseToProto(item)}}, nil
+}
+
+func (s *RoutingService) UpdateRoutingGrayRelease(ctx context.Context, req *v1.UpdateRoutingGrayReleaseRequest) (*v1.RoutingGrayReleaseReply, error) {
+	item, err := s.uc.UpdateGrayRelease(ctx, grayReleaseFromProto(req.GetRelease()))
+	if err != nil {
+		return nil, err
+	}
+	return &v1.RoutingGrayReleaseReply{Code: successCode, Message: "success", Data: &v1.RoutingGrayReleaseData{Release: grayReleaseToProto(item)}}, nil
+}
+
+func (s *RoutingService) DeleteRoutingGrayRelease(ctx context.Context, req *v1.DeleteRoutingGrayReleaseRequest) (*v1.DeleteRouteItemReply, error) {
+	if err := s.uc.DeleteGrayRelease(ctx, req.Id); err != nil {
+		return nil, err
+	}
+	return deleteReply(), nil
+}
+
+func (s *RoutingService) ActRoutingGrayRelease(ctx context.Context, req *v1.ActRoutingGrayReleaseRequest) (*v1.RoutingGrayReleaseReply, error) {
+	item, err := s.uc.ActGrayRelease(ctx, req.Id, req.Action, req.Operator, req.Reason)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.RoutingGrayReleaseReply{Code: successCode, Message: "success", Data: &v1.RoutingGrayReleaseData{Release: grayReleaseToProto(item)}}, nil
+}
+
 func routeProfileFromProto(item *v1.RouteProfile) *routingbiz.RouteProfile {
 	if item == nil {
 		return &routingbiz.RouteProfile{}
@@ -369,6 +428,94 @@ func routeEventToProto(item *routingbiz.RoutingRouteEvent) *v1.RoutingRouteEvent
 		EventJson:      item.EventJSON,
 		CreatedAt:      item.CreatedAt.Unix(),
 		UpdatedAt:      item.UpdatedAt.Unix(),
+	}
+}
+
+func grayReleaseFromProto(item *v1.RoutingGrayRelease) *routingbiz.RoutingGrayRelease {
+	if item == nil {
+		return &routingbiz.RoutingGrayRelease{}
+	}
+	return &routingbiz.RoutingGrayRelease{
+		ID:             item.Id,
+		ProfileCode:    item.ProfileCode,
+		Name:           item.Name,
+		Status:         item.Status,
+		BatchNo:        int(item.BatchNo),
+		TargetType:     item.TargetType,
+		TargetIDsJSON:  item.TargetIdsJson,
+		Operator:       item.Operator,
+		RollbackReason: item.RollbackReason,
+		StartedAt:      unixToTime(item.StartedAt),
+		EndedAt:        unixToTime(item.EndedAt),
+		ReleaseJSON:    item.ReleaseJson,
+	}
+}
+
+func grayReleaseToProto(item *routingbiz.RoutingGrayRelease) *v1.RoutingGrayRelease {
+	if item == nil {
+		return nil
+	}
+	return &v1.RoutingGrayRelease{
+		Id:             item.ID,
+		ProfileCode:    item.ProfileCode,
+		Name:           item.Name,
+		Status:         item.Status,
+		BatchNo:        int32(item.BatchNo),
+		TargetType:     item.TargetType,
+		TargetIdsJson:  item.TargetIDsJSON,
+		Operator:       item.Operator,
+		RollbackReason: item.RollbackReason,
+		StartedAt:      unixOrZero(item.StartedAt),
+		EndedAt:        unixOrZero(item.EndedAt),
+		ReleaseJson:    item.ReleaseJSON,
+		TargetCount:    int32(item.TargetCount),
+		CreatedAt:      item.CreatedAt.Unix(),
+		UpdatedAt:      item.UpdatedAt.Unix(),
+	}
+}
+
+func routingAnalyticsToProto(item *routingbiz.RoutingAnalytics) *v1.RoutingAnalyticsData {
+	if item == nil {
+		return nil
+	}
+	items := make([]*v1.RoutingAnalyticsItem, 0, len(item.Items))
+	for _, row := range item.Items {
+		items = append(items, &v1.RoutingAnalyticsItem{
+			ProfileCode:       row.ProfileCode,
+			RoutingHash:       row.RoutingHash,
+			ReporterId:        row.ReporterID,
+			RouteEvents:       int32(row.RouteEvents),
+			RouteDecisions:    int32(row.RouteDecisions),
+			RouteFallbacks:    int32(row.RouteFallbacks),
+			FallbackRateBp:    int32(row.FallbackRateBP),
+			DnsFailures:       int32(row.DNSFailures),
+			OutboundFailures:  int32(row.OutboundFailures),
+			AffectedReporters: int32(row.AffectedReporters),
+			LastEventType:     row.LastEventType,
+			LastStatus:        row.LastStatus,
+			LastError:         row.LastError,
+			LastSeenAt:        unixOrZero(row.LastSeenAt),
+		})
+	}
+	topErrors := make([]*v1.RoutingAnalyticsError, 0, len(item.TopErrors))
+	for _, row := range item.TopErrors {
+		topErrors = append(topErrors, &v1.RoutingAnalyticsError{
+			Key:   row.Key,
+			Kind:  row.Kind,
+			Error: row.Error,
+			Count: int32(row.Count),
+		})
+	}
+	return &v1.RoutingAnalyticsData{
+		Items:              items,
+		TopErrors:          topErrors,
+		TotalRouteEvents:   int32(item.TotalRouteEvents),
+		TotalHealthReports: int32(item.TotalHealthReports),
+		AffectedReporters:  int32(item.AffectedReporters),
+		FallbackRateBp:     int32(item.FallbackRateBP),
+		DnsFailRateBp:      int32(item.DNSFailRateBP),
+		OutboundFailRateBp: int32(item.OutboundFailRateBP),
+		WindowStartedAt:    unixOrZero(item.WindowStartedAt),
 	}
 }
 
@@ -590,4 +737,18 @@ func int64ToString(value int64) string {
 		return ""
 	}
 	return strconv.FormatInt(value, 10)
+}
+
+func unixToTime(value int64) time.Time {
+	if value <= 0 {
+		return time.Time{}
+	}
+	return time.Unix(value, 0)
+}
+
+func unixOrZero(value time.Time) int64 {
+	if value.IsZero() {
+		return 0
+	}
+	return value.Unix()
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyredemptioncode"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyredemptionrecord"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingdnsresolver"
+	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinggrayrelease"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinghealthreport"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingoutbound"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingprofile"
@@ -75,6 +76,7 @@ const (
 	TypeProxyRedemptionCode         = "ProxyRedemptionCode"
 	TypeProxyRedemptionRecord       = "ProxyRedemptionRecord"
 	TypeProxyRoutingDNSResolver     = "ProxyRoutingDNSResolver"
+	TypeProxyRoutingGrayRelease     = "ProxyRoutingGrayRelease"
 	TypeProxyRoutingHealthReport    = "ProxyRoutingHealthReport"
 	TypeProxyRoutingOutbound        = "ProxyRoutingOutbound"
 	TypeProxyRoutingProfile         = "ProxyRoutingProfile"
@@ -13223,6 +13225,1082 @@ func (m *ProxyRoutingDNSResolverMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ProxyRoutingDNSResolverMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown ProxyRoutingDNSResolver edge %s", name)
+}
+
+// ProxyRoutingGrayReleaseMutation represents an operation that mutates the ProxyRoutingGrayRelease nodes in the graph.
+type ProxyRoutingGrayReleaseMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *int64
+	profile_code    *string
+	name            *string
+	status          *string
+	batch_no        *int
+	addbatch_no     *int
+	target_type     *string
+	target_ids_json *string
+	operator        *string
+	rollback_reason *string
+	started_at      *time.Time
+	ended_at        *time.Time
+	release_json    *string
+	created_at      *time.Time
+	updated_at      *time.Time
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*ProxyRoutingGrayRelease, error)
+	predicates      []predicate.ProxyRoutingGrayRelease
+}
+
+var _ ent.Mutation = (*ProxyRoutingGrayReleaseMutation)(nil)
+
+// proxyroutinggrayreleaseOption allows management of the mutation configuration using functional options.
+type proxyroutinggrayreleaseOption func(*ProxyRoutingGrayReleaseMutation)
+
+// newProxyRoutingGrayReleaseMutation creates new mutation for the ProxyRoutingGrayRelease entity.
+func newProxyRoutingGrayReleaseMutation(c config, op Op, opts ...proxyroutinggrayreleaseOption) *ProxyRoutingGrayReleaseMutation {
+	m := &ProxyRoutingGrayReleaseMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeProxyRoutingGrayRelease,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withProxyRoutingGrayReleaseID sets the ID field of the mutation.
+func withProxyRoutingGrayReleaseID(id int64) proxyroutinggrayreleaseOption {
+	return func(m *ProxyRoutingGrayReleaseMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ProxyRoutingGrayRelease
+		)
+		m.oldValue = func(ctx context.Context) (*ProxyRoutingGrayRelease, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ProxyRoutingGrayRelease.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withProxyRoutingGrayRelease sets the old ProxyRoutingGrayRelease of the mutation.
+func withProxyRoutingGrayRelease(node *ProxyRoutingGrayRelease) proxyroutinggrayreleaseOption {
+	return func(m *ProxyRoutingGrayReleaseMutation) {
+		m.oldValue = func(context.Context) (*ProxyRoutingGrayRelease, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ProxyRoutingGrayReleaseMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ProxyRoutingGrayReleaseMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ProxyRoutingGrayRelease entities.
+func (m *ProxyRoutingGrayReleaseMutation) SetID(id int64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ProxyRoutingGrayReleaseMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ProxyRoutingGrayRelease.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetProfileCode sets the "profile_code" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetProfileCode(s string) {
+	m.profile_code = &s
+}
+
+// ProfileCode returns the value of the "profile_code" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) ProfileCode() (r string, exists bool) {
+	v := m.profile_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProfileCode returns the old "profile_code" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldProfileCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProfileCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProfileCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProfileCode: %w", err)
+	}
+	return oldValue.ProfileCode, nil
+}
+
+// ResetProfileCode resets all changes to the "profile_code" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetProfileCode() {
+	m.profile_code = nil
+}
+
+// SetName sets the "name" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetName() {
+	m.name = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetBatchNo sets the "batch_no" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetBatchNo(i int) {
+	m.batch_no = &i
+	m.addbatch_no = nil
+}
+
+// BatchNo returns the value of the "batch_no" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) BatchNo() (r int, exists bool) {
+	v := m.batch_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBatchNo returns the old "batch_no" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldBatchNo(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBatchNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBatchNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBatchNo: %w", err)
+	}
+	return oldValue.BatchNo, nil
+}
+
+// AddBatchNo adds i to the "batch_no" field.
+func (m *ProxyRoutingGrayReleaseMutation) AddBatchNo(i int) {
+	if m.addbatch_no != nil {
+		*m.addbatch_no += i
+	} else {
+		m.addbatch_no = &i
+	}
+}
+
+// AddedBatchNo returns the value that was added to the "batch_no" field in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) AddedBatchNo() (r int, exists bool) {
+	v := m.addbatch_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetBatchNo resets all changes to the "batch_no" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetBatchNo() {
+	m.batch_no = nil
+	m.addbatch_no = nil
+}
+
+// SetTargetType sets the "target_type" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetTargetType(s string) {
+	m.target_type = &s
+}
+
+// TargetType returns the value of the "target_type" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) TargetType() (r string, exists bool) {
+	v := m.target_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetType returns the old "target_type" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldTargetType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetType: %w", err)
+	}
+	return oldValue.TargetType, nil
+}
+
+// ResetTargetType resets all changes to the "target_type" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetTargetType() {
+	m.target_type = nil
+}
+
+// SetTargetIdsJSON sets the "target_ids_json" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetTargetIdsJSON(s string) {
+	m.target_ids_json = &s
+}
+
+// TargetIdsJSON returns the value of the "target_ids_json" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) TargetIdsJSON() (r string, exists bool) {
+	v := m.target_ids_json
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetIdsJSON returns the old "target_ids_json" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldTargetIdsJSON(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetIdsJSON is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetIdsJSON requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetIdsJSON: %w", err)
+	}
+	return oldValue.TargetIdsJSON, nil
+}
+
+// ResetTargetIdsJSON resets all changes to the "target_ids_json" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetTargetIdsJSON() {
+	m.target_ids_json = nil
+}
+
+// SetOperator sets the "operator" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetOperator(s string) {
+	m.operator = &s
+}
+
+// Operator returns the value of the "operator" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) Operator() (r string, exists bool) {
+	v := m.operator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOperator returns the old "operator" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldOperator(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOperator is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOperator requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOperator: %w", err)
+	}
+	return oldValue.Operator, nil
+}
+
+// ResetOperator resets all changes to the "operator" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetOperator() {
+	m.operator = nil
+}
+
+// SetRollbackReason sets the "rollback_reason" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetRollbackReason(s string) {
+	m.rollback_reason = &s
+}
+
+// RollbackReason returns the value of the "rollback_reason" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) RollbackReason() (r string, exists bool) {
+	v := m.rollback_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRollbackReason returns the old "rollback_reason" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldRollbackReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRollbackReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRollbackReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRollbackReason: %w", err)
+	}
+	return oldValue.RollbackReason, nil
+}
+
+// ClearRollbackReason clears the value of the "rollback_reason" field.
+func (m *ProxyRoutingGrayReleaseMutation) ClearRollbackReason() {
+	m.rollback_reason = nil
+	m.clearedFields[proxyroutinggrayrelease.FieldRollbackReason] = struct{}{}
+}
+
+// RollbackReasonCleared returns if the "rollback_reason" field was cleared in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) RollbackReasonCleared() bool {
+	_, ok := m.clearedFields[proxyroutinggrayrelease.FieldRollbackReason]
+	return ok
+}
+
+// ResetRollbackReason resets all changes to the "rollback_reason" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetRollbackReason() {
+	m.rollback_reason = nil
+	delete(m.clearedFields, proxyroutinggrayrelease.FieldRollbackReason)
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldStartedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) ClearStartedAt() {
+	m.started_at = nil
+	m.clearedFields[proxyroutinggrayrelease.FieldStartedAt] = struct{}{}
+}
+
+// StartedAtCleared returns if the "started_at" field was cleared in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) StartedAtCleared() bool {
+	_, ok := m.clearedFields[proxyroutinggrayrelease.FieldStartedAt]
+	return ok
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetStartedAt() {
+	m.started_at = nil
+	delete(m.clearedFields, proxyroutinggrayrelease.FieldStartedAt)
+}
+
+// SetEndedAt sets the "ended_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetEndedAt(t time.Time) {
+	m.ended_at = &t
+}
+
+// EndedAt returns the value of the "ended_at" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) EndedAt() (r time.Time, exists bool) {
+	v := m.ended_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndedAt returns the old "ended_at" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldEndedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndedAt: %w", err)
+	}
+	return oldValue.EndedAt, nil
+}
+
+// ClearEndedAt clears the value of the "ended_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) ClearEndedAt() {
+	m.ended_at = nil
+	m.clearedFields[proxyroutinggrayrelease.FieldEndedAt] = struct{}{}
+}
+
+// EndedAtCleared returns if the "ended_at" field was cleared in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) EndedAtCleared() bool {
+	_, ok := m.clearedFields[proxyroutinggrayrelease.FieldEndedAt]
+	return ok
+}
+
+// ResetEndedAt resets all changes to the "ended_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetEndedAt() {
+	m.ended_at = nil
+	delete(m.clearedFields, proxyroutinggrayrelease.FieldEndedAt)
+}
+
+// SetReleaseJSON sets the "release_json" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetReleaseJSON(s string) {
+	m.release_json = &s
+}
+
+// ReleaseJSON returns the value of the "release_json" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) ReleaseJSON() (r string, exists bool) {
+	v := m.release_json
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReleaseJSON returns the old "release_json" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldReleaseJSON(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReleaseJSON is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReleaseJSON requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReleaseJSON: %w", err)
+	}
+	return oldValue.ReleaseJSON, nil
+}
+
+// ResetReleaseJSON resets all changes to the "release_json" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetReleaseJSON() {
+	m.release_json = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ProxyRoutingGrayReleaseMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ProxyRoutingGrayRelease entity.
+// If the ProxyRoutingGrayRelease object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProxyRoutingGrayReleaseMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ProxyRoutingGrayReleaseMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the ProxyRoutingGrayReleaseMutation builder.
+func (m *ProxyRoutingGrayReleaseMutation) Where(ps ...predicate.ProxyRoutingGrayRelease) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ProxyRoutingGrayReleaseMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ProxyRoutingGrayReleaseMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ProxyRoutingGrayRelease, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ProxyRoutingGrayReleaseMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ProxyRoutingGrayReleaseMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ProxyRoutingGrayRelease).
+func (m *ProxyRoutingGrayReleaseMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ProxyRoutingGrayReleaseMutation) Fields() []string {
+	fields := make([]string, 0, 13)
+	if m.profile_code != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldProfileCode)
+	}
+	if m.name != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldName)
+	}
+	if m.status != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldStatus)
+	}
+	if m.batch_no != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldBatchNo)
+	}
+	if m.target_type != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldTargetType)
+	}
+	if m.target_ids_json != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldTargetIdsJSON)
+	}
+	if m.operator != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldOperator)
+	}
+	if m.rollback_reason != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldRollbackReason)
+	}
+	if m.started_at != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldStartedAt)
+	}
+	if m.ended_at != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldEndedAt)
+	}
+	if m.release_json != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldReleaseJSON)
+	}
+	if m.created_at != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ProxyRoutingGrayReleaseMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case proxyroutinggrayrelease.FieldProfileCode:
+		return m.ProfileCode()
+	case proxyroutinggrayrelease.FieldName:
+		return m.Name()
+	case proxyroutinggrayrelease.FieldStatus:
+		return m.Status()
+	case proxyroutinggrayrelease.FieldBatchNo:
+		return m.BatchNo()
+	case proxyroutinggrayrelease.FieldTargetType:
+		return m.TargetType()
+	case proxyroutinggrayrelease.FieldTargetIdsJSON:
+		return m.TargetIdsJSON()
+	case proxyroutinggrayrelease.FieldOperator:
+		return m.Operator()
+	case proxyroutinggrayrelease.FieldRollbackReason:
+		return m.RollbackReason()
+	case proxyroutinggrayrelease.FieldStartedAt:
+		return m.StartedAt()
+	case proxyroutinggrayrelease.FieldEndedAt:
+		return m.EndedAt()
+	case proxyroutinggrayrelease.FieldReleaseJSON:
+		return m.ReleaseJSON()
+	case proxyroutinggrayrelease.FieldCreatedAt:
+		return m.CreatedAt()
+	case proxyroutinggrayrelease.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ProxyRoutingGrayReleaseMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case proxyroutinggrayrelease.FieldProfileCode:
+		return m.OldProfileCode(ctx)
+	case proxyroutinggrayrelease.FieldName:
+		return m.OldName(ctx)
+	case proxyroutinggrayrelease.FieldStatus:
+		return m.OldStatus(ctx)
+	case proxyroutinggrayrelease.FieldBatchNo:
+		return m.OldBatchNo(ctx)
+	case proxyroutinggrayrelease.FieldTargetType:
+		return m.OldTargetType(ctx)
+	case proxyroutinggrayrelease.FieldTargetIdsJSON:
+		return m.OldTargetIdsJSON(ctx)
+	case proxyroutinggrayrelease.FieldOperator:
+		return m.OldOperator(ctx)
+	case proxyroutinggrayrelease.FieldRollbackReason:
+		return m.OldRollbackReason(ctx)
+	case proxyroutinggrayrelease.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case proxyroutinggrayrelease.FieldEndedAt:
+		return m.OldEndedAt(ctx)
+	case proxyroutinggrayrelease.FieldReleaseJSON:
+		return m.OldReleaseJSON(ctx)
+	case proxyroutinggrayrelease.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case proxyroutinggrayrelease.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ProxyRoutingGrayRelease field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProxyRoutingGrayReleaseMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case proxyroutinggrayrelease.FieldProfileCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProfileCode(v)
+		return nil
+	case proxyroutinggrayrelease.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case proxyroutinggrayrelease.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case proxyroutinggrayrelease.FieldBatchNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBatchNo(v)
+		return nil
+	case proxyroutinggrayrelease.FieldTargetType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetType(v)
+		return nil
+	case proxyroutinggrayrelease.FieldTargetIdsJSON:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetIdsJSON(v)
+		return nil
+	case proxyroutinggrayrelease.FieldOperator:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOperator(v)
+		return nil
+	case proxyroutinggrayrelease.FieldRollbackReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRollbackReason(v)
+		return nil
+	case proxyroutinggrayrelease.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case proxyroutinggrayrelease.FieldEndedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndedAt(v)
+		return nil
+	case proxyroutinggrayrelease.FieldReleaseJSON:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReleaseJSON(v)
+		return nil
+	case proxyroutinggrayrelease.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case proxyroutinggrayrelease.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProxyRoutingGrayRelease field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) AddedFields() []string {
+	var fields []string
+	if m.addbatch_no != nil {
+		fields = append(fields, proxyroutinggrayrelease.FieldBatchNo)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ProxyRoutingGrayReleaseMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case proxyroutinggrayrelease.FieldBatchNo:
+		return m.AddedBatchNo()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProxyRoutingGrayReleaseMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case proxyroutinggrayrelease.FieldBatchNo:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddBatchNo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProxyRoutingGrayRelease numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ProxyRoutingGrayReleaseMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(proxyroutinggrayrelease.FieldRollbackReason) {
+		fields = append(fields, proxyroutinggrayrelease.FieldRollbackReason)
+	}
+	if m.FieldCleared(proxyroutinggrayrelease.FieldStartedAt) {
+		fields = append(fields, proxyroutinggrayrelease.FieldStartedAt)
+	}
+	if m.FieldCleared(proxyroutinggrayrelease.FieldEndedAt) {
+		fields = append(fields, proxyroutinggrayrelease.FieldEndedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ProxyRoutingGrayReleaseMutation) ClearField(name string) error {
+	switch name {
+	case proxyroutinggrayrelease.FieldRollbackReason:
+		m.ClearRollbackReason()
+		return nil
+	case proxyroutinggrayrelease.FieldStartedAt:
+		m.ClearStartedAt()
+		return nil
+	case proxyroutinggrayrelease.FieldEndedAt:
+		m.ClearEndedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ProxyRoutingGrayRelease nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ProxyRoutingGrayReleaseMutation) ResetField(name string) error {
+	switch name {
+	case proxyroutinggrayrelease.FieldProfileCode:
+		m.ResetProfileCode()
+		return nil
+	case proxyroutinggrayrelease.FieldName:
+		m.ResetName()
+		return nil
+	case proxyroutinggrayrelease.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case proxyroutinggrayrelease.FieldBatchNo:
+		m.ResetBatchNo()
+		return nil
+	case proxyroutinggrayrelease.FieldTargetType:
+		m.ResetTargetType()
+		return nil
+	case proxyroutinggrayrelease.FieldTargetIdsJSON:
+		m.ResetTargetIdsJSON()
+		return nil
+	case proxyroutinggrayrelease.FieldOperator:
+		m.ResetOperator()
+		return nil
+	case proxyroutinggrayrelease.FieldRollbackReason:
+		m.ResetRollbackReason()
+		return nil
+	case proxyroutinggrayrelease.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case proxyroutinggrayrelease.FieldEndedAt:
+		m.ResetEndedAt()
+		return nil
+	case proxyroutinggrayrelease.FieldReleaseJSON:
+		m.ResetReleaseJSON()
+		return nil
+	case proxyroutinggrayrelease.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case proxyroutinggrayrelease.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ProxyRoutingGrayRelease field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ProxyRoutingGrayReleaseMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ProxyRoutingGrayReleaseMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ProxyRoutingGrayRelease unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ProxyRoutingGrayReleaseMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ProxyRoutingGrayRelease edge %s", name)
 }
 
 // ProxyRoutingHealthReportMutation represents an operation that mutates the ProxyRoutingHealthReport nodes in the graph.

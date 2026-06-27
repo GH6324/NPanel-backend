@@ -18,6 +18,7 @@ import (
 	"github.com/npanel-dev/NPanel-backend/ent/proxyredemptioncode"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyredemptionrecord"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingdnsresolver"
+	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinggrayrelease"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutinghealthreport"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingoutbound"
 	"github.com/npanel-dev/NPanel-backend/ent/proxyroutingprofile"
@@ -854,6 +855,84 @@ func init() {
 	proxyroutingdnsresolver.DefaultUpdatedAt = proxyroutingdnsresolverDescUpdatedAt.Default.(func() time.Time)
 	// proxyroutingdnsresolver.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	proxyroutingdnsresolver.UpdateDefaultUpdatedAt = proxyroutingdnsresolverDescUpdatedAt.UpdateDefault.(func() time.Time)
+	proxyroutinggrayreleaseFields := schema.ProxyRoutingGrayRelease{}.Fields()
+	_ = proxyroutinggrayreleaseFields
+	// proxyroutinggrayreleaseDescProfileCode is the schema descriptor for profile_code field.
+	proxyroutinggrayreleaseDescProfileCode := proxyroutinggrayreleaseFields[1].Descriptor()
+	// proxyroutinggrayrelease.ProfileCodeValidator is a validator for the "profile_code" field. It is called by the builders before save.
+	proxyroutinggrayrelease.ProfileCodeValidator = func() func(string) error {
+		validators := proxyroutinggrayreleaseDescProfileCode.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(profile_code string) error {
+			for _, fn := range fns {
+				if err := fn(profile_code); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// proxyroutinggrayreleaseDescName is the schema descriptor for name field.
+	proxyroutinggrayreleaseDescName := proxyroutinggrayreleaseFields[2].Descriptor()
+	// proxyroutinggrayrelease.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	proxyroutinggrayrelease.NameValidator = func() func(string) error {
+		validators := proxyroutinggrayreleaseDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// proxyroutinggrayreleaseDescStatus is the schema descriptor for status field.
+	proxyroutinggrayreleaseDescStatus := proxyroutinggrayreleaseFields[3].Descriptor()
+	// proxyroutinggrayrelease.DefaultStatus holds the default value on creation for the status field.
+	proxyroutinggrayrelease.DefaultStatus = proxyroutinggrayreleaseDescStatus.Default.(string)
+	// proxyroutinggrayrelease.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	proxyroutinggrayrelease.StatusValidator = proxyroutinggrayreleaseDescStatus.Validators[0].(func(string) error)
+	// proxyroutinggrayreleaseDescBatchNo is the schema descriptor for batch_no field.
+	proxyroutinggrayreleaseDescBatchNo := proxyroutinggrayreleaseFields[4].Descriptor()
+	// proxyroutinggrayrelease.DefaultBatchNo holds the default value on creation for the batch_no field.
+	proxyroutinggrayrelease.DefaultBatchNo = proxyroutinggrayreleaseDescBatchNo.Default.(int)
+	// proxyroutinggrayreleaseDescTargetType is the schema descriptor for target_type field.
+	proxyroutinggrayreleaseDescTargetType := proxyroutinggrayreleaseFields[5].Descriptor()
+	// proxyroutinggrayrelease.DefaultTargetType holds the default value on creation for the target_type field.
+	proxyroutinggrayrelease.DefaultTargetType = proxyroutinggrayreleaseDescTargetType.Default.(string)
+	// proxyroutinggrayrelease.TargetTypeValidator is a validator for the "target_type" field. It is called by the builders before save.
+	proxyroutinggrayrelease.TargetTypeValidator = proxyroutinggrayreleaseDescTargetType.Validators[0].(func(string) error)
+	// proxyroutinggrayreleaseDescTargetIdsJSON is the schema descriptor for target_ids_json field.
+	proxyroutinggrayreleaseDescTargetIdsJSON := proxyroutinggrayreleaseFields[6].Descriptor()
+	// proxyroutinggrayrelease.DefaultTargetIdsJSON holds the default value on creation for the target_ids_json field.
+	proxyroutinggrayrelease.DefaultTargetIdsJSON = proxyroutinggrayreleaseDescTargetIdsJSON.Default.(string)
+	// proxyroutinggrayreleaseDescOperator is the schema descriptor for operator field.
+	proxyroutinggrayreleaseDescOperator := proxyroutinggrayreleaseFields[7].Descriptor()
+	// proxyroutinggrayrelease.DefaultOperator holds the default value on creation for the operator field.
+	proxyroutinggrayrelease.DefaultOperator = proxyroutinggrayreleaseDescOperator.Default.(string)
+	// proxyroutinggrayrelease.OperatorValidator is a validator for the "operator" field. It is called by the builders before save.
+	proxyroutinggrayrelease.OperatorValidator = proxyroutinggrayreleaseDescOperator.Validators[0].(func(string) error)
+	// proxyroutinggrayreleaseDescReleaseJSON is the schema descriptor for release_json field.
+	proxyroutinggrayreleaseDescReleaseJSON := proxyroutinggrayreleaseFields[11].Descriptor()
+	// proxyroutinggrayrelease.DefaultReleaseJSON holds the default value on creation for the release_json field.
+	proxyroutinggrayrelease.DefaultReleaseJSON = proxyroutinggrayreleaseDescReleaseJSON.Default.(string)
+	// proxyroutinggrayreleaseDescCreatedAt is the schema descriptor for created_at field.
+	proxyroutinggrayreleaseDescCreatedAt := proxyroutinggrayreleaseFields[12].Descriptor()
+	// proxyroutinggrayrelease.DefaultCreatedAt holds the default value on creation for the created_at field.
+	proxyroutinggrayrelease.DefaultCreatedAt = proxyroutinggrayreleaseDescCreatedAt.Default.(func() time.Time)
+	// proxyroutinggrayreleaseDescUpdatedAt is the schema descriptor for updated_at field.
+	proxyroutinggrayreleaseDescUpdatedAt := proxyroutinggrayreleaseFields[13].Descriptor()
+	// proxyroutinggrayrelease.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	proxyroutinggrayrelease.DefaultUpdatedAt = proxyroutinggrayreleaseDescUpdatedAt.Default.(func() time.Time)
+	// proxyroutinggrayrelease.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	proxyroutinggrayrelease.UpdateDefaultUpdatedAt = proxyroutinggrayreleaseDescUpdatedAt.UpdateDefault.(func() time.Time)
 	proxyroutinghealthreportFields := schema.ProxyRoutingHealthReport{}.Fields()
 	_ = proxyroutinghealthreportFields
 	// proxyroutinghealthreportDescReporterType is the schema descriptor for reporter_type field.

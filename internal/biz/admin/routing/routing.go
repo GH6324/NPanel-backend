@@ -141,6 +141,60 @@ type RoutingRouteEvent struct {
 	UpdatedAt      time.Time
 }
 
+type RoutingGrayRelease struct {
+	ID             int64
+	ProfileCode    string
+	Name           string
+	Status         string
+	BatchNo        int
+	TargetType     string
+	TargetIDsJSON  string
+	Operator       string
+	RollbackReason string
+	StartedAt      time.Time
+	EndedAt        time.Time
+	ReleaseJSON    string
+	TargetCount    int
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+type RoutingAnalyticsItem struct {
+	ProfileCode       string
+	RoutingHash       string
+	ReporterID        string
+	RouteEvents       int
+	RouteDecisions    int
+	RouteFallbacks    int
+	FallbackRateBP    int
+	DNSFailures       int
+	OutboundFailures  int
+	AffectedReporters int
+	LastEventType     string
+	LastStatus        string
+	LastError         string
+	LastSeenAt        time.Time
+}
+
+type RoutingAnalyticsError struct {
+	Key   string
+	Kind  string
+	Error string
+	Count int
+}
+
+type RoutingAnalytics struct {
+	Items              []RoutingAnalyticsItem
+	TopErrors          []RoutingAnalyticsError
+	TotalRouteEvents   int
+	TotalHealthReports int
+	AffectedReporters  int
+	FallbackRateBP     int
+	DNSFailRateBP      int
+	OutboundFailRateBP int
+	WindowStartedAt    time.Time
+}
+
 type RoutingEnforceGuard struct {
 	Key    string
 	Label  string
@@ -219,6 +273,12 @@ type RoutingRepo interface {
 	ListHealthReports(context.Context, int, int, string, string, string) ([]*RoutingHealthReport, int32, error)
 	SaveRouteEvents(context.Context, []*RoutingRouteEvent) error
 	ListRouteEvents(context.Context, int, int, string, string, string) ([]*RoutingRouteEvent, int32, error)
+
+	SaveGrayRelease(context.Context, *RoutingGrayRelease) (*RoutingGrayRelease, error)
+	UpdateGrayRelease(context.Context, *RoutingGrayRelease) (*RoutingGrayRelease, error)
+	FindGrayReleaseByID(context.Context, int64) (*RoutingGrayRelease, error)
+	ListGrayReleases(context.Context, int, int, string, string) ([]*RoutingGrayRelease, int32, error)
+	DeleteGrayRelease(context.Context, int64) error
 }
 
 type RoutingUsecase struct {
@@ -439,6 +499,97 @@ func (uc *RoutingUsecase) RecordRouteEvent(ctx context.Context, req publicroutin
 func (uc *RoutingUsecase) ListRouteEvents(ctx context.Context, page, size int, eventType, profileCode, reporterType string) ([]*RoutingRouteEvent, int32, error) {
 	page, size = normalizePage(page, size)
 	return uc.repo.ListRouteEvents(ctx, page, size, eventType, profileCode, reporterType)
+}
+
+func (uc *RoutingUsecase) CreateGrayRelease(ctx context.Context, item *RoutingGrayRelease) (*RoutingGrayRelease, error) {
+	normalizeGrayRelease(item)
+	if err := validateGrayRelease(item); err != nil {
+		return nil, err
+	}
+	return uc.repo.SaveGrayRelease(ctx, item)
+}
+
+func (uc *RoutingUsecase) UpdateGrayRelease(ctx context.Context, item *RoutingGrayRelease) (*RoutingGrayRelease, error) {
+	if item.ID <= 0 {
+		return nil, responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	normalizeGrayRelease(item)
+	if err := validateGrayRelease(item); err != nil {
+		return nil, err
+	}
+	if found, err := uc.repo.FindGrayReleaseByID(ctx, item.ID); err != nil {
+		return nil, responsecode.NewKratosError(responsecode.ErrDatabaseQuery)
+	} else if found == nil {
+		return nil, responsecode.NewKratosError(responsecode.ErrSystemNotFound)
+	}
+	return uc.repo.UpdateGrayRelease(ctx, item)
+}
+
+func (uc *RoutingUsecase) ListGrayReleases(ctx context.Context, page, size int, profileCode, status string) ([]*RoutingGrayRelease, int32, error) {
+	page, size = normalizePage(page, size)
+	return uc.repo.ListGrayReleases(ctx, page, size, strings.TrimSpace(profileCode), normalizeGrayReleaseStatus(status))
+}
+
+func (uc *RoutingUsecase) DeleteGrayRelease(ctx context.Context, id int64) error {
+	if id <= 0 {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	return uc.repo.DeleteGrayRelease(ctx, id)
+}
+
+func (uc *RoutingUsecase) ActGrayRelease(ctx context.Context, id int64, action, operator, reason string) (*RoutingGrayRelease, error) {
+	if id <= 0 {
+		return nil, responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	release, err := uc.repo.FindGrayReleaseByID(ctx, id)
+	if err != nil {
+		return nil, responsecode.NewKratosError(responsecode.ErrDatabaseQuery)
+	}
+	if release == nil {
+		return nil, responsecode.NewKratosError(responsecode.ErrSystemNotFound)
+	}
+	now := time.Now()
+	release.Operator = strings.TrimSpace(operator)
+	switch strings.ToLower(strings.TrimSpace(action)) {
+	case "advance", "next_batch", "publish_next":
+		release.Status = "running"
+		release.BatchNo++
+		release.StartedAt = firstTime(release.StartedAt, now)
+		release.EndedAt = time.Time{}
+		release.RollbackReason = ""
+	case "pause":
+		release.Status = "paused"
+	case "complete":
+		release.Status = "completed"
+		release.EndedAt = now
+	case "rollback", "observe":
+		release.Status = "rolled_back"
+		release.RollbackReason = strings.TrimSpace(reason)
+		release.EndedAt = now
+	default:
+		return nil, responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	normalizeGrayRelease(release)
+	return uc.repo.UpdateGrayRelease(ctx, release)
+}
+
+func (uc *RoutingUsecase) Analytics(ctx context.Context, profileCode, routingHash string, windowMinutes int) (*RoutingAnalytics, error) {
+	if windowMinutes <= 0 {
+		windowMinutes = 60
+	}
+	if windowMinutes > 10080 {
+		windowMinutes = 10080
+	}
+	startedAt := time.Now().Add(-time.Duration(windowMinutes) * time.Minute)
+	events, _, err := uc.repo.ListRouteEvents(ctx, 1, 1000, "", strings.TrimSpace(profileCode), "")
+	if err != nil {
+		return nil, err
+	}
+	healthReports, _, err := uc.repo.ListHealthReports(ctx, 1, 1000, "", "", "")
+	if err != nil {
+		return nil, err
+	}
+	return buildRoutingAnalytics(events, healthReports, strings.TrimSpace(routingHash), startedAt), nil
 }
 
 func (uc *RoutingUsecase) Preview(ctx context.Context, req PreviewRequest) (PreviewResult, error) {
@@ -752,6 +903,58 @@ func validateUnlockService(item *UnlockService) error {
 	return nil
 }
 
+func normalizeGrayRelease(item *RoutingGrayRelease) {
+	item.ProfileCode = strings.TrimSpace(item.ProfileCode)
+	item.Name = strings.TrimSpace(item.Name)
+	item.Status = firstNonEmpty(normalizeGrayReleaseStatus(item.Status), "draft")
+	item.TargetType = firstNonEmpty(normalizeGrayTargetType(item.TargetType), "user")
+	item.TargetIDsJSON = normalizeJSONWithDefault(item.TargetIDsJSON, "[]")
+	item.Operator = strings.TrimSpace(item.Operator)
+	item.RollbackReason = strings.TrimSpace(item.RollbackReason)
+	item.ReleaseJSON = normalizeJSON(item.ReleaseJSON)
+	item.TargetCount = countJSONList(item.TargetIDsJSON)
+}
+
+func validateGrayRelease(item *RoutingGrayRelease) error {
+	if item.ProfileCode == "" || item.Name == "" || !json.Valid([]byte(item.TargetIDsJSON)) || !json.Valid([]byte(item.ReleaseJSON)) {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	if normalizeGrayReleaseStatus(item.Status) == "" || normalizeGrayTargetType(item.TargetType) == "" {
+		return responsecode.NewKratosError(responsecode.ErrInvalidParameter)
+	}
+	return nil
+}
+
+func normalizeGrayReleaseStatus(status string) string {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "draft", "running", "paused", "completed", "rolled_back":
+		return strings.ToLower(strings.TrimSpace(status))
+	case "":
+		return ""
+	default:
+		return ""
+	}
+}
+
+func normalizeGrayTargetType(targetType string) string {
+	switch strings.ToLower(strings.TrimSpace(targetType)) {
+	case "user", "user_subscribe", "subscribe", "node":
+		return strings.ToLower(strings.TrimSpace(targetType))
+	case "":
+		return ""
+	default:
+		return ""
+	}
+}
+
+func countJSONList(raw string) int {
+	var items []any
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return 0
+	}
+	return len(items)
+}
+
 func healthReportsFromRequest(req publicrouting.HealthReportRequest, now time.Time) ([]*RoutingHealthReport, error) {
 	req.ReporterType = firstNonEmpty(strings.TrimSpace(req.ReporterType), "client")
 	req.ReporterID = strings.TrimSpace(req.ReporterID)
@@ -887,6 +1090,165 @@ func normalizeRouteEventStatus(status string) string {
 	default:
 		return "degraded"
 	}
+}
+
+func buildRoutingAnalytics(events []*RoutingRouteEvent, reports []*RoutingHealthReport, routingHash string, startedAt time.Time) *RoutingAnalytics {
+	analytics := &RoutingAnalytics{WindowStartedAt: startedAt}
+	reporters := map[string]struct{}{}
+	groups := map[string]*RoutingAnalyticsItem{}
+	errors := map[string]*RoutingAnalyticsError{}
+
+	for _, event := range events {
+		if event == nil || event.EventAt.Before(startedAt) || !matchesRoutingHash(event.RoutingHash, routingHash) {
+			continue
+		}
+		analytics.TotalRouteEvents++
+		reporterKey := firstNonEmpty(event.ReporterID, "unknown")
+		reporters[reporterKey] = struct{}{}
+		key := analyticsKey(event.ProfileCode, event.RoutingHash, reporterKey)
+		item := groups[key]
+		if item == nil {
+			item = &RoutingAnalyticsItem{ProfileCode: event.ProfileCode, RoutingHash: event.RoutingHash, ReporterID: reporterKey}
+			groups[key] = item
+		}
+		item.RouteEvents++
+		switch event.EventType {
+		case "route_decision":
+			item.RouteDecisions++
+		case "route_fallback":
+			item.RouteFallbacks++
+		}
+		if event.Status == "fallback" && event.EventType != "route_fallback" {
+			item.RouteFallbacks++
+		}
+		if strings.Contains(event.EventType, "dns_resolver") && isFailingStatus(event.Status) {
+			item.DNSFailures++
+		}
+		if strings.Contains(event.EventType, "outbound") && isFailingStatus(event.Status) {
+			item.OutboundFailures++
+		}
+		if event.EventAt.After(item.LastSeenAt) {
+			item.LastSeenAt = event.EventAt
+			item.LastEventType = event.EventType
+			item.LastStatus = event.Status
+			item.LastError = event.Error
+		}
+		addAnalyticsError(errors, event.EventType, event.Subject, event.Error)
+	}
+
+	for _, report := range reports {
+		if report == nil || report.CheckedAt.Before(startedAt) || !matchesRoutingHash(report.RoutingHash, routingHash) {
+			continue
+		}
+		analytics.TotalHealthReports++
+		reporterKey := firstNonEmpty(report.ReporterID, "unknown")
+		reporters[reporterKey] = struct{}{}
+		key := analyticsKey(report.ProfileCode, report.RoutingHash, reporterKey)
+		item := groups[key]
+		if item == nil {
+			item = &RoutingAnalyticsItem{ProfileCode: report.ProfileCode, RoutingHash: report.RoutingHash, ReporterID: reporterKey}
+			groups[key] = item
+		}
+		if report.SubjectType == "dns_resolver" && isFailingStatus(report.Status) {
+			item.DNSFailures++
+		}
+		if report.SubjectType == "outbound" && isFailingStatus(report.Status) {
+			item.OutboundFailures++
+		}
+		if report.CheckedAt.After(item.LastSeenAt) {
+			item.LastSeenAt = report.CheckedAt
+			item.LastStatus = report.Status
+			item.LastError = report.LastError
+		}
+		addAnalyticsError(errors, report.SubjectType, report.SubjectKey, report.LastError)
+	}
+
+	for _, item := range groups {
+		item.FallbackRateBP = rateBP(item.RouteFallbacks, item.RouteDecisions)
+		item.AffectedReporters = 1
+		analytics.Items = append(analytics.Items, *item)
+		analytics.OutboundFailRateBP += item.OutboundFailures
+		analytics.DNSFailRateBP += item.DNSFailures
+	}
+	sort.SliceStable(analytics.Items, func(i, j int) bool {
+		return analytics.Items[i].LastSeenAt.After(analytics.Items[j].LastSeenAt)
+	})
+	analytics.AffectedReporters = len(reporters)
+	analytics.FallbackRateBP = aggregateFallbackRate(analytics.Items)
+	analytics.DNSFailRateBP = rateBP(countHealthFailures(reports, "dns_resolver", routingHash, startedAt), analytics.TotalHealthReports)
+	analytics.OutboundFailRateBP = rateBP(countHealthFailures(reports, "outbound", routingHash, startedAt), analytics.TotalHealthReports)
+	analytics.TopErrors = topAnalyticsErrors(errors, 8)
+	return analytics
+}
+
+func matchesRoutingHash(value, expected string) bool {
+	return expected == "" || value == expected
+}
+
+func analyticsKey(profileCode, routingHash, reporterID string) string {
+	return profileCode + "|" + routingHash + "|" + reporterID
+}
+
+func isFailingStatus(status string) bool {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "failed", "degraded", "fallback", "stale":
+		return true
+	default:
+		return false
+	}
+}
+
+func addAnalyticsError(errors map[string]*RoutingAnalyticsError, kind, key, msg string) {
+	msg = strings.TrimSpace(msg)
+	if msg == "" {
+		return
+	}
+	mapKey := kind + "|" + key + "|" + msg
+	if errors[mapKey] == nil {
+		errors[mapKey] = &RoutingAnalyticsError{Key: key, Kind: kind, Error: msg}
+	}
+	errors[mapKey].Count++
+}
+
+func topAnalyticsErrors(errors map[string]*RoutingAnalyticsError, limit int) []RoutingAnalyticsError {
+	items := make([]RoutingAnalyticsError, 0, len(errors))
+	for _, item := range errors {
+		items = append(items, *item)
+	}
+	sort.SliceStable(items, func(i, j int) bool { return items[i].Count > items[j].Count })
+	if len(items) > limit {
+		items = items[:limit]
+	}
+	return items
+}
+
+func aggregateFallbackRate(items []RoutingAnalyticsItem) int {
+	decisions, fallbacks := 0, 0
+	for _, item := range items {
+		decisions += item.RouteDecisions
+		fallbacks += item.RouteFallbacks
+	}
+	return rateBP(fallbacks, decisions)
+}
+
+func countHealthFailures(reports []*RoutingHealthReport, subjectType, routingHash string, startedAt time.Time) int {
+	total := 0
+	for _, report := range reports {
+		if report == nil || report.SubjectType != subjectType || report.CheckedAt.Before(startedAt) || !matchesRoutingHash(report.RoutingHash, routingHash) {
+			continue
+		}
+		if isFailingStatus(report.Status) {
+			total++
+		}
+	}
+	return total
+}
+
+func rateBP(numerator, denominator int) int {
+	if denominator <= 0 {
+		return 0
+	}
+	return numerator * 10000 / denominator
 }
 
 func normalizeJSON(raw string) string {
@@ -1405,6 +1767,13 @@ func unknownServiceHealth(items []publicrouting.UnlockService, now string) []pub
 
 func boolPtr(value bool) *bool {
 	return &value
+}
+
+func firstTime(value, fallback time.Time) time.Time {
+	if value.IsZero() {
+		return fallback
+	}
+	return value
 }
 
 func firstNonEmpty(values ...string) string {

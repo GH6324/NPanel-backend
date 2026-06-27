@@ -45,6 +45,9 @@ type ProxyRedemptionRecord func(*sql.Selector)
 // ProxyRoutingDNSResolver is the predicate function for proxyroutingdnsresolver builders.
 type ProxyRoutingDNSResolver func(*sql.Selector)
 
+// ProxyRoutingGrayRelease is the predicate function for proxyroutinggrayrelease builders.
+type ProxyRoutingGrayRelease func(*sql.Selector)
+
 // ProxyRoutingHealthReport is the predicate function for proxyroutinghealthreport builders.
 type ProxyRoutingHealthReport func(*sql.Selector)
 
